@@ -27,10 +27,11 @@ const users = [
 ]
 
 // ! These two secrets should be in .env file and not in any other file
+// Fallbacks keep the mock login working when .env has not been created yet
 const jwtConfig = {
-  secret: process.env.NEXT_PUBLIC_JWT_SECRET,
-  expirationTime: process.env.NEXT_PUBLIC_JWT_EXPIRATION,
-  refreshTokenSecret: process.env.NEXT_PUBLIC_JWT_REFRESH_TOKEN_SECRET
+  secret: process.env.NEXT_PUBLIC_JWT_SECRET || 'dev-mock-secret',
+  expirationTime: process.env.NEXT_PUBLIC_JWT_EXPIRATION || '5m',
+  refreshTokenSecret: process.env.NEXT_PUBLIC_JWT_REFRESH_TOKEN_SECRET || 'dev-mock-refresh-secret'
 }
 mock.onPost('/jwt/login').reply(request => {
   const { email, password } = JSON.parse(request.data)
