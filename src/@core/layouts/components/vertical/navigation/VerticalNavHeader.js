@@ -80,12 +80,6 @@ const VerticalNavHeader = props => {
             alt={themeConfig.templateName}
             style={{ height: 34, width: navCollapsed && !navHover ? 34 : 'auto', objectFit: 'contain' }}
           />
-          <HeaderTitle
-            variant='body2'
-            sx={{ ...menuCollapsedStyles, ...(navCollapsed && !navHover ? {} : { ml: 2.5 }), color: 'secondary.main' }}
-          >
-            منصة مجلة رقمية
-          </HeaderTitle>
         </LinkStyled>
       )}
 

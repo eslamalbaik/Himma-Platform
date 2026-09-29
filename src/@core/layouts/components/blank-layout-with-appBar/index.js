@@ -45,9 +45,6 @@ const BlankLayoutAppBar = () => {
       >
         <LinkStyled href='/'>
           <img src='/images/logos/himma-mark.png' alt='Himma' style={{ height: 34 }} />
-          <Typography variant='h4' sx={{ ml: 2.5, fontWeight: 700, lineHeight: '24px' }}>
-            منصة مجلة رقمية
-          </Typography>
         </LinkStyled>
       </Toolbar>
     </AppBar>
