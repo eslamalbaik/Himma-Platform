@@ -75,6 +75,7 @@ const AuthProvider = ({ children }) => {
         router.replace(redirectURL)
       })
       .catch(err => {
+        console.error('Login failed:', err)
         if (errorCallback) errorCallback(err)
       })
   }
