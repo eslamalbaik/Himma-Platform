@@ -1,9 +1,6 @@
 /**
- *  Set Home URL based on User Roles
+ *  Home URL after sign-in. Every platform role starts on the super admin overview.
  */
-const getHomeRoute = role => {
-  if (role === 'client') return '/acl'
-  else return '/dashboards/analytics'
-}
+const getHomeRoute = () => '/admin'
 
 export default getHomeRoute

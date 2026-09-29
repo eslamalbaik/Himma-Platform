@@ -10,6 +10,8 @@ import axios from 'axios'
 // ** Config
 import authConfig from 'src/configs/auth'
 
+// The session lives in an httpOnly cookie set by /api/auth/login; the browser never sees the token.
+
 // ** Defaults
 const defaultProvider = {
   user: null,
@@ -30,61 +32,46 @@ const AuthProvider = ({ children }) => {
   const router = useRouter()
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
-      if (storedToken) {
-        setLoading(true)
-        await axios
-          .get(authConfig.meEndpoint, {
-            headers: {
-              Authorization: storedToken
-            }
-          })
-          .then(async response => {
-            setLoading(false)
-            setUser({ ...response.data.userData })
-          })
-          .catch(() => {
-            localStorage.removeItem('userData')
-            localStorage.removeItem('refreshToken')
-            localStorage.removeItem('accessToken')
-            setUser(null)
-            setLoading(false)
-            if (authConfig.onTokenExpiration === 'logout' && !router.pathname.includes('login')) {
-              router.replace('/login')
-            }
-          })
-      } else {
+      try {
+        const response = await axios.get(authConfig.meEndpoint)
+        setUser(response.data.user)
+      } catch {
+        setUser(null)
+      } finally {
         setLoading(false)
       }
     }
     initAuth()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // errorCallback receives the error code from the API (see public/locales `errors.*`).
   const handleLogin = (params, errorCallback) => {
     axios
-      .post(authConfig.loginEndpoint, params)
-      .then(async response => {
-        params.rememberMe
-          ? window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
-          : null
+      .post(authConfig.loginEndpoint, {
+        email: params.email,
+        password: params.password,
+        remember: Boolean(params.rememberMe)
+      })
+      .then(response => {
         const returnUrl = router.query.returnUrl
-        setUser({ ...response.data.userData })
-        params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(response.data.userData)) : null
-        const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+        setUser(response.data.user)
+        const redirectURL = returnUrl && returnUrl !== '/' && returnUrl.startsWith('/') ? returnUrl : '/'
         router.replace(redirectURL)
       })
       .catch(err => {
-        console.error('Login failed:', err)
-        if (errorCallback) errorCallback(err)
+        // A rejected sign-in is expected; only unexpected failures are logged (see SETUP.md troubleshooting).
+        if (!err.response) console.warn('Login failed:', err)
+        if (errorCallback) errorCallback(err.response?.data?.error?.code || 'network_error')
       })
   }
 
-  const handleLogout = () => {
-    setUser(null)
-    window.localStorage.removeItem('userData')
-    window.localStorage.removeItem(authConfig.storageTokenKeyName)
-    router.push('/login')
+  const handleLogout = async () => {
+    try {
+      await axios.post(authConfig.logoutEndpoint, {})
+    } finally {
+      setUser(null)
+      router.push('/login')
+    }
   }
 
   const values = {

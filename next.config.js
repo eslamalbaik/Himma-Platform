@@ -5,6 +5,11 @@ const path = require('path') // ❗ حتماً این خط باشه
 module.exports = {
   trailingSlash: true,
   reactStrictMode: false,
+
+  // Accounts are created by the platform team; there is no public sign-up.
+  async redirects() {
+    return [{ source: '/register', destination: '/login', permanent: false }]
+  },
   webpack: config => {
     config.resolve.alias = {
       ...config.resolve.alias,
