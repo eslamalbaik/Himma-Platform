@@ -9,7 +9,7 @@ const themeConfig = {
   templateName: 'همّة' /* App Name */,
   layout: 'vertical' /* vertical | horizontal */,
   mode: 'light' /* light | dark | semi-dark /*! Note: semi-dark value will only work for Vertical Layout */,
-  direction: 'ltr' /* ltr | rtl */,
+  direction: 'rtl' /* ltr | rtl — Arabic is the default language */,
   skin: 'default' /* default | bordered */,
   contentWidth: 'boxed' /* full | boxed */,
   footer: 'static' /* fixed | static | hidden */,

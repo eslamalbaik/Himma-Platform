@@ -13,10 +13,21 @@
 ## التثبيت والتشغيل
 
 ```bash
-git clone -b claude/project-thread-n6g8io https://github.com/eslamalbaik/Himma-Platform.git
+git clone https://github.com/eslamalbaik/Himma-Platform.git
 cd Himma-Platform
 cp .env.example .env        # على Windows: copy .env.example .env
-npm ci
+```
+
+افتح ملف `.env` وضع:
+- في `AUTH_SECRET` قيمة عشوائية طويلة (32 حرفاً على الأقل). لتوليدها:
+  `node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"`
+- في `SEED_ADMIN_PASSWORD` كلمة مرور حساب المدير الأول (10 أحرف على الأقل).
+
+ثم:
+
+```bash
+npm ci                 # يثبت الحزم ويجهّز Prisma
+npm run db:migrate     # ينشئ قاعدة البيانات المحلية (prisma/dev.db) وينشئ حساب المدير
 npm run dev
 ```
 
@@ -28,35 +39,33 @@ npm run dev
 
 | المتغير | الوصف |
 |---|---|
-| `NEXT_PUBLIC_JWT_SECRET` | مفتاح توقيع رمز الدخول |
-| `NEXT_PUBLIC_JWT_REFRESH_TOKEN_SECRET` | مفتاح رمز التحديث |
-| `NEXT_PUBLIC_JWT_EXPIRATION` | مدة صلاحية الرمز (مثل `5m`) |
+| `DATABASE_URL` | قاعدة البيانات. محلياً ملف SQLite (`file:./dev.db`)، وفي الإنتاج MySQL |
+| `AUTH_SECRET` | مفتاح توقيع جلسة الدخول. سري، ولا يُرسل للمتصفح أبداً |
+| `SEED_ADMIN_EMAIL` | بريد المدير الأول (الافتراضي `admin@himma.local`) |
+| `SEED_ADMIN_PASSWORD` | كلمة مرور المدير الأول |
 
-- ملف `.env` لا يُرفع إلى GitHub (موجود في `.gitignore`). ضع فيه مفاتيحك الخاصة.
-- إذا لم يوجد الملف، يستخدم تسجيل الدخول التجريبي قيماً احتياطية ويعمل رغم ذلك.
+- ملف `.env` لا يُرفع إلى GitHub (موجود في `.gitignore`).
+- في الإنتاج يرفض الخادم العمل إذا كان `AUTH_SECRET` ضعيفاً أو فارغاً.
 
-## بيانات الدخول التجريبية
+## تسجيل الدخول
 
-| الدور | البريد | كلمة المرور |
-|---|---|---|
-| Admin | `admin@vuexy.com` | `admin` |
-| Client | `client@vuexy.com` | `client` |
-
-تسجيل الدخول حالياً وهمي (`src/@fake-db/auth/jwt.js`) وغير مرتبط بقاعدة بيانات أو API حقيقي.
+- ادخل ببريد المدير وكلمة المرور من `.env`. هذا الحساب «مالك المنصة» ويرى كل أقسام لوحة الإدارة العليا.
+- لا يوجد تسجيل عام؛ الحسابات ينشئها فريق المنصة. رابط `/register` يحوّل إلى صفحة الدخول.
+- بعد 5 محاولات فاشلة لنفس البريد خلال 15 دقيقة يُوقف الدخول مؤقتاً.
+- كل دخول وخروج ومحاولة فاشلة تُسجَّل في سجل التدقيق.
+- اللغة: العربية افتراضياً، وزر اللغة في صفحة الدخول وفي الشريط العلوي يبدّل إلى الإنجليزية ويقلب اتجاه الصفحة.
 
 ## حل المشاكل
 
 ### `ERR_CONNECTION_REFUSED` عند فتح localhost
 الخادم لا يعمل. شغّل `npm run dev` وانتظر ظهور `Ready`.
 
-### "Email or Password is invalid" مع البيانات الصحيحة
-1. أوقف الخادم بـ `Ctrl+C`.
-2. `git pull` لجلب آخر نسخة.
-3. احذف مجلد الكاش `.next`:
-   - Mac / Linux: `rm -rf .next`
-   - Windows: `rmdir /s /q .next`
-4. `npm run dev` ثم افتح <http://localhost:3000/login>.
-5. إذا بقي الخطأ: اضغط `F12` ← تبويب **Console** وابحث عن السطر الأحمر الذي يبدأ بـ `Login failed`، فهو يعرض السبب الحقيقي.
+### «البريد الإلكتروني أو كلمة المرور غير صحيحة» مع البيانات الصحيحة
+1. تأكد أن `npm run db:migrate` نُفِّذ وأنه طبع `Created super admin`.
+2. إذا غيّرت `SEED_ADMIN_PASSWORD` بعد إنشاء الحساب فلن يتغير الحساب القائم. احذف `prisma/dev.db` ثم نفّذ `npm run db:migrate` من جديد (هذا يحذف كل البيانات المحلية).
+
+### «محاولات كثيرة غير ناجحة»
+انتظر 15 دقيقة، أو أعد تشغيل `npm run dev`.
 
 ## الأوامر المتاحة
 
@@ -67,6 +76,8 @@ npm run dev
 | `npm run start` | تشغيل نسخة الإنتاج بعد البناء |
 | `npm run lint` | فحص الكود |
 | `npm run format` | تنسيق الكود |
+| `npm run db:migrate` | تطبيق تغييرات قاعدة البيانات |
+| `npm run db:seed` | إنشاء حساب المدير الأول |
 
 ## مشاكل معروفة
 

@@ -20,6 +20,12 @@ import Icon from 'src/@core/components/icon'
 // ** Context
 import { useAuth } from 'src/hooks/useAuth'
 
+// ** Config
+import { roleLabel } from 'src/configs/roles'
+
+// ** Third Party Import
+import { useTranslation } from 'react-i18next'
+
 // ** Styled Components
 const BadgeContentSpan = styled('span')(({ theme }) => ({
   width: 8,
@@ -44,7 +50,10 @@ const UserDropdown = props => {
 
   // ** Hooks
   const router = useRouter()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language === 'en' ? 'en' : 'ar'
+  const name = (lang === 'en' ? user?.nameEn : user?.nameAr) || user?.email
 
   // ** Vars
   const { direction } = settings
@@ -92,12 +101,7 @@ const UserDropdown = props => {
           horizontal: 'right'
         }}
       >
-        <Avatar
-          alt='John Doe'
-          src='/images/avatars/1.png'
-          onClick={handleDropdownOpen}
-          sx={{ width: 38, height: 38 }}
-        />
+        <Avatar alt={name} onClick={handleDropdownOpen} sx={{ width: 38, height: 38 }} />
       </Badge>
       <Menu
         anchorEl={anchorEl}
@@ -117,57 +121,19 @@ const UserDropdown = props => {
                 horizontal: 'right'
               }}
             >
-              <Avatar alt='John Doe' src='/images/avatars/1.png' sx={{ width: '2.5rem', height: '2.5rem' }} />
+              <Avatar alt={name} sx={{ width: '2.5rem', height: '2.5rem' }} />
             </Badge>
             <Box sx={{ display: 'flex', ml: 2.5, alignItems: 'flex-start', flexDirection: 'column' }}>
-              <Typography sx={{ fontWeight: 500 }}>John Doe</Typography>
-              <Typography variant='body2'>Admin</Typography>
+              <Typography sx={{ fontWeight: 500 }}>{name}</Typography>
+              <Typography variant='body2'>{user ? roleLabel(user.role, lang) : null}</Typography>
             </Box>
           </Box>
         </Box>
         <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/user-profile/profile')}>
-          <Box sx={styles}>
-            <Icon icon='tabler:user-check' />
-            My Profile
-          </Box>
-        </MenuItemStyled>
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/account-settings/account')}>
-          <Box sx={styles}>
-            <Icon icon='tabler:settings' />
-            Settings
-          </Box>
-        </MenuItemStyled>
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/account-settings/billing')}>
-          <Box sx={styles}>
-            <Icon icon='tabler:credit-card' />
-            Billing
-          </Box>
-        </MenuItemStyled>
-        <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/help-center')}>
-          <Box sx={styles}>
-            <Icon icon='tabler:lifebuoy' />
-            Help
-          </Box>
-        </MenuItemStyled>
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/faq')}>
-          <Box sx={styles}>
-            <Icon icon='tabler:info-circle' />
-            FAQ
-          </Box>
-        </MenuItemStyled>
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/pricing')}>
-          <Box sx={styles}>
-            <Icon icon='tabler:currency-dollar' />
-            Pricing
-          </Box>
-        </MenuItemStyled>
-        <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
         <MenuItemStyled sx={{ p: 0 }} onClick={handleLogout}>
           <Box sx={styles}>
             <Icon icon='tabler:logout' />
-            Sign Out
+            {t('userMenu.logout')}
           </Box>
         </MenuItemStyled>
       </Menu>

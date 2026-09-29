@@ -1,33 +1,32 @@
 import { AbilityBuilder, Ability } from '@casl/ability'
 
+import { PLATFORM_ROLES } from 'src/configs/roles'
+
 export const AppAbility = Ability
 
-/**
- * Please define your own Ability rules according to your app requirements.
- * We have just shown Admin and Client rules for demo purpose where
- * admin can manage everything and client can just visit ACL page
- */
-const defineRulesFor = (role, subject) => {
+// Builds the CASL rules for a role from src/configs/roles.js.
+// Unknown roles get no rules, so they can reach nothing.
+const defineRulesFor = role => {
   const { can, rules } = new AbilityBuilder(AppAbility)
-  if (role === 'admin') {
-    can('manage', 'all')
-  } else if (role === 'client') {
-    can(['read'], 'acl-page')
-  } else {
-    can(['read', 'create', 'update', 'delete'], subject)
+  const roleDef = PLATFORM_ROLES[role]
+
+  if (roleDef) {
+    roleDef.rules.forEach(rule => can(rule.action, rule.subject))
   }
 
   return rules
 }
 
-export const buildAbilityFor = (role, subject) => {
-  return new AppAbility(defineRulesFor(role, subject), {
+export const buildAbilityFor = role => {
+  return new AppAbility(defineRulesFor(role), {
     // https://casl.js.org/v5/en/guide/subject-type-detection
     // @ts-ignore
     detectSubjectType: object => object.type
   })
 }
 
+// Pages without their own `acl` (the remaining Vuexy demo pages) stay reachable by the platform owner only.
+// Himma admin pages declare their own `acl` with the subject of their sidebar section.
 export const defaultACLObj = {
   action: 'manage',
   subject: 'all'

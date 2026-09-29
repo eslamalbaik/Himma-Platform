@@ -1,0 +1,65 @@
+// Himma database schema.
+// Development uses SQLite (no install needed). Production is planned on MySQL (REQUIREMENTS.md §11.4):
+// switch `provider` to "mysql" and point DATABASE_URL at the server.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A client organisation (association, school, institution, government entity).
+// Platform staff (super admin team) have no tenant.
+model Tenant {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  nameAr    String
+  nameEn    String
+  type      String // association | school | institution | government
+  status    String   @default("active") // trial | active | suspended | cancelled
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  nameAr       String
+  nameEn       String
+  role         String // see src/configs/roles.js
+  status       String    @default("active") // active | disabled
+  locale       String    @default("ar") // ar | en
+  // Bumped on logout-everywhere / password change / disable, invalidating issued sessions.
+  tokenVersion Int       @default(0)
+  lastLoginAt  DateTime?
+  tenantId     String?
+  tenant       Tenant?   @relation(fields: [tenantId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  auditLogs    AuditLog[]
+}
+
+// Append-only audit trail (REQUIREMENTS.md §6). Application code only ever inserts rows.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  actorEmail String?
+  action     String // e.g. auth.login, auth.login_failed, auth.logout
+  entityType String?
+  entityId   String?
+  metadata   String? // JSON
+  ip         String?
+  userAgent  String?
+  tenantId   String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([action])
+}

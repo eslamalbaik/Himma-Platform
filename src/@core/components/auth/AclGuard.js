@@ -40,7 +40,7 @@ const AclGuard = props => {
 
   // User is logged in, build ability for the user based on his role
   if (auth.user && !ability) {
-    ability = buildAbilityFor(auth.user.role, aclAbilities.subject)
+    ability = buildAbilityFor(auth.user.role)
     if (router.route === '/') {
       return <Spinner />
     }

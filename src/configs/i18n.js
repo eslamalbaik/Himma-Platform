@@ -14,12 +14,17 @@ i18n
   // Enables the hook initialization module
   .use(initReactI18next)
   .init({
-    lng: 'en',
+    // Himma is bilingual: Arabic (default, RTL) and English (LTR). See CLAUDE.md.
+    supportedLngs: ['ar', 'en'],
+    fallbackLng: 'ar',
+    detection: {
+      order: ['localStorage'],
+      caches: ['localStorage']
+    },
     backend: {
       /* translation file path */
       loadPath: '/locales/{{lng}}.json'
     },
-    fallbackLng: 'en',
     debug: false,
     keySeparator: false,
     react: {
