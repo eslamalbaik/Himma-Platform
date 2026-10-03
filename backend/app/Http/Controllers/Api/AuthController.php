@@ -3,18 +3,26 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsureApiUser;
+use App\Models\PlatformSetting;
 use App\Models\User;
 use App\Support\Ability;
 use App\Support\Audit;
-use App\Support\LoginRateLimiter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
     // Compared against when the email is unknown, so both paths take about the same time.
     private const DUMMY_HASH = '$2y$12$AQxTVhIiavTxkJuyDJi6Je2AnEAIUb.ijqRse4fLT3APYwsjGap9.';
+
+    // Failed sign-ins allowed per 15 minutes: per account, and a looser limit per IP
+    // so one office network is not locked out by a single user.
+    private const DECAY_SECONDS = 15 * 60;
+
+    private const MAX_FAILURES = ['email' => 5, 'ip' => 20];
 
     public function login(Request $request)
     {
@@ -23,49 +31,66 @@ class AuthController extends Controller
         $remember = $request->boolean('remember');
 
         if ($email === '' || $password === '' || strlen($password) > 200) {
-            return response()->json(['error' => ['code' => 'invalid_credentials']], 400);
+            return $this->error('invalid_credentials', 400);
         }
 
-        $limitKeys = ["ip:{$request->ip()}", "email:$email"];
+        $limits = ["login:email:$email" => self::MAX_FAILURES['email'], "login:ip:{$request->ip()}" => self::MAX_FAILURES['ip']];
 
-        if (LoginRateLimiter::isBlocked($limitKeys)) {
-            Audit::log($request, ['action' => 'auth.login_blocked', 'actor_email' => $email]);
+        foreach ($limits as $key => $max) {
+            if (RateLimiter::tooManyAttempts($key, $max)) {
+                Audit::log($request, ['action' => 'auth.login_blocked', 'actor_email' => $email]);
 
-            return response()->json(['error' => ['code' => 'too_many_attempts']], 429);
+                return $this->error('too_many_attempts', 429);
+            }
         }
 
         $user = User::where('email', $email)->first();
         $passwordOk = Hash::check($password, $user?->password ?? self::DUMMY_HASH);
 
-        if (!$user || !$passwordOk || $user->status !== 'active') {
-            LoginRateLimiter::recordFailure($limitKeys);
+        if (! $user || ! $passwordOk || $user->status !== 'active') {
+            foreach (array_keys($limits) as $key) {
+                RateLimiter::hit($key, self::DECAY_SECONDS);
+            }
             Audit::log($request, [
                 'action' => 'auth.login_failed',
                 'actor_email' => $email,
-                'metadata' => ['reason' => !$user ? 'unknown_email' : (!$passwordOk ? 'wrong_password' : 'disabled')],
+                'metadata' => ['reason' => ! $user ? 'unknown_email' : (! $passwordOk ? 'wrong_password' : 'disabled')],
             ]);
 
-            return response()->json(['error' => ['code' => 'invalid_credentials']], 401);
+            return $this->error('invalid_credentials', 401);
         }
 
         // Only the super admin dashboard exists so far; client (tenant) accounts get their own dashboard later.
-        if (!Ability::isPlatformRole($user->role)) {
+        if (! Ability::isPlatformRole($user->role)) {
             Audit::log($request, [
                 'action' => 'auth.login_denied',
                 'actor' => $user,
                 'metadata' => ['reason' => 'no_dashboard_for_role'],
             ]);
 
-            return response()->json(['error' => ['code' => 'dashboard_not_available']], 403);
+            return $this->error('dashboard_not_available', 403);
         }
 
-        LoginRateLimiter::clear($limitKeys);
-        $user->update(['last_login_at' => now()]);
+        if (PlatformSetting::current()->maintenance_mode && $user->role !== 'super_admin') {
+            Audit::log($request, [
+                'action' => 'auth.login_denied',
+                'actor' => $user,
+                'metadata' => ['reason' => 'maintenance_mode'],
+            ]);
+
+            return $this->error('maintenance_mode', 503);
+        }
+
+        foreach (array_keys($limits) as $key) {
+            RateLimiter::clear($key);
+        }
 
         $request->session()->regenerate();
         Auth::login($user, $remember);
+        $request->session()->put(EnsureApiUser::SESSION_TOKEN_VERSION, $user->token_version);
+        $user->update(['last_login_at' => now()]);
 
-        if (!$remember) {
+        if (! $remember) {
             // Session cookie ends with the browser session (Laravel defaults to persistent otherwise).
             config(['session.expire_on_close' => true]);
         }
@@ -86,18 +111,13 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json(['ok' => true]);
+        return $this->ok();
     }
 
     public function me(Request $request)
     {
-        $user = $request->user();
-        if (!$user) {
-            return response()->json(['error' => ['code' => 'unauthenticated']], 401);
-        }
-
         return response()
-            ->json(['user' => $user->toPublicArray()])
+            ->json(['user' => $request->user()->toPublicArray()])
             ->header('Cache-Control', 'no-store');
     }
 }

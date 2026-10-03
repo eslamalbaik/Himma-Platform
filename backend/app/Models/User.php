@@ -12,6 +12,8 @@ class User extends Authenticatable
 {
     use HasFactory;
 
+    public const STATUSES = ['active', 'disabled'];
+
     protected $fillable = [
         'cuid',
         'email',

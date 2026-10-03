@@ -21,9 +21,9 @@ class Invoice extends Model
     protected static function booted(): void
     {
         static::creating(function (self $invoice) {
-            if (!$invoice->number) {
+            if (! $invoice->number) {
                 $next = (static::max('id') ?? 0) + 1;
-                $invoice->number = 'INV-' . now()->format('Y') . '-' . str_pad((string) $next, 5, '0', STR_PAD_LEFT);
+                $invoice->number = 'INV-'.now()->format('Y').'-'.str_pad((string) $next, 5, '0', STR_PAD_LEFT);
             }
         });
     }

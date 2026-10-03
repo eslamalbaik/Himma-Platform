@@ -2,27 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\Ability;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
+// Sign-in and permission checks live in route middleware (`auth.api`, `ability:<action>,<subject>`),
+// input checks in App\Http\Requests\ApiRequest subclasses.
 abstract class Controller
 {
-    // Returns an error response when the signed-in user may not do $action on $subject, or null when allowed.
-    protected function deny(Request $request, string $action, string $subject): ?JsonResponse
-    {
-        $user = $request->user();
-        if (!$user) {
-            return $this->error('unauthenticated', 401);
-        }
-        if (!Ability::can($user->role, $action, $subject)) {
-            return $this->error('forbidden', 403);
-        }
-
-        return null;
-    }
-
     protected function error(string $code, int $status): JsonResponse
     {
         return response()->json(['error' => ['code' => $code]], $status);
@@ -33,7 +20,8 @@ abstract class Controller
         return min(max((int) $request->query('perPage', 25), 1), 100);
     }
 
-    protected function paginated(LengthAwarePaginator $page, callable $map, array $extra = []): JsonResponse
+    // List response: `{data, meta: {total, perPage, currentPage, lastPage, ...$meta}, ...$extra}`.
+    protected function paginated(LengthAwarePaginator $page, callable $map, array $meta = [], array $extra = []): JsonResponse
     {
         return response()->json([
             'data' => $page->getCollection()->map($map)->values(),
@@ -42,20 +30,17 @@ abstract class Controller
                 'perPage' => $page->perPage(),
                 'currentPage' => $page->currentPage(),
                 'lastPage' => $page->lastPage(),
-            ],
+            ] + $meta,
         ] + $extra)->header('Cache-Control', 'no-store');
     }
 
-    // Shared field checks; each returns true when the value is acceptable.
-    protected function validName(?string $value): bool
+    protected function item(array $data, int $status = 200): JsonResponse
     {
-        $value = trim((string) $value);
-
-        return $value !== '' && mb_strlen($value) <= 255;
+        return response()->json(['data' => $data], $status)->header('Cache-Control', 'no-store');
     }
 
-    protected function optionalDate($value): bool
+    protected function ok(): JsonResponse
     {
-        return $value === null || $value === '' || strtotime((string) $value) !== false;
+        return response()->json(['ok' => true]);
     }
 }

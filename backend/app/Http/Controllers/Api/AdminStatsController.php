@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Support\Ability;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -14,14 +13,6 @@ class AdminStatsController extends Controller
 {
     public function __invoke(Request $request)
     {
-        $user = $request->user();
-        if (!$user) {
-            return response()->json(['error' => ['code' => 'unauthenticated']], 401);
-        }
-        if (!Ability::can($user->role, 'read', 'dashboard')) {
-            return response()->json(['error' => ['code' => 'forbidden']], 403);
-        }
-
         $now = Carbon::now();
         $startOfMonth = $now->copy()->startOfMonth();
         $last24h = $now->copy()->subDay();

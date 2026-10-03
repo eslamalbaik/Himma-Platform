@@ -18,7 +18,7 @@ class EnsureSameOriginJson
         $origin = $request->header('origin');
 
         if ($origin) {
-            $expected = rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/');
+            $expected = rtrim(config('app.frontend_url'), '/');
             $originNormalized = rtrim($origin, '/');
 
             if ($originNormalized !== $expected) {
@@ -26,7 +26,7 @@ class EnsureSameOriginJson
             }
         }
 
-        if (!str_starts_with((string) $request->header('content-type'), 'application/json')) {
+        if (! str_starts_with((string) $request->header('content-type'), 'application/json')) {
             return response()->json(['error' => ['code' => 'bad_origin']], 403);
         }
 

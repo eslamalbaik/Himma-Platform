@@ -12,6 +12,8 @@ class TenantRequest extends Model
 {
     use HasFactory;
 
+    public const STATUSES = ['pending', 'approved', 'rejected'];
+
     protected $fillable = [
         'cuid',
         'name_ar',

@@ -13,6 +13,10 @@ class Tenant extends Model
 {
     use HasFactory;
 
+    public const TYPES = ['association', 'school', 'institution', 'government'];
+
+    public const STATUSES = ['trial', 'active', 'suspended', 'cancelled'];
+
     protected $fillable = [
         'cuid',
         'slug',

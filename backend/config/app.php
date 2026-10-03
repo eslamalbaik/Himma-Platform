@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // The Next.js frontend that proxies /api to this app. Writes must come from this origin.
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
