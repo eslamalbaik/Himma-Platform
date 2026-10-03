@@ -159,7 +159,7 @@ const VerticalNavGroup = props => {
           disablePadding
           className='nav-group'
           onClick={handleGroupClick}
-          sx={{ mt: 1, px: '0 !important', flexDirection: 'column' }}
+          sx={{ mt: parent ? 1 : 2.5, px: '0 !important', flexDirection: 'column' }}
         >
           <ListItemButton
             className={clsx({

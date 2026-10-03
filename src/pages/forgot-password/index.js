@@ -96,7 +96,7 @@ const ForgotPassword = () => {
           }}
         >
           <Box sx={{ width: '100%', maxWidth: 400 }}>
-            <img src='/images/logos/himma-logo.png' alt='Himma' style={{ height: 72 }} />
+            <img src='/images/logos/himma-logo.png' alt='Himma' style={{ height: 110 }} />
             <Box sx={{ my: 6 }}>
               <Typography sx={{ mb: 1.5, fontWeight: 500, fontSize: '1.625rem', lineHeight: 1.385 }}>
                 Forgot Password? 🔒

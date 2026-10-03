@@ -29,7 +29,7 @@ const AppBarContent = props => {
         userAppBarBranding(props)
       ) : (
         <LinkStyled href='/'>
-          <img src='/images/logos/himma-mark.png' alt='Himma' style={{ height: 34 }} />
+          <img src='/images/logos/himma-mark.png' alt='Himma' style={{ height: 44 }} />
         </LinkStyled>
       )}
       {userAppBarContent ? userAppBarContent(props) : null}

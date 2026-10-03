@@ -10,6 +10,16 @@ module.exports = {
   async redirects() {
     return [{ source: '/register', destination: '/login', permanent: false }]
   },
+
+  // The backend is now Laravel (see backend/). Proxied so the browser only ever talks to
+  // this origin — the httpOnly session cookie Laravel sets stays first-party, no CORS needed.
+  async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
+
+    return {
+      beforeFiles: [{ source: '/api/:path*', destination: `${backendUrl}/api/:path*` }]
+    }
+  },
   webpack: config => {
     config.resolve.alias = {
       ...config.resolve.alias,
