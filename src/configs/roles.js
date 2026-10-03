@@ -17,7 +17,8 @@ export const SUBJECTS = [
   'reports',
   'permissions',
   'settings',
-  'audit'
+  'audit',
+  'ai_agent'
 ]
 
 export const PLATFORM_ROLES = {

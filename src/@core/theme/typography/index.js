@@ -1,6 +1,7 @@
-const typography = {
+// Arabic (rtl) uses IBM Plex Sans Arabic; English (ltr) keeps the template's Public Sans.
+const typography = (direction = 'ltr') => ({
   fontFamily: [
-    'Public Sans',
+    ...(direction === 'rtl' ? ['"IBM Plex Sans Arabic"'] : ['Public Sans']),
     'sans-serif',
     '-apple-system',
     'BlinkMacSystemFont',
@@ -73,6 +74,6 @@ const typography = {
     fontSize: '0.75rem',
     letterSpacing: '1px'
   }
-}
+})
 
 export default typography

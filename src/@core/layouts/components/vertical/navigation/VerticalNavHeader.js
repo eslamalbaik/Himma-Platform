@@ -60,7 +60,7 @@ const VerticalNavHeader = props => {
       if (userNavMenuBranding) {
         return 0
       } else {
-        return (collapsedNavWidth - navigationBorderWidth - 34) / 8
+        return (collapsedNavWidth - navigationBorderWidth - 44) / 8
       }
     } else {
       return 6
@@ -78,7 +78,7 @@ const VerticalNavHeader = props => {
           <img
             src='/images/logos/himma-mark.png'
             alt={themeConfig.templateName}
-            style={{ height: 34, width: navCollapsed && !navHover ? 34 : 'auto', objectFit: 'contain' }}
+            style={{ height: 44, width: navCollapsed && !navHover ? 44 : 'auto', objectFit: 'contain' }}
           />
         </LinkStyled>
       )}

@@ -69,6 +69,7 @@ export const adminNavigation = [
     ]
   },
   { title: 'nav.messages', icon: 'tabler:messages', path: '/admin/messages', action: 'read', subject: 'messages' },
+  { title: 'nav.aiAgent', icon: 'tabler:robot', path: '/admin/ai-agent', action: 'read', subject: 'ai_agent' },
   {
     title: 'nav.reports',
     icon: 'tabler:chart-bar',

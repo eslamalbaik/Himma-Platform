@@ -35,7 +35,7 @@ const themeOptions = (settings, overrideMode) => {
         }
       },
       shadows: shadows(mode === 'semi-dark' ? overrideMode : mode),
-      typography
+      typography: typography(direction)
     },
     userThemeConfig
   )
