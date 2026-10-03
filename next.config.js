@@ -6,6 +6,21 @@ module.exports = {
   trailingSlash: true,
   reactStrictMode: false,
 
+  // Development only: keep compiled pages in memory for an hour instead of ~1 minute,
+  // so going back to a dashboard section does not compile it again.
+  onDemandEntries: {
+    maxInactiveAge: 60 * 60 * 1000,
+    pagesBufferLength: 100
+  },
+
+  // `npm run dev` uses Turbopack (much faster than webpack on this template); the same alias as below.
+  turbopack: {
+    resolveAlias: {
+      apexcharts: './node_modules/apexcharts-clevision',
+      'apexcharts/*': './node_modules/apexcharts-clevision/*'
+    }
+  },
+
   // Accounts are created by the platform team; there is no public sign-up.
   async redirects() {
     return [{ source: '/register', destination: '/login', permanent: false }]
