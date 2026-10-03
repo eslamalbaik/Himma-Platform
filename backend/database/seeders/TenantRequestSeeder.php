@@ -50,6 +50,6 @@ class TenantRequestSeeder extends Seeder
             );
         }
 
-        $this->command->info('Sample tenant requests ready: ' . count($requests));
+        $this->command->info('Sample tenant requests ready: '.count($requests));
     }
 }

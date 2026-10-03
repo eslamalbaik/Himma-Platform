@@ -24,7 +24,13 @@ class Tenant extends Model
         'name_en',
         'type',
         'status',
+        'billing_suspended_at',
     ];
+
+    protected function casts(): array
+    {
+        return ['billing_suspended_at' => 'datetime'];
+    }
 
     // Route-model binding and the public API use the cuid, never the numeric id.
     public function getRouteKeyName(): string
@@ -57,6 +63,16 @@ class Tenant extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
     }
 
     // Only these fields ever leave the server (mirrors User::toPublicArray()).

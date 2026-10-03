@@ -1,8 +1,13 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
+use App\Billing\BillingService;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Renewal invoices, overdue subscriptions and suspensions for unpaid clients (rules: Settings → Billing).
+Artisan::command('billing:run', function (BillingService $billing) {
+    $summary = $billing->runDaily();
+    $this->info("Invoices issued: {$summary['invoiced']}, past due: {$summary['pastDue']}, suspended: {$summary['suspended']}");
+})->purpose('Run the daily billing tasks');
+
+Schedule::command('billing:run')->dailyAt('03:00')->withoutOverlapping();

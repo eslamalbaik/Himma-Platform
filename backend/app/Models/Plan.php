@@ -10,6 +10,8 @@ class Plan extends Model
 {
     use HasCuid;
 
+    public const INTERVALS = ['monthly', 'yearly'];
+
     protected $fillable = ['name_ar', 'name_en', 'price', 'currency', 'interval', 'features_ar', 'features_en', 'is_active'];
 
     protected function casts(): array

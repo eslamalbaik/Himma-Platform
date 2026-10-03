@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
         $email = env('SEED_ADMIN_EMAIL');
         $password = env('SEED_ADMIN_PASSWORD');
 
-        if (!$email || !$password) {
+        if (! $email || ! $password) {
             $this->command->warn('SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD are not set in .env — skipping.');
 
             return;

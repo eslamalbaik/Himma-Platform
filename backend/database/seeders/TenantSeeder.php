@@ -31,6 +31,6 @@ class TenantSeeder extends Seeder
             );
         }
 
-        $this->command->info('Sample tenants ready: ' . count($tenants));
+        $this->command->info('Sample tenants ready: '.count($tenants));
     }
 }
