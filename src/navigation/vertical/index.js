@@ -69,6 +69,7 @@ export const adminNavigation = [
     ]
   },
   { title: 'nav.messages', icon: 'tabler:messages', path: '/admin/messages', action: 'read', subject: 'messages' },
+  { title: 'nav.aiAgent', icon: 'tabler:robot', path: '/admin/ai-agent', action: 'read', subject: 'ai_agent' },
   {
     title: 'nav.reports',
     icon: 'tabler:chart-bar',
@@ -103,13 +104,13 @@ export const adminNavigation = [
     ]
   },
   {
+    // No subject of its own: the group shows when any entry inside is allowed
+    // (finance sees only Billing, which needs `manage billing`).
     title: 'nav.settings',
     icon: 'tabler:settings',
-    action: 'read',
-    subject: 'settings',
     children: [
       { title: 'nav.settings.general', path: '/admin/settings/general', action: 'read', subject: 'settings' },
-      { title: 'nav.settings.billing', path: '/admin/settings/billing', action: 'read', subject: 'settings' },
+      { title: 'nav.settings.billing', path: '/admin/settings/billing', action: 'manage', subject: 'billing' },
       { title: 'nav.settings.publishing', path: '/admin/settings/publishing', action: 'read', subject: 'settings' },
       { title: 'nav.settings.ai', path: '/admin/settings/ai', action: 'read', subject: 'settings' },
       { title: 'nav.settings.youtube', path: '/admin/settings/youtube', action: 'read', subject: 'settings' },

@@ -6,6 +6,8 @@ import CardContent from '@mui/material/CardContent'
 
 // ** Third Party Imports
 import axios from 'axios'
+// Demo data must be mocked here too: `next build` runs getStatic* without _app.js
+import 'src/@fake-db'
 
 // ** Demo Imports
 import HelpCenterLandingHeader from 'src/views/pages/help-center/landing/HelpCenterLandingHeader'
