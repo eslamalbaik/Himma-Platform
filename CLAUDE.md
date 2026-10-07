@@ -35,6 +35,12 @@ Himma ships in two languages. Any code you add or change must work in both:
   columns snake_case, public ids are the `cuid` column (`HasCuid`), never the numeric id.
 - **Audit:** every sign-in and every change to data writes a row with `Audit::log()` (`backend/app/Support/Audit.php`).
   The `audit_logs` table is append-only: never update or delete rows.
+- **Billing alerts:** `App\Billing\BillingNotifier` emails the client (one email in both languages, texts
+  `email.*` in `public/locales`, read on the server by `App\Support\Locales`) and alerts staff who `manage,billing`
+  in the dashboard bell (Laravel database notifications, `GET /api/admin/notifications`). Each alert is sent once
+  (`billing_notices`, unique on kind + subject). Recipients: the client's `billing_email`, else its active users.
+  Which alerts and the reminder days: Settings → Notifications (`Setting` group `notifications`). Mail goes to the
+  log until `MAIL_*` is set in `backend/.env`.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
 - Sidebar: `src/navigation/vertical/index.js`. Each item has a translation key and the CASL subject that
@@ -44,7 +50,12 @@ Himma ships in two languages. Any code you add or change must work in both:
 
 ## Commands
 Frontend (repo root):
-- `npm run dev` — Next.js on http://localhost:3000
+- `npm run dev` — Next.js on http://localhost:3000. On the owner's machine (project on a hard disk) dev mode
+  compiles each page on first visit: ~60 s to start and ~50 s for the first `/admin` page.
+- `npm run fast` — builds once into `.next-prod` (~4–5 min, lint skipped) then serves it with `next start`;
+  every page opens in ~0.01 s. Use this to *use* the dashboard; rerun it after code changes. `next.config.js`
+  picks the folder by phase, so the dev server's `.next` cache is never overwritten. Demo pages that call the
+  mocked API in `getStatic*` import `src/@fake-db` themselves, because `next build` runs them without `_app.js`.
 - `npx prettier --write <files>` — format. `npm run lint` / `npm run build` currently fail on a Babel version
   mismatch inherited from the template (see SETUP.md).
 

@@ -37,6 +37,8 @@ import { fetchData, deleteUser } from 'src/store/apps/user'
 
 // ** Third Party Components
 import axios from 'axios'
+// Demo data must be mocked here too: `next build` runs getStatic* without _app.js
+import 'src/@fake-db'
 
 // ** Custom Table Components Imports
 import TableHeader from 'src/views/apps/user/list/TableHeader'

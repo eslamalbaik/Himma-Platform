@@ -18,7 +18,7 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 const TYPES = ['association', 'school', 'institution', 'government']
 const STATUSES = ['trial', 'active', 'suspended', 'cancelled']
 
-const emptyValues = { nameAr: '', nameEn: '', type: 'association', status: 'trial' }
+const emptyValues = { nameAr: '', nameEn: '', type: 'association', status: 'trial', billingEmail: '' }
 
 // Add/edit form for a tenant. `tenant` is null when adding, or the record being edited.
 const TenantFormDialog = ({ open, tenant, submitting, errorCode, onSubmit, onClose }) => {
@@ -29,7 +29,10 @@ const TenantFormDialog = ({ open, tenant, submitting, errorCode, onSubmit, onClo
     handleSubmit,
     reset,
     formState: { errors }
-  } = useForm({ defaultValues: emptyValues, values: tenant ? { ...emptyValues, ...tenant } : emptyValues })
+  } = useForm({
+    defaultValues: emptyValues,
+    values: tenant ? { ...emptyValues, ...tenant, billingEmail: tenant.billingEmail || '' } : emptyValues
+  })
 
   const handleClose = () => {
     reset(emptyValues)
@@ -104,6 +107,22 @@ const TenantFormDialog = ({ open, tenant, submitting, errorCode, onSubmit, onClo
                       </MenuItem>
                     ))}
                   </CustomTextField>
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Controller
+                name='billingEmail'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    {...field}
+                    fullWidth
+                    type='email'
+                    label={t('admin.tenants.form.billingEmail')}
+                    helperText={t('admin.tenants.form.billingEmailHelp')}
+                    inputProps={{ dir: 'ltr' }}
+                  />
                 )}
               />
             </Grid>

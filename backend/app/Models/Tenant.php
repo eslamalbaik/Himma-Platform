@@ -24,6 +24,7 @@ class Tenant extends Model
         'name_en',
         'type',
         'status',
+        'billing_email',
         'billing_suspended_at',
     ];
 
@@ -85,6 +86,7 @@ class Tenant extends Model
             'nameEn' => $this->name_en,
             'type' => $this->type,
             'status' => $this->status,
+            'billingEmail' => $this->billing_email,
             'usersCount' => $this->users_count ?? null,
             'createdAt' => optional($this->created_at)->toIso8601String(),
         ];

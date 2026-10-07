@@ -11,6 +11,16 @@ use App\Http\Controllers\Api\Billing\PaymentResultController;
 use App\Http\Controllers\Api\Billing\PlanController;
 use App\Http\Controllers\Api\Billing\SubscriptionController;
 use App\Http\Controllers\Api\Billing\WebhookController;
+use App\Http\Controllers\Api\Content\ArticleController;
+use App\Http\Controllers\Api\Content\CommentController;
+use App\Http\Controllers\Api\Content\ContentReportController;
+use App\Http\Controllers\Api\Events\EventController;
+use App\Http\Controllers\Api\Events\RegistrationController;
+use App\Http\Controllers\Api\Magazine\IssueController;
+use App\Http\Controllers\Api\Magazine\SectionController;
+use App\Http\Controllers\Api\Magazine\TagController;
+use App\Http\Controllers\Api\MyNotificationController;
+use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
@@ -41,8 +51,14 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
     Route::get('audit-logs', [AuditLogController::class, 'index'])->middleware('ability:read,audit');
     Route::get('users', [UserController::class, 'index'])->middleware('ability:read,users');
     Route::get('settings', [PlatformSettingController::class, 'show'])->middleware('ability:read,settings');
+    Route::get('settings/notifications', [NotificationSettingsController::class, 'show'])->middleware('ability:read,settings');
+
+    // The signed-in user's own alerts: no ability needed, a user only sees and marks their own.
+    Route::get('notifications', [MyNotificationController::class, 'index']);
+    Route::post('notifications/read', [MyNotificationController::class, 'markRead'])->middleware('same_origin');
 
     Route::middleware('same_origin')->group(function () {
+        Route::put('settings/notifications', [NotificationSettingsController::class, 'update'])->middleware('ability:update,settings');
         Route::post('tenants', [TenantController::class, 'store'])->middleware('ability:create,tenants');
         Route::put('tenants/{tenant}', [TenantController::class, 'update'])->middleware('ability:update,tenants');
         Route::delete('tenants/{tenant}', [TenantController::class, 'destroy'])->middleware('ability:delete,tenants');
@@ -93,6 +109,74 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
             Route::post('gateways/{gateway}/register-webhook', [GatewayController::class, 'registerWebhook'])->middleware('ability:manage,billing');
 
             Route::put('settings', [BillingSettingsController::class, 'update'])->middleware('ability:manage,billing');
+        });
+    });
+
+    // Editing needs `update,content`; editorial decisions (approve, reject, publish, withdraw, restore)
+    // need `manage,content` (GOV-02).
+    Route::prefix('content')->group(function () {
+        Route::get('articles', [ArticleController::class, 'index'])->middleware('ability:read,content');
+        Route::get('articles/{article}', [ArticleController::class, 'show'])->middleware('ability:read,content');
+        Route::get('reports', [ContentReportController::class, 'index'])->middleware('ability:read,content');
+        Route::get('comments', [CommentController::class, 'index'])->middleware('ability:read,content');
+
+        Route::middleware('same_origin')->group(function () {
+            Route::post('articles', [ArticleController::class, 'store'])->middleware('ability:create,content');
+            Route::put('articles/{article}', [ArticleController::class, 'update'])->middleware('ability:update,content');
+            Route::delete('articles/{article}', [ArticleController::class, 'destroy'])->middleware('ability:delete,content');
+            Route::post('articles/{article}/submit', [ArticleController::class, 'submit'])->middleware('ability:update,content');
+            Route::post('articles/{article}/compliance', [ArticleController::class, 'compliance'])->middleware('ability:update,content');
+            Route::post('articles/{article}/approve', [ArticleController::class, 'approve'])->middleware('ability:manage,content');
+            Route::post('articles/{article}/reject', [ArticleController::class, 'reject'])->middleware('ability:manage,content');
+            Route::post('articles/{article}/publish', [ArticleController::class, 'publish'])->middleware('ability:manage,content');
+            Route::post('articles/{article}/withdraw', [ArticleController::class, 'withdraw'])->middleware('ability:manage,content');
+            Route::post('articles/{article}/restore', [ArticleController::class, 'restore'])->middleware('ability:manage,content');
+
+            Route::post('reports', [ContentReportController::class, 'store'])->middleware('ability:create,content');
+            Route::post('reports/{report}/decide', [ContentReportController::class, 'decide'])->middleware('ability:update,content');
+
+            Route::post('comments/{comment}/moderate', [CommentController::class, 'moderate'])->middleware('ability:update,content');
+            Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->middleware('ability:delete,content');
+        });
+    });
+
+    // Announcing (schedule) and cancelling need `manage,events`; running the broadcast (start, end) and
+    // handling registrations need `update,events`, which the broadcast moderator has.
+    Route::get('events', [EventController::class, 'index'])->middleware('ability:read,events');
+    Route::get('events/{event}', [EventController::class, 'show'])->middleware('ability:read,events');
+    Route::get('events/{event}/registrations', [RegistrationController::class, 'index'])->middleware('ability:read,events');
+
+    Route::middleware('same_origin')->group(function () {
+        Route::post('events', [EventController::class, 'store'])->middleware('ability:create,events');
+        Route::put('events/{event}', [EventController::class, 'update'])->middleware('ability:update,events');
+        Route::delete('events/{event}', [EventController::class, 'destroy'])->middleware('ability:delete,events');
+        Route::post('events/{event}/schedule', [EventController::class, 'schedule'])->middleware('ability:manage,events');
+        Route::post('events/{event}/cancel', [EventController::class, 'cancel'])->middleware('ability:manage,events');
+        Route::post('events/{event}/start', [EventController::class, 'start'])->middleware('ability:update,events');
+        Route::post('events/{event}/end', [EventController::class, 'end'])->middleware('ability:update,events');
+
+        Route::post('events/{event}/registrations', [RegistrationController::class, 'store'])->middleware('ability:update,events');
+        Route::post('events/{event}/registrations/{registration}/status', [RegistrationController::class, 'updateStatus'])->middleware('ability:update,events');
+    });
+
+    Route::prefix('magazine')->group(function () {
+        Route::get('sections', [SectionController::class, 'index'])->middleware('ability:read,magazine');
+        Route::get('tags', [TagController::class, 'index'])->middleware('ability:read,magazine');
+        Route::get('issues', [IssueController::class, 'index'])->middleware('ability:read,magazine');
+
+        Route::middleware('same_origin')->group(function () {
+            Route::post('sections', [SectionController::class, 'store'])->middleware('ability:create,magazine');
+            Route::put('sections/{section}', [SectionController::class, 'update'])->middleware('ability:update,magazine');
+            Route::delete('sections/{section}', [SectionController::class, 'destroy'])->middleware('ability:delete,magazine');
+
+            Route::post('tags', [TagController::class, 'store'])->middleware('ability:create,magazine');
+            Route::put('tags/{tag}', [TagController::class, 'update'])->middleware('ability:update,magazine');
+            Route::delete('tags/{tag}', [TagController::class, 'destroy'])->middleware('ability:delete,magazine');
+
+            Route::post('issues', [IssueController::class, 'store'])->middleware('ability:create,magazine');
+            Route::put('issues/{issue}', [IssueController::class, 'update'])->middleware('ability:update,magazine');
+            Route::post('issues/{issue}/publish', [IssueController::class, 'publish'])->middleware('ability:update,magazine');
+            Route::delete('issues/{issue}', [IssueController::class, 'destroy'])->middleware('ability:delete,magazine');
         });
     });
 });

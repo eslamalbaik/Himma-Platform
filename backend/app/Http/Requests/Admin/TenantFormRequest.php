@@ -15,6 +15,7 @@ class TenantFormRequest extends ApiRequest
             'nameEn' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::in(Tenant::TYPES)],
             'status' => ['required', Rule::in(Tenant::STATUSES)],
+            'billingEmail' => ['nullable', 'email', 'max:255'],
         ];
     }
 
@@ -25,6 +26,7 @@ class TenantFormRequest extends ApiRequest
             'nameEn' => 'invalid_tenant_name',
             'type' => 'invalid_tenant_type',
             'status' => 'invalid_tenant_status',
+            'billingEmail' => 'invalid_billing_email',
         ];
     }
 
@@ -35,6 +37,7 @@ class TenantFormRequest extends ApiRequest
             'name_en' => $this->input('nameEn'),
             'type' => $this->input('type'),
             'status' => $this->input('status'),
+            'billing_email' => $this->input('billingEmail') ?: null,
         ];
     }
 }

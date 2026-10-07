@@ -55,7 +55,7 @@ class BillingService
     ): Invoice {
         $settings = self::settings();
 
-        return Invoice::create([
+        $invoice = Invoice::create([
             'tenant_id' => $tenant->id,
             'subscription_id' => $subscription?->id,
             'period_start' => $periodStart,
@@ -66,6 +66,15 @@ class BillingService
             'issued_at' => today(),
             'due_at' => $dueAt ?? today()->addDays($settings['invoiceDueDays']),
         ]);
+
+        $this->notifier()->invoiceIssued($invoice);
+
+        return $invoice;
+    }
+
+    public function notifier(): BillingNotifier
+    {
+        return app(BillingNotifier::class);
     }
 
     // Invoice for the period that starts when the subscription's paid time ends.
@@ -98,10 +107,10 @@ class BillingService
     // and lifts a suspension that billing itself put on the client.
     public function settleInvoice(Invoice $invoice): void
     {
-        DB::transaction(function () use ($invoice) {
+        $settled = DB::transaction(function () use ($invoice) {
             $invoice = Invoice::whereKey($invoice->id)->lockForUpdate()->first();
             if ($invoice->status !== 'unpaid' || $invoice->balance() > 0) {
-                return;
+                return false;
             }
 
             $invoice->update(['status' => 'paid', 'paid_at' => now()]);
@@ -128,7 +137,13 @@ class BillingService
                 'entity_id' => $invoice->cuid,
                 'metadata' => ['number' => $invoice->number, 'amount' => (float) $invoice->amount],
             ]);
+
+            return true;
         });
+
+        if ($settled) {
+            $this->notifier()->paymentReceived($invoice->fresh());
+        }
     }
 
     // ---- Payments ----
@@ -218,6 +233,8 @@ class BillingService
 
         if ($status === 'succeeded') {
             $this->settleInvoice($payment->invoice);
+        } elseif ($status === 'failed') {
+            $this->notifier()->paymentFailed($payment->fresh());
         }
     }
 
@@ -280,7 +297,20 @@ class BillingService
     {
         $today ??= today();
         $settings = self::settings();
-        $summary = ['invoiced' => 0, 'pastDue' => 0, 'suspended' => 0];
+        $summary = ['invoiced' => 0, 'pastDue' => 0, 'suspended' => 0, 'reminders' => 0, 'overdueNotices' => 0];
+        $notifier = $this->notifier();
+
+        // 0. Renewal reminders N days before the paid period (or trial) ends (Settings → Notifications).
+        foreach (array_unique(BillingNotifier::settings()['reminderDays']) as $days) {
+            Subscription::with('plan', 'tenant')
+                ->whereIn('status', ['trial', 'active', 'past_due'])
+                ->whereDate('ends_at', $today->copy()->addDays((int) $days))
+                ->each(function (Subscription $subscription) use ($notifier, $days, &$summary) {
+                    if ($notifier->renewalReminder($subscription, (int) $days)) {
+                        $summary['reminders']++;
+                    }
+                });
+        }
 
         // 1. Renewal invoices shortly before the paid period (or trial) ends.
         Subscription::with('plan', 'tenant')
@@ -309,6 +339,14 @@ class BillingService
                 Audit::log(request(), ['action' => 'subscription.past_due', 'entity_type' => 'subscription', 'entity_id' => $subscription->cuid]);
             });
 
+        // 2b. One "overdue" alert per unpaid invoice past its due date.
+        Invoice::with('tenant')->where('status', 'unpaid')->whereDate('due_at', '<', $today)
+            ->each(function (Invoice $invoice) use ($notifier, &$summary) {
+                if ($notifier->invoiceOverdue($invoice)) {
+                    $summary['overdueNotices']++;
+                }
+            });
+
         // 3. Still unpaid after the grace period → suspend the client.
         $graceCutoff = $today->copy()->subDays($settings['graceDays']);
         Tenant::whereIn('status', ['trial', 'active'])
@@ -316,6 +354,7 @@ class BillingService
             ->each(function (Tenant $tenant) use (&$summary) {
                 $tenant->update(['status' => 'suspended', 'billing_suspended_at' => now()]);
                 $summary['suspended']++;
+                $this->notifier()->tenantSuspended($tenant);
                 Audit::log(request(), ['action' => 'tenant.billing_suspended', 'entity_type' => 'tenant', 'entity_id' => $tenant->cuid]);
             });
 

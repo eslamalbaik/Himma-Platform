@@ -1,5 +1,5 @@
 // ** React Imports
-import { useEffect, useCallback, useRef, useState } from 'react'
+import { useContext, useEffect, useCallback, useRef, useState } from 'react'
 
 // ** Next Imports
 import Link from 'next/link'
@@ -20,7 +20,11 @@ import ListItemButton from '@mui/material/ListItemButton'
 import InputAdornment from '@mui/material/InputAdornment'
 
 // ** Third Party Imports
-import axios from 'axios'
+import { useTranslation } from 'react-i18next'
+
+// ** Himma navigation and permissions
+import { adminNavigation } from 'src/navigation/vertical'
+import { AbilityContext } from 'src/layouts/components/acl/Can'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -339,20 +343,30 @@ const AutocompleteComponent = ({ hidden, settings }) => {
   const wrapper = useRef(null)
   const fullScreenDialog = useMediaQuery(theme.breakpoints.down('sm'))
 
-  // Get all data using API
+  const { t } = useTranslation()
+  const ability = useContext(AbilityContext)
+
+  // Searches the sidebar sections the user may open (no request; the template's mock API is gone).
   useEffect(() => {
-    axios
-      .get('/app-bar/search', {
-        params: { q: searchValue }
-      })
-      .then(response => {
-        if (response.data && response.data.length) {
-          setOptions(response.data)
-        } else {
-          setOptions([])
+    const query = searchValue.trim().toLowerCase()
+    if (!query) {
+      setOptions([])
+
+      return
+    }
+    const results = []
+    adminNavigation.forEach(section => {
+      const entries = section.children ? section.children.map(child => ({ ...child, icon: section.icon })) : [section]
+      entries.forEach(entry => {
+        if (!entry.path || !ability?.can(entry.action, entry.subject)) return
+        const title = t(entry.title)
+        if (title.toLowerCase().includes(query) || t(section.title).toLowerCase().includes(query)) {
+          results.push({ id: entry.path, url: entry.path, icon: entry.icon, title, category: t(section.title) })
         }
       })
-  }, [searchValue])
+    })
+    setOptions(results)
+  }, [searchValue, ability, t])
   useEffect(() => {
     if (!openDialog) {
       setSearchValue('')
@@ -431,7 +445,7 @@ const AutocompleteComponent = ({ hidden, settings }) => {
                 onChange={(event, obj) => handleOptionClick(obj)}
                 noOptionsText={<NoResult value={searchValue} setOpenDialog={setOpenDialog} />}
                 getOptionLabel={option => option.title || ''}
-                groupBy={option => (searchValue.length ? categoryTitle[option.category] : '')}
+                groupBy={option => (searchValue.length ? categoryTitle[option.category] || option.category : '')}
                 sx={{
                   '& + .MuiAutocomplete-popper': {
                     ...(searchValue.length

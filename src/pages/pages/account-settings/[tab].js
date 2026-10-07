@@ -1,5 +1,7 @@
 // ** Third Party Imports
 import axios from 'axios'
+// Demo data must be mocked here too: `next build` runs getStatic* without _app.js
+import 'src/@fake-db'
 
 // ** Demo Components Imports
 import AccountSettings from 'src/views/pages/account-settings/AccountSettings'

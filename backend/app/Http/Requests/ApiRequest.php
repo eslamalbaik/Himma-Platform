@@ -28,7 +28,10 @@ abstract class ApiRequest extends FormRequest
 
         foreach ($validator->failed() as $field => $rules) {
             $rule = Str::snake(array_key_first($rules));
-            $code = $codes["$field.$rule"] ?? $codes[$field] ?? 'invalid_input';
+            // Array items ('audiences.2') fall back to their wildcard ('audiences.*').
+            $wildcard = preg_replace('/\.\d+(?=\.|$)/', '.*', $field);
+            $code = $codes["$field.$rule"] ?? $codes[$field]
+                ?? $codes["$wildcard.$rule"] ?? $codes[$wildcard] ?? 'invalid_input';
             break;
         }
 

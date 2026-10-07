@@ -33,7 +33,7 @@ const ConfirmDialog = ({
             {t(`errors.${errorCode}`)}
           </Alert>
         ) : null}
-        <DialogContentText>{message}</DialogContentText>
+        <DialogContentText component='div'>{message}</DialogContentText>
       </DialogContent>
       <DialogActions sx={{ px: 6, pb: 6 }}>
         <Button variant='tonal' color='secondary' onClick={onClose} disabled={submitting}>

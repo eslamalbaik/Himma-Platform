@@ -1,10 +1,7 @@
 // ** Next Imports
 import Head from 'next/head'
+import dynamic from 'next/dynamic'
 import { Router } from 'next/router'
-
-// ** Store Imports
-import { store } from 'src/store'
-import { Provider } from 'react-redux'
 
 // ** Loader Import
 import NProgress from 'nprogress'
@@ -16,9 +13,6 @@ import { CacheProvider } from '@emotion/react'
 import 'src/configs/i18n'
 import { defaultACLObj } from 'src/configs/acl'
 import themeConfig from 'src/configs/themeConfig'
-
-// ** Fake-DB Import
-import 'src/@fake-db'
 
 // ** Third Party Import
 import { Toaster } from 'react-hot-toast'
@@ -43,20 +37,30 @@ import ReactHotToast from 'src/@core/styles/libs/react-hot-toast'
 // ** Utils Imports
 import { createEmotionCache } from 'src/@core/utils/create-emotion-cache'
 
-// ** Prismjs Styles
-import 'prismjs'
+// ** Prismjs Styles (the Prism code itself loads with the demo pages)
 import 'prismjs/themes/prism-tomorrow.css'
-import 'prismjs/components/prism-jsx'
-import 'prismjs/components/prism-tsx'
 
 // ** React Perfect Scrollbar Style
 import 'react-perfect-scrollbar/dist/css/styles.css'
-import 'src/iconify-bundle/icons-bundle-react'
+
+// ** Icons used by Himma (regenerate with `npm run build:icons:himma`)
+import 'src/iconify-bundle/icons-himma'
 
 // ** Global css styles
 import '../../styles/globals.css'
 
 const clientSideEmotionCache = createEmotionCache()
+
+// The Vuexy reference pages need Redux, the mocked API and every icon. They are loaded only
+// when one of those pages is opened, so Himma pages stay small.
+const DemoProvider = dynamic(() => import('src/@core/demo/DemoProvider'), { ssr: false, loading: () => <Spinner /> })
+
+const HIMMA_ROUTES = ['/admin', '/billing', '/login', '/forgot-password', '/register', '/401', '/404', '/500']
+
+const isDemoRoute = pathname =>
+  pathname !== '/' &&
+  pathname !== '/_error' &&
+  !HIMMA_ROUTES.some(route => pathname === route || pathname.startsWith(`${route}/`))
 
 // ** Pace Loader
 if (themeConfig.routingLoader) {
@@ -83,7 +87,7 @@ const Guard = ({ children, authGuard, guestGuard }) => {
 
 // ** Configure JSS & ClassName
 const App = props => {
-  const { Component, emotionCache = clientSideEmotionCache, pageProps } = props
+  const { Component, emotionCache = clientSideEmotionCache, pageProps, router } = props
 
   // Variables
   const contentHeightFixed = Component.contentHeightFixed ?? false
@@ -95,41 +99,41 @@ const App = props => {
   const guestGuard = Component.guestGuard ?? false
   const aclAbilities = Component.acl ?? defaultACLObj
 
-  return (
-    <Provider store={store}>
-      <CacheProvider value={emotionCache}>
-        <Head>
-          <title>{themeConfig.templateName}</title>
-          <meta
-            name='description'
-            content={`${themeConfig.templateName} – Material Design React Admin Dashboard Template – is the most developer friendly & highly customizable Admin Dashboard Template based on MUI v5.`}
-          />
-          <meta name='keywords' content='Material Design, MUI, Admin Template, React Admin Template' />
-          <meta name='viewport' content='initial-scale=1, width=device-width' />
-        </Head>
+  const page = getLayout(<Component {...pageProps} />)
 
-        <AuthProvider>
-          <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
-            <SettingsConsumer>
-              {({ settings }) => {
-                return (
-                  <ThemeComponent settings={settings}>
-                    <Guard authGuard={authGuard} guestGuard={guestGuard}>
-                      <AclGuard aclAbilities={aclAbilities} guestGuard={guestGuard} authGuard={authGuard}>
-                        {getLayout(<Component {...pageProps} />)}
-                      </AclGuard>
-                    </Guard>
-                    <ReactHotToast>
-                      <Toaster position={settings.toastPosition} toastOptions={{ className: 'react-hot-toast' }} />
-                    </ReactHotToast>
-                  </ThemeComponent>
-                )
-              }}
-            </SettingsConsumer>
-          </SettingsProvider>
-        </AuthProvider>
-      </CacheProvider>
-    </Provider>
+  return (
+    <CacheProvider value={emotionCache}>
+      <Head>
+        <title>{themeConfig.templateName}</title>
+        <meta
+          name='description'
+          content={`${themeConfig.templateName} – Material Design React Admin Dashboard Template – is the most developer friendly & highly customizable Admin Dashboard Template based on MUI v5.`}
+        />
+        <meta name='keywords' content='Material Design, MUI, Admin Template, React Admin Template' />
+        <meta name='viewport' content='initial-scale=1, width=device-width' />
+      </Head>
+
+      <AuthProvider>
+        <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
+          <SettingsConsumer>
+            {({ settings }) => {
+              return (
+                <ThemeComponent settings={settings}>
+                  <Guard authGuard={authGuard} guestGuard={guestGuard}>
+                    <AclGuard aclAbilities={aclAbilities} guestGuard={guestGuard} authGuard={authGuard}>
+                      {isDemoRoute(router.pathname) ? <DemoProvider>{page}</DemoProvider> : page}
+                    </AclGuard>
+                  </Guard>
+                  <ReactHotToast>
+                    <Toaster position={settings.toastPosition} toastOptions={{ className: 'react-hot-toast' }} />
+                  </ReactHotToast>
+                </ThemeComponent>
+              )
+            }}
+          </SettingsConsumer>
+        </SettingsProvider>
+      </AuthProvider>
+    </CacheProvider>
   )
 }
 

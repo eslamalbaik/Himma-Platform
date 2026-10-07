@@ -3,6 +3,8 @@ import Grid from '@mui/material/Grid'
 
 // ** Third Party Components
 import axios from 'axios'
+// Demo data must be mocked here too: `next build` runs getStatic* without _app.js
+import 'src/@fake-db'
 
 // ** Demo Components Imports
 import DialogAddCard from 'src/views/pages/dialog-examples/DialogAddCard'

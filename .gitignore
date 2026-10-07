@@ -39,3 +39,4 @@ yarn-error.log*
 # local database
 /prisma/*.db
 /prisma/*.db-journal
+/.next-prod/
