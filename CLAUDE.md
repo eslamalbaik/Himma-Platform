@@ -48,6 +48,11 @@ Himma ships in two languages. Any code you add or change must work in both:
   Only the two participants can open a conversation (404 for anyone else, staff included). Moderators see a message
   only when it is reported (`message_reports`), and opening the reports list is audited. Audit rows for sent
   messages never hold the text. Blocks (`user_blocks`) stop messages both ways.
+- **Publishing rules (Settings → Publishing):** `App\Support\PublishingRules` (`Setting` group `publishing`): fields required
+  before review, four-eyes approval (the last text editor cannot approve), stricter checks for sponsored content, and
+  the article form's defaults. Enforced in `ArticleController` submit/approve; off by default.
+- **Policies (§7):** `policies` + append-only `policy_versions`, edited in Settings → Policies, shown on the public
+  `/policies` page (`GET /api/policies`, no sign-in). Titles: `policies.kind.*`. `PolicySeeder` writes starter texts.
 - **Reports (`/admin/reports/*`):** `App\Http\Controllers\Api\ReportController`, period `?from&to` (`ReportPeriodRequest`,
   default last 12 months, at most 36). Each report needs `read reports` plus read access to its section (revenue →
   billing, ...); the sidebar entry says so with `requires`, checked by `CanViewNavLink`. The AI report waits for the AI agent.

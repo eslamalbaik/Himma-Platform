@@ -26,10 +26,13 @@ use App\Http\Controllers\Api\Messages\MessageReportController;
 use App\Http\Controllers\Api\MyNotificationController;
 use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
+use App\Http\Controllers\Api\PolicyController;
+use App\Http\Controllers\Api\PublishingSettingsController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
 use App\Http\Controllers\Api\UserController;
+use App\Models\Policy;
 use Illuminate\Support\Facades\Route;
 
 // Every route that reads or changes data declares its permission with `ability:<action>,<subject>`
@@ -46,6 +49,9 @@ Route::prefix('billing')->group(function () {
     Route::post('webhook/{driver}', [WebhookController::class, 'handle'])->middleware('throttle:120,1');
     Route::get('payments/{cuid}/result', [PaymentResultController::class, 'show'])->middleware('throttle:30,1');
 });
+
+// The public policies page (REQUIREMENTS.md §7).
+Route::get('policies', [PolicyController::class, 'published'])->middleware('throttle:60,1');
 
 Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(function () {
     Route::get('stats', AdminStatsController::class)->middleware('ability:read,dashboard');
@@ -66,6 +72,10 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
     Route::get('users', [UserController::class, 'index'])->middleware('ability:read,users');
     Route::get('settings', [PlatformSettingController::class, 'show'])->middleware('ability:read,settings');
     Route::get('settings/notifications', [NotificationSettingsController::class, 'show'])->middleware('ability:read,settings');
+    // The article form shows the publishing rules, so whoever reads content reads them.
+    Route::get('settings/publishing', [PublishingSettingsController::class, 'show'])->middleware('ability:read,content');
+    Route::get('policies', [PolicyController::class, 'index'])->middleware('ability:read,settings');
+    Route::get('policies/{kind}/versions', [PolicyController::class, 'versions'])->middleware('ability:read,settings')->whereIn('kind', Policy::KINDS);
 
     // The signed-in user's own alerts: no ability needed, a user only sees and marks their own.
     Route::get('notifications', [MyNotificationController::class, 'index']);
@@ -73,6 +83,8 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
 
     Route::middleware('same_origin')->group(function () {
         Route::put('settings/notifications', [NotificationSettingsController::class, 'update'])->middleware('ability:update,settings');
+        Route::put('settings/publishing', [PublishingSettingsController::class, 'update'])->middleware('ability:update,settings');
+        Route::put('policies/{kind}', [PolicyController::class, 'update'])->middleware('ability:update,settings')->whereIn('kind', Policy::KINDS);
         Route::post('tenants', [TenantController::class, 'store'])->middleware('ability:create,tenants');
         Route::put('tenants/{tenant}', [TenantController::class, 'update'])->middleware('ability:update,tenants');
         Route::delete('tenants/{tenant}', [TenantController::class, 'destroy'])->middleware('ability:delete,tenants');

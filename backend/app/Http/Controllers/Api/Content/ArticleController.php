@@ -10,6 +10,7 @@ use App\Models\Article;
 use App\Models\ArticleVersion;
 use App\Models\MagazineSection;
 use App\Support\Audit;
+use App\Support\PublishingRules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -148,8 +149,13 @@ class ArticleController extends Controller
         return $this->item($article->fresh(['section', 'issue', 'tenant', 'tags'])->toPublicArray());
     }
 
+    // Fields the publishing settings require must be filled before review (Settings → Publishing).
     public function submit(Request $request, Article $article)
     {
+        if ($article->canDo('submit') && $missing = PublishingRules::missingField($article)) {
+            return $this->error($missing, 409);
+        }
+
         return $this->transition($request, $article, 'submit');
     }
 
@@ -162,6 +168,9 @@ class ArticleController extends Controller
             }
             if ($article->compliance_result === 'non_compliant') {
                 return $this->error('compliance_failed', 409);
+            }
+            if ($blocked = PublishingRules::approvalBlock($article, $request->user())) {
+                return $this->error($blocked, 409);
             }
         }
 

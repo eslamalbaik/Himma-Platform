@@ -1,5 +1,5 @@
 // ** React Imports
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 
 // ** MUI Imports
 import Card from '@mui/material/Card'
@@ -90,6 +90,15 @@ const ArticlesList = ({ titleKey, subtitleKey, fixedStatus = null }) => {
   const sections = useApiOptions('/api/admin/magazine/sections', { enabled: canReadMagazine })
   const issues = useApiOptions('/api/admin/magazine/issues', { enabled: canReadMagazine })
   const tags = useApiOptions('/api/admin/magazine/tags', { enabled: canReadMagazine })
+
+  // Publishing rules from Settings → Publishing, for the article form.
+  const [rules, setRules] = useState(null)
+  useEffect(() => {
+    axios
+      .get('/api/admin/settings/publishing')
+      .then(response => setRules(response.data.data))
+      .catch(() => setRules(null))
+  }, [])
 
   const [menu, setMenu] = useState({ anchor: null, article: null })
   const [form, setForm] = useState({ open: false, article: null })
@@ -351,6 +360,7 @@ const ArticlesList = ({ titleKey, subtitleKey, fixedStatus = null }) => {
         sections={sections}
         issues={issues}
         tags={tags}
+        rules={rules}
         submitting={submitting}
         errorCode={form.open ? error : null}
         onSubmit={save}

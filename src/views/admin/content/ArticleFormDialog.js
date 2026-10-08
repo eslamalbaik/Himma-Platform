@@ -63,17 +63,39 @@ const toForm = article => ({
   rightsNote: article.rightsNote || ''
 })
 
-// Create or edit an article. `article` (with its body) is null when adding.
-const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, errorCode, onSubmit, onClose }) => {
+// Create or edit an article. `article` (with its body) is null when adding. `rules` are the publishing
+// settings (GET /api/admin/settings/publishing): defaults for a new article and the fields review needs.
+const ArticleFormDialog = ({
+  open,
+  article,
+  sections,
+  issues,
+  tags,
+  rules,
+  submitting,
+  errorCode,
+  onSubmit,
+  onClose
+}) => {
   const { t, i18n } = useTranslation()
   const lang = pickLang(i18n)
+
+  const newArticle = {
+    ...emptyArticle,
+    classification: rules?.defaultClassification || emptyArticle.classification,
+    language: rules?.defaultLanguage || emptyArticle.language
+  }
+
+  // Shown under the fields the publishing settings require before submitting for review.
+  const reviewHint = field =>
+    rules?.requiredOnSubmit?.includes(field) ? t('admin.content.requiredForReview') : undefined
 
   const {
     control,
     handleSubmit,
     watch,
     formState: { errors }
-  } = useForm({ values: article ? toForm(article) : emptyArticle })
+  } = useForm({ values: article ? toForm(article) : newArticle })
 
   const classification = watch('classification')
   const needsTenant = TENANT_CLASSIFICATIONS.includes(classification)
@@ -143,7 +165,13 @@ const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, 
                 name='sectionId'
                 control={control}
                 render={({ field }) => (
-                  <CustomTextField {...field} select fullWidth label={t('admin.content.field.section')}>
+                  <CustomTextField
+                    {...field}
+                    select
+                    fullWidth
+                    label={t('admin.content.field.section')}
+                    helperText={reviewHint('section')}
+                  >
                     <MenuItem value=''>{t('admin.content.none')}</MenuItem>
                     {sections.map(section => (
                       <MenuItem key={section.id} value={section.id}>
@@ -222,7 +250,12 @@ const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, 
                     options={AUDIENCES}
                     getOptionLabel={value => t(`admin.content.audience.${value}`)}
                     renderInput={params => (
-                      <CustomTextField {...params} fullWidth label={t('admin.content.field.audiences')} />
+                      <CustomTextField
+                        {...params}
+                        fullWidth
+                        label={t('admin.content.field.audiences')}
+                        helperText={reviewHint('audiences')}
+                      />
                     )}
                   />
                 )}
@@ -249,17 +282,17 @@ const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, 
             </Grid>
 
             <Grid item xs={12}>
-              {text('summary', { multiline: true, minRows: 2 })}
+              {text('summary', { multiline: true, minRows: 2, helperText: reviewHint('summary') })}
             </Grid>
             <Grid item xs={12}>
               {text('body', { required: true, multiline: true, minRows: 10 })}
             </Grid>
 
             <Grid item xs={12} md={6}>
-              {text('source')}
+              {text('source', { helperText: reviewHint('source') })}
             </Grid>
             <Grid item xs={12} md={6}>
-              {text('rightsNote')}
+              {text('rightsNote', { helperText: reviewHint('rightsNote') })}
             </Grid>
             <Grid item xs={12}>
               <Controller
