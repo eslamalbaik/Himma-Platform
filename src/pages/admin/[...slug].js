@@ -25,7 +25,11 @@ const AdminSectionPage = () => {
 
   if (!router.isReady) return null
   if (!match) return <AdminMessage messageKey='errors.not_found' icon='tabler:map-off' />
-  if (!ability?.can(match.item.action, match.item.subject))
+  const { requires } = match.item
+  if (
+    !ability?.can(match.item.action, match.item.subject) ||
+    (requires && !ability.can(requires.action, requires.subject))
+  )
     return <AdminMessage messageKey='errors.forbidden' icon='tabler:lock' />
 
   return <SectionPlaceholder title={match.item.title} sectionTitle={match.section.title} icon={match.section.icon} />

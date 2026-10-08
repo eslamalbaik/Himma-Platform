@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\Messages\MessageReportController;
 use App\Http\Controllers\Api\MyNotificationController;
 use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
 use App\Http\Controllers\Api\UserController;
@@ -49,6 +50,14 @@ Route::prefix('billing')->group(function () {
 Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(function () {
     Route::get('stats', AdminStatsController::class)->middleware('ability:read,dashboard');
     Route::get('stats/business', BusinessStatsController::class)->middleware('ability:read,dashboard');
+
+    // Reports: `read reports` and read access to the section each one summarises.
+    Route::prefix('reports')->middleware('ability:read,reports')->group(function () {
+        Route::get('revenue', [ReportController::class, 'revenue'])->middleware('ability:read,billing');
+        Route::get('tenants', [ReportController::class, 'tenants'])->middleware('ability:read,tenants');
+        Route::get('content', [ReportController::class, 'content'])->middleware('ability:read,content');
+        Route::get('events', [ReportController::class, 'events'])->middleware('ability:read,events');
+    });
 
     Route::get('tenants', [TenantController::class, 'index'])->middleware('ability:read,tenants');
     Route::get('tenants/{tenant}', [TenantController::class, 'show'])->middleware('ability:read,tenants');

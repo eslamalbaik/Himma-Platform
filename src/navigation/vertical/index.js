@@ -1,5 +1,6 @@
 // Super admin sidebar (sitemap in /mnt/project-files/himma/super-admin-dashboard.md §3).
 // `title` is a translation key (public/locales/{ar,en}.json); `subject` matches src/configs/roles.js.
+// `requires` is a second permission an entry needs (each report also needs read access to its section).
 
 export const adminNavigation = [
   { title: 'nav.overview', icon: 'tabler:smart-home', path: '/admin', action: 'read', subject: 'dashboard' },
@@ -76,11 +77,41 @@ export const adminNavigation = [
     action: 'read',
     subject: 'reports',
     children: [
-      { title: 'nav.reports.revenue', path: '/admin/reports/revenue', action: 'read', subject: 'reports' },
-      { title: 'nav.reports.tenants', path: '/admin/reports/tenants', action: 'read', subject: 'reports' },
-      { title: 'nav.reports.content', path: '/admin/reports/content', action: 'read', subject: 'reports' },
-      { title: 'nav.reports.events', path: '/admin/reports/events', action: 'read', subject: 'reports' },
-      { title: 'nav.reports.ai', path: '/admin/reports/ai', action: 'read', subject: 'reports' }
+      {
+        title: 'nav.reports.revenue',
+        path: '/admin/reports/revenue',
+        action: 'read',
+        subject: 'reports',
+        requires: { action: 'read', subject: 'billing' }
+      },
+      {
+        title: 'nav.reports.tenants',
+        path: '/admin/reports/tenants',
+        action: 'read',
+        subject: 'reports',
+        requires: { action: 'read', subject: 'tenants' }
+      },
+      {
+        title: 'nav.reports.content',
+        path: '/admin/reports/content',
+        action: 'read',
+        subject: 'reports',
+        requires: { action: 'read', subject: 'content' }
+      },
+      {
+        title: 'nav.reports.events',
+        path: '/admin/reports/events',
+        action: 'read',
+        subject: 'reports',
+        requires: { action: 'read', subject: 'events' }
+      },
+      {
+        title: 'nav.reports.ai',
+        path: '/admin/reports/ai',
+        action: 'read',
+        subject: 'reports',
+        requires: { action: 'read', subject: 'ai_agent' }
+      }
     ]
   },
   {

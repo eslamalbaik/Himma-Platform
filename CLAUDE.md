@@ -48,6 +48,9 @@ Himma ships in two languages. Any code you add or change must work in both:
   Only the two participants can open a conversation (404 for anyone else, staff included). Moderators see a message
   only when it is reported (`message_reports`), and opening the reports list is audited. Audit rows for sent
   messages never hold the text. Blocks (`user_blocks`) stop messages both ways.
+- **Reports (`/admin/reports/*`):** `App\Http\Controllers\Api\ReportController`, period `?from&to` (`ReportPeriodRequest`,
+  default last 12 months, at most 36). Each report needs `read reports` plus read access to its section (revenue →
+  billing, ...); the sidebar entry says so with `requires`, checked by `CanViewNavLink`. The AI report waits for the AI agent.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
 - Sidebar: `src/navigation/vertical/index.js`. Each item has a translation key and the CASL subject that

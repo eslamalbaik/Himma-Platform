@@ -16,7 +16,7 @@ const CanViewNavGroup = props => {
       if (i.children) {
         return checkForVisibleChild(i.children)
       } else {
-        return ability?.can(i.action, i.subject)
+        return ability?.can(i.action, i.subject) && (!i.requires || ability.can(i.requires.action, i.requires.subject))
       }
     })
   }

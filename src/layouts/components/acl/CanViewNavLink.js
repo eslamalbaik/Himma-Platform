@@ -13,7 +13,12 @@ const CanViewNavLink = props => {
   if (navLink && navLink.auth === false) {
     return <>{children}</>
   } else {
-    return ability && ability.can(navLink?.action, navLink?.subject) ? <>{children}</> : null
+    const allowed =
+      ability &&
+      ability.can(navLink?.action, navLink?.subject) &&
+      (!navLink?.requires || ability.can(navLink.requires.action, navLink.requires.subject))
+
+    return allowed ? <>{children}</> : null
   }
 }
 
