@@ -27,7 +27,7 @@ class ArticleController extends Controller
 
     public function index(Request $request)
     {
-        $query = Article::with(['section', 'issue', 'tenant', 'tags', 'reviewer'])
+        $query = Article::with(['section', 'issue', 'tenant', 'writer', 'tags', 'reviewer'])
             ->withCount(['reports as open_reports_count' => fn ($q) => $q->where('status', 'open')]);
 
         if ($search = trim((string) $request->query('search', ''))) {
@@ -62,7 +62,7 @@ class ArticleController extends Controller
 
     public function show(Article $article)
     {
-        $article->load(['section', 'issue', 'tenant', 'tags', 'reviewer', 'versions.editor']);
+        $article->load(['section', 'issue', 'tenant', 'writer', 'tags', 'reviewer', 'versions.editor']);
 
         return $this->item($article->toPublicArray(true) + [
             'versions' => $article->versions->map(fn (ArticleVersion $version) => $version->toPublicArray())->values(),
@@ -71,6 +71,10 @@ class ArticleController extends Controller
 
     public function store(ArticleFormRequest $request)
     {
+        if ($request->writer()?->status === 'suspended') {
+            return $this->error('writer_suspended', 409);
+        }
+
         $article = DB::transaction(function () use ($request) {
             $article = Article::create($request->fields() + ['status' => 'draft', 'author_id' => null]);
             $article->tags()->sync($request->tagIds());
@@ -81,7 +85,7 @@ class ArticleController extends Controller
 
         $this->audit($request, 'created', $article, ['classification' => $article->classification]);
 
-        return $this->item($article->fresh(['section', 'issue', 'tenant', 'tags'])->toPublicArray(true), 201);
+        return $this->item($article->fresh(['section', 'issue', 'tenant', 'writer', 'tags'])->toPublicArray(true), 201);
     }
 
     // Any edit to the title or body is saved as a new version (PUB-06).
@@ -89,6 +93,11 @@ class ArticleController extends Controller
     {
         if (! $article->isEditable()) {
             return $this->error('article_locked', 409);
+        }
+        // A suspended writer keeps the articles they have but cannot be given new ones.
+        $writer = $request->writer();
+        if ($writer && $writer->id !== $article->writer_id && $writer->status === 'suspended') {
+            return $this->error('writer_suspended', 409);
         }
 
         DB::transaction(function () use ($request, $article) {
@@ -110,7 +119,7 @@ class ArticleController extends Controller
 
         $this->audit($request, 'updated', $article, ['status' => $article->status]);
 
-        return $this->item($article->fresh(['section', 'issue', 'tenant', 'tags'])->toPublicArray(true));
+        return $this->item($article->fresh(['section', 'issue', 'tenant', 'writer', 'tags'])->toPublicArray(true));
     }
 
     // Only drafts and rejected articles can be deleted; anything that went further stays on record.
@@ -146,13 +155,13 @@ class ArticleController extends Controller
         $article->update($updates);
         $this->audit($request, 'compliance_checked', $article, ['result' => $result, 'checks' => $checks]);
 
-        return $this->item($article->fresh(['section', 'issue', 'tenant', 'tags'])->toPublicArray());
+        return $this->item($article->fresh(['section', 'issue', 'tenant', 'writer', 'tags'])->toPublicArray());
     }
 
     // Fields the publishing settings require must be filled before review (Settings → Publishing).
     public function submit(Request $request, Article $article)
     {
-        if ($article->canDo('submit') && $missing = PublishingRules::missingField($article)) {
+        if ($article->canDo('submit') && $missing = PublishingRules::submissionBlock($article)) {
             return $this->error($missing, 409);
         }
 
@@ -227,7 +236,7 @@ class ArticleController extends Controller
             'reason' => $extra['review_note'] ?? $extra['withdrawal_reason'] ?? null,
         ]));
 
-        return $this->item($article->fresh(['section', 'issue', 'tenant', 'tags', 'reviewer'])->toPublicArray());
+        return $this->item($article->fresh(['section', 'issue', 'tenant', 'writer', 'tags', 'reviewer'])->toPublicArray());
     }
 
     private function audit(Request $request, string $what, Article $article, array $metadata = []): void

@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\Writers\WriterController;
 use App\Models\Policy;
 use Illuminate\Support\Facades\Route;
 
@@ -70,6 +71,8 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
     Route::get('tenant-requests', [TenantRequestController::class, 'index'])->middleware('ability:read,tenants');
     Route::get('audit-logs', [AuditLogController::class, 'index'])->middleware('ability:read,audit');
     Route::get('users', [UserController::class, 'index'])->middleware('ability:read,users');
+    Route::get('writers', [WriterController::class, 'index'])->middleware('ability:read,writers');
+    Route::get('writers/{writer}', [WriterController::class, 'show'])->middleware('ability:read,writers');
     Route::get('settings', [PlatformSettingController::class, 'show'])->middleware('ability:read,settings');
     Route::get('settings/notifications', [NotificationSettingsController::class, 'show'])->middleware('ability:read,settings');
     // The article form shows the publishing rules, so whoever reads content reads them.
@@ -96,6 +99,12 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
         Route::post('users', [UserController::class, 'store'])->middleware('ability:create,users');
         Route::put('users/{cuid}', [UserController::class, 'update'])->middleware('ability:update,users');
         Route::delete('users/{cuid}', [UserController::class, 'destroy'])->middleware('ability:delete,users');
+
+        Route::post('writers', [WriterController::class, 'store'])->middleware('ability:create,writers');
+        Route::put('writers/{writer}', [WriterController::class, 'update'])->middleware('ability:update,writers');
+        Route::post('writers/{writer}/verify', [WriterController::class, 'verify'])->middleware('ability:update,writers');
+        Route::post('writers/{writer}/suspend', [WriterController::class, 'suspend'])->middleware('ability:update,writers');
+        Route::delete('writers/{writer}', [WriterController::class, 'destroy'])->middleware('ability:delete,writers');
 
         Route::put('settings', [PlatformSettingController::class, 'update'])->middleware('ability:update,settings');
     });

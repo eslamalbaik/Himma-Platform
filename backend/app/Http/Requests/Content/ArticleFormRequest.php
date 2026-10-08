@@ -8,6 +8,7 @@ use App\Models\Issue;
 use App\Models\MagazineSection;
 use App\Models\Tag;
 use App\Models\Tenant;
+use App\Models\Writer;
 use Illuminate\Validation\Rule;
 
 class ArticleFormRequest extends ApiRequest
@@ -27,7 +28,9 @@ class ArticleFormRequest extends ApiRequest
             ],
             'sectionId' => ['nullable', 'string', Rule::exists('magazine_sections', 'cuid')],
             'issueId' => ['nullable', 'string', Rule::exists('issues', 'cuid')],
-            'authorName' => ['required', 'string', 'max:255'],
+            // A registered writer (PUB-02); the byline defaults to their name in the article's language.
+            'writerId' => ['nullable', 'string', Rule::exists('writers', 'cuid')],
+            'authorName' => ['required_without:writerId', 'nullable', 'string', 'max:255'],
             'audiences' => ['nullable', 'array'],
             'audiences.*' => [Rule::in(Article::AUDIENCES)],
             'isSponsored' => ['sometimes', 'boolean'],
@@ -50,6 +53,7 @@ class ArticleFormRequest extends ApiRequest
             'tenantId' => 'invalid_tenant',
             'sectionId' => 'invalid_section',
             'issueId' => 'invalid_issue',
+            'writerId' => 'invalid_writer',
             'authorName' => 'invalid_author',
             'audiences' => 'invalid_audience',
             'audiences.*' => 'invalid_audience',
@@ -75,12 +79,20 @@ class ArticleFormRequest extends ApiRequest
                 : null,
             'section_id' => $this->filled('sectionId') ? MagazineSection::where('cuid', $this->input('sectionId'))->value('id') : null,
             'issue_id' => $this->filled('issueId') ? Issue::where('cuid', $this->input('issueId'))->value('id') : null,
-            'author_name' => trim($this->input('authorName')),
+            'writer_id' => $this->writer()?->id,
+            'author_name' => filled($this->input('authorName'))
+                ? trim($this->input('authorName'))
+                : $this->writer()?->nameIn($this->input('language')),
             'audiences' => array_values(array_unique($this->input('audiences', []))),
             'is_sponsored' => $this->boolean('isSponsored'),
             'source' => $this->input('source'),
             'rights_note' => $this->input('rightsNote'),
         ];
+    }
+
+    public function writer(): ?Writer
+    {
+        return once(fn () => $this->filled('writerId') ? Writer::where('cuid', $this->input('writerId'))->first() : null);
     }
 
     public function tagIds(): array

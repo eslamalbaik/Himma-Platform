@@ -16,6 +16,7 @@ class PublishingSettingsFormRequest extends ApiRequest
             'requiredOnSubmit.*' => ['string', Rule::in(PublishingRules::REQUIRABLE_FIELDS), 'distinct'],
             'separateApprover' => ['required', 'boolean'],
             'sponsoredChecks' => ['required', 'boolean'],
+            'verifiedWriterRequired' => ['required', 'boolean'],
             'defaultClassification' => ['required', Rule::in(Article::CLASSIFICATIONS)],
             'defaultLanguage' => ['required', Rule::in(Article::LANGUAGES)],
         ];
@@ -28,6 +29,7 @@ class PublishingSettingsFormRequest extends ApiRequest
             'requiredOnSubmit.*' => 'invalid_required_fields',
             'separateApprover' => 'invalid_publishing_setting',
             'sponsoredChecks' => 'invalid_publishing_setting',
+            'verifiedWriterRequired' => 'invalid_publishing_setting',
             'defaultClassification' => 'invalid_classification',
             'defaultLanguage' => 'invalid_language',
         ];
@@ -40,6 +42,7 @@ class PublishingSettingsFormRequest extends ApiRequest
             'requiredOnSubmit' => array_values(array_intersect(PublishingRules::REQUIRABLE_FIELDS, $this->input('requiredOnSubmit', []))),
             'separateApprover' => $this->boolean('separateApprover'),
             'sponsoredChecks' => $this->boolean('sponsoredChecks'),
+            'verifiedWriterRequired' => $this->boolean('verifiedWriterRequired'),
             'defaultClassification' => $this->input('defaultClassification'),
             'defaultLanguage' => $this->input('defaultLanguage'),
         ];

@@ -15,7 +15,7 @@ class PublishingAndPoliciesTest extends TestCase
     private function rules(array $override = []): array
     {
         return $override + [
-            'requiredOnSubmit' => [], 'separateApprover' => false, 'sponsoredChecks' => false,
+            'requiredOnSubmit' => [], 'separateApprover' => false, 'sponsoredChecks' => false, 'verifiedWriterRequired' => false,
             'defaultClassification' => 'public', 'defaultLanguage' => 'ar',
         ];
     }

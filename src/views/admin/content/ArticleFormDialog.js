@@ -35,6 +35,7 @@ const emptyArticle = {
   issueId: '',
   classification: 'public',
   tenant: null,
+  writer: null,
   authorName: '',
   audiences: [],
   tagIds: [],
@@ -55,6 +56,14 @@ const toForm = article => ({
   tenant: article.tenantId
     ? { id: article.tenantId, nameAr: article.tenantNameAr, nameEn: article.tenantNameEn }
     : null,
+  writer: article.writerId
+    ? {
+        id: article.writerId,
+        nameAr: article.writerNameAr,
+        nameEn: article.writerNameEn,
+        status: article.writerStatus
+      }
+    : null,
   authorName: article.authorName,
   audiences: article.audiences || [],
   tagIds: (article.tags || []).map(tag => tag.id),
@@ -65,12 +74,14 @@ const toForm = article => ({
 
 // Create or edit an article. `article` (with its body) is null when adding. `rules` are the publishing
 // settings (GET /api/admin/settings/publishing): defaults for a new article and the fields review needs.
+// `writers` are the registered writers who can be given articles (pending or verified).
 const ArticleFormDialog = ({
   open,
   article,
   sections,
   issues,
   tags,
+  writers = [],
   rules,
   submitting,
   errorCode,
@@ -94,16 +105,31 @@ const ArticleFormDialog = ({
     control,
     handleSubmit,
     watch,
+    getValues,
+    setValue,
     formState: { errors }
   } = useForm({ values: article ? toForm(article) : newArticle })
+
+  const writerName = (writer, language) => (writer ? (language === 'en' ? writer.nameEn : writer.nameAr) : '')
+
+  // Picking a writer fills the byline in the article's language, unless the byline was typed by hand.
+  const pickWriter = (field, writer) => {
+    const language = getValues('language')
+    const byline = getValues('authorName')
+    if (!byline || byline === writerName(field.value, language)) {
+      setValue('authorName', writerName(writer, language))
+    }
+    field.onChange(writer)
+  }
 
   const classification = watch('classification')
   const needsTenant = TENANT_CLASSIFICATIONS.includes(classification)
 
   const submit = data => {
-    const { tenant, ...rest } = data
+    const { tenant, writer, ...rest } = data
     onSubmit({
       ...rest,
+      writerId: writer?.id || null,
       sectionId: rest.sectionId || null,
       issueId: rest.issueId || null,
       tenantId: needsTenant ? tenant?.id || null : null
@@ -158,9 +184,57 @@ const ArticleFormDialog = ({
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              {text('authorName', { required: true })}
+              <Controller
+                name='writer'
+                control={control}
+                render={({ field }) => (
+                  <Autocomplete
+                    value={field.value}
+                    onChange={(e, value) => pickWriter(field, value)}
+                    options={writers}
+                    isOptionEqualToValue={(option, selected) => option.id === selected.id}
+                    getOptionLabel={writer => localName(writer, 'name', lang)}
+                    renderOption={(props, writer) => (
+                      <li {...props} key={writer.id}>
+                        {localName(writer, 'name', lang)}
+                        {writer.status !== 'verified' ? ` · ${t(`admin.writers.status.${writer.status}`)}` : ''}
+                      </li>
+                    )}
+                    renderInput={params => (
+                      <CustomTextField
+                        {...params}
+                        fullWidth
+                        label={t('admin.content.field.writer')}
+                        helperText={
+                          rules?.verifiedWriterRequired
+                            ? t('admin.content.verifiedWriterHint')
+                            : field.value && field.value.status !== 'verified'
+                            ? t(`admin.writers.status.${field.value.status}`)
+                            : undefined
+                        }
+                      />
+                    )}
+                  />
+                )}
+              />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={6}>
+              <Controller
+                name='authorName'
+                control={control}
+                rules={{ validate: (value, values) => Boolean(value?.trim() || values.writer) }}
+                render={({ field }) => (
+                  <CustomTextField
+                    {...field}
+                    fullWidth
+                    label={t('admin.content.field.authorName')}
+                    helperText={t('admin.content.authorNameHint')}
+                    error={Boolean(errors.authorName)}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
               <Controller
                 name='sectionId'
                 control={control}
@@ -182,7 +256,7 @@ const ArticleFormDialog = ({
                 )}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={6}>
               <Controller
                 name='issueId'
                 control={control}

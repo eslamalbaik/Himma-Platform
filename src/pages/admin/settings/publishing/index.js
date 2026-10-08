@@ -132,6 +132,7 @@ const PublishingSettingsPage = () => {
             <Grid item xs={12}>
               <Typography variant='h6'>{t('admin.settings.publishing.approvalRules')}</Typography>
             </Grid>
+            {rule('verifiedWriterRequired')}
             {rule('separateApprover')}
             {rule('sponsoredChecks')}
 

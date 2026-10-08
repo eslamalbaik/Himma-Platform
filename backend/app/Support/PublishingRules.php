@@ -20,6 +20,8 @@ class PublishingRules
         'separateApprover' => false,
         // Sponsored content needs the advertising and approvals compliance items passed (ADS-02, ADS-03).
         'sponsoredChecks' => false,
+        // Articles need a verified writer from the writers registry (PUB-02).
+        'verifiedWriterRequired' => false,
         'defaultClassification' => 'public',
         'defaultLanguage' => 'ar',
     ];
@@ -49,13 +51,27 @@ class PublishingRules
         return null;
     }
 
+    // Why the article cannot go to review yet, as an error code, or null.
+    public static function submissionBlock(Article $article): ?string
+    {
+        if ($missing = self::missingField($article)) {
+            return $missing;
+        }
+
+        if (self::settings()['verifiedWriterRequired'] && $article->writer?->status !== 'verified') {
+            return 'writer_not_verified';
+        }
+
+        return null;
+    }
+
     // Why $approver may not approve the article under these rules, as an error code, or null.
     public static function approvalBlock(Article $article, User $approver): ?string
     {
         $settings = self::settings();
 
-        if ($missing = self::missingField($article)) {
-            return $missing;
+        if ($blocked = self::submissionBlock($article)) {
+            return $blocked;
         }
 
         if ($settings['separateApprover'] && $article->versions()->value('edited_by') === $approver->id) {

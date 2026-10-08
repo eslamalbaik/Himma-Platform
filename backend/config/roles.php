@@ -19,6 +19,7 @@ return [
         'settings',
         'audit',
         'ai_agent',
+        'writers',
     ],
 
     'platform_roles' => [
@@ -56,6 +57,8 @@ return [
                 ['action' => 'manage', 'subject' => 'content'],
                 ['action' => 'manage', 'subject' => 'events'],
                 ['action' => 'manage', 'subject' => 'magazine'],
+                // Editors register and verify writers (PUB-02) without managing staff accounts.
+                ['action' => 'manage', 'subject' => 'writers'],
                 ['action' => 'read', 'subject' => 'users'],
                 ['action' => 'manage', 'subject' => 'messages'],
                 ['action' => 'read', 'subject' => 'reports'],
@@ -76,6 +79,7 @@ return [
                 ['action' => 'read', 'subject' => 'billing'],
                 ['action' => 'read', 'subject' => 'content'],
                 ['action' => ['read', 'update'], 'subject' => 'users'],
+                ['action' => 'read', 'subject' => 'writers'],
                 ['action' => 'manage', 'subject' => 'messages'],
             ],
         ],
@@ -84,7 +88,7 @@ return [
             'rules' => [
                 ['action' => 'read', 'subject' => [
                     'dashboard', 'tenants', 'billing', 'content', 'events', 'magazine',
-                    'users', 'messages', 'reports', 'permissions', 'audit', 'ai_agent',
+                    'users', 'messages', 'reports', 'permissions', 'audit', 'ai_agent', 'writers',
                 ]],
                 ['action' => 'manage', 'subject' => 'audit'],
             ],

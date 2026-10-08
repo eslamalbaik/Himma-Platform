@@ -18,7 +18,8 @@ export const SUBJECTS = [
   'permissions',
   'settings',
   'audit',
-  'ai_agent'
+  'ai_agent',
+  'writers'
 ]
 
 export const PLATFORM_ROLES = {
@@ -54,6 +55,8 @@ export const PLATFORM_ROLES = {
       { action: 'manage', subject: 'content' },
       { action: 'manage', subject: 'events' },
       { action: 'manage', subject: 'magazine' },
+      // Editors register and verify writers (PUB-02) without managing staff accounts.
+      { action: 'manage', subject: 'writers' },
       { action: 'read', subject: 'users' },
       { action: 'manage', subject: 'messages' },
       { action: 'read', subject: 'reports' }
@@ -74,6 +77,7 @@ export const PLATFORM_ROLES = {
       { action: 'read', subject: 'billing' },
       { action: 'read', subject: 'content' },
       { action: ['read', 'update'], subject: 'users' },
+      { action: 'read', subject: 'writers' },
       { action: 'manage', subject: 'messages' }
     ]
   },

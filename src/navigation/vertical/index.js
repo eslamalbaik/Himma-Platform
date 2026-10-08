@@ -66,7 +66,7 @@ export const adminNavigation = [
     subject: 'users',
     children: [
       { title: 'nav.users.all', path: '/admin/users', action: 'read', subject: 'users' },
-      { title: 'nav.users.writers', path: '/admin/users/writers', action: 'read', subject: 'users' }
+      { title: 'nav.users.writers', path: '/admin/users/writers', action: 'read', subject: 'writers' }
     ]
   },
   { title: 'nav.messages', icon: 'tabler:messages', path: '/admin/messages', action: 'read', subject: 'messages' },

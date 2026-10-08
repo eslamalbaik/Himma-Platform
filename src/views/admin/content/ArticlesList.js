@@ -91,6 +91,12 @@ const ArticlesList = ({ titleKey, subtitleKey, fixedStatus = null }) => {
   const issues = useApiOptions('/api/admin/magazine/issues', { enabled: canReadMagazine })
   const tags = useApiOptions('/api/admin/magazine/tags', { enabled: canReadMagazine })
 
+  // Writers who can be given articles (suspended ones cannot, PUB-02).
+  const writers = useApiOptions('/api/admin/writers', {
+    enabled: Boolean(ability?.can('read', 'writers')),
+    params: { status: 'pending,verified' }
+  })
+
   // Publishing rules from Settings → Publishing, for the article form.
   const [rules, setRules] = useState(null)
   useEffect(() => {
@@ -360,6 +366,7 @@ const ArticlesList = ({ titleKey, subtitleKey, fixedStatus = null }) => {
         sections={sections}
         issues={issues}
         tags={tags}
+        writers={writers}
         rules={rules}
         submitting={submitting}
         errorCode={form.open ? error : null}

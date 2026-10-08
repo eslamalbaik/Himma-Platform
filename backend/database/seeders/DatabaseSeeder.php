@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
         $this->call(MessagingSeeder::class);
         $this->call(ContentSeeder::class);
         $this->call(EventSeeder::class);
+        $this->call(WriterSeeder::class);
         $this->call(PolicySeeder::class);
     }
 }

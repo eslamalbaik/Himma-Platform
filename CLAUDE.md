@@ -53,6 +53,10 @@ Himma ships in two languages. Any code you add or change must work in both:
   the article form's defaults. Enforced in `ArticleController` submit/approve; off by default.
 - **Policies (§7):** `policies` + append-only `policy_versions`, edited in Settings → Policies, shown on the public
   `/policies` page (`GET /api/policies`, no sign-in). Titles: `policies.kind.*`. `PolicySeeder` writes starter texts.
+- **Writers registry (`/admin/users/writers`, PUB-02):** `writers` table, subject `writers` (editors manage, support and
+  auditors read). Pending → verified (method + note recorded) → suspended. Articles link with `writer_id`; the byline
+  (`author_name`) defaults to the writer's name. Suspended writers get no new articles; writers with articles are never
+  deleted. Settings → Publishing can require a verified writer before review.
 - **Reports (`/admin/reports/*`):** `App\Http\Controllers\Api\ReportController`, period `?from&to` (`ReportPeriodRequest`,
   default last 12 months, at most 36). Each report needs `read reports` plus read access to its section (revenue →
   billing, ...); the sidebar entry says so with `requires`, checked by `CanViewNavLink`. The AI report waits for the AI agent.
