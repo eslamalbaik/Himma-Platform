@@ -19,6 +19,9 @@ use App\Http\Controllers\Api\Events\RegistrationController;
 use App\Http\Controllers\Api\Magazine\IssueController;
 use App\Http\Controllers\Api\Magazine\SectionController;
 use App\Http\Controllers\Api\Magazine\TagController;
+use App\Http\Controllers\Api\Messages\BlockController;
+use App\Http\Controllers\Api\Messages\ConversationController;
+use App\Http\Controllers\Api\Messages\MessageReportController;
 use App\Http\Controllers\Api\MyNotificationController;
 use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
@@ -158,6 +161,24 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
 
         Route::post('events/{event}/registrations', [RegistrationController::class, 'store'])->middleware('ability:update,events');
         Route::post('events/{event}/registrations/{registration}/status', [RegistrationController::class, 'updateStatus'])->middleware('ability:update,events');
+    });
+
+    // Private messages: a user only ever sees their own conversations (participant check in the
+    // controller). Reported messages are the one place moderators read private text (MSG-06).
+    Route::prefix('messages')->group(function () {
+        Route::get('conversations', [ConversationController::class, 'index'])->middleware('ability:read,messages');
+        Route::get('conversations/{conversation}', [ConversationController::class, 'show'])->middleware('ability:read,messages');
+        Route::get('recipients', [ConversationController::class, 'recipients'])->middleware('ability:create,messages');
+        Route::get('reports', [MessageReportController::class, 'index'])->middleware('ability:read,messages');
+
+        Route::middleware('same_origin')->group(function () {
+            Route::post('conversations', [ConversationController::class, 'store'])->middleware(['ability:create,messages', 'throttle:60,1']);
+            Route::post('conversations/{conversation}/messages', [ConversationController::class, 'reply'])->middleware(['ability:create,messages', 'throttle:60,1']);
+            Route::post('{message}/report', [MessageReportController::class, 'store'])->middleware('ability:create,messages');
+            Route::post('reports/{report}/decide', [MessageReportController::class, 'decide'])->middleware('ability:update,messages');
+            Route::post('blocks', [BlockController::class, 'store'])->middleware('ability:create,messages');
+            Route::delete('blocks/{cuid}', [BlockController::class, 'destroy'])->middleware('ability:create,messages');
+        });
     });
 
     Route::prefix('magazine')->group(function () {

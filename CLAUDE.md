@@ -44,6 +44,10 @@ Himma ships in two languages. Any code you add or change must work in both:
 - **Invoice PDF:** `App\Billing\InvoicePdf` (mPDF, Arabic and English on one document, texts `pdf.invoice.*`),
   served by `GET /api/admin/billing/invoices/{id}/pdf` and attached to the invoice issued, payment received and
   overdue emails.
+- **Private messages (MSG-01..06):** one conversation per pair of users (`conversations.pair_key`), `/admin/messages`.
+  Only the two participants can open a conversation (404 for anyone else, staff included). Moderators see a message
+  only when it is reported (`message_reports`), and opening the reports list is audited. Audit rows for sent
+  messages never hold the text. Blocks (`user_blocks`) stop messages both ways.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
 - Sidebar: `src/navigation/vertical/index.js`. Each item has a translation key and the CASL subject that
