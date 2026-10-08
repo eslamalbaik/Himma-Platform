@@ -24,6 +24,7 @@ class Tenant extends Model
         'name_en',
         'type',
         'status',
+        'youtube_channel_url',
         'billing_email',
         'billing_suspended_at',
     ];
@@ -87,6 +88,7 @@ class Tenant extends Model
             'type' => $this->type,
             'status' => $this->status,
             'billingEmail' => $this->billing_email,
+            'youtubeChannelUrl' => $this->youtube_channel_url,
             'usersCount' => $this->users_count ?? null,
             'createdAt' => optional($this->created_at)->toIso8601String(),
         ];

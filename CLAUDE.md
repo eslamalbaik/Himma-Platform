@@ -65,6 +65,9 @@ Himma ships in two languages. Any code you add or change must work in both:
 - **YouTube (Settings → YouTube):** `App\Support\YoutubeSettings` (`Setting` group `youtube`): platform channel link,
   YouTube-only stream/recording links (rule `App\Rules\YoutubeLink`), recording required to end a broadcast, and
   privacy-enhanced embedding (youtube-nocookie.com) on the live page. Event staff read it; off by default.
+  Clients broadcast their own events from their own channel (owner's decision): `tenants.youtube_channel_url`, set in the
+  client form for now and shown on the organiser's live card (`organiserChannelUrl`). Connecting a channel with Google
+  sign-in (one Himma Google Cloud project, OAuth per client) belongs to the client dashboard.
 - **Reports (`/admin/reports/*`):** `App\Http\Controllers\Api\ReportController`, period `?from&to` (`ReportPeriodRequest`,
   default last 12 months, at most 36). Each report needs `read reports` plus read access to its section (revenue →
   billing, ...); the sidebar entry says so with `requires`, checked by `CanViewNavLink`. The AI report waits for the AI agent.

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use App\Http\Requests\ApiRequest;
 use App\Models\Tenant;
+use App\Support\YoutubeSettings;
 use Illuminate\Validation\Rule;
 
 class TenantFormRequest extends ApiRequest
@@ -16,6 +17,12 @@ class TenantFormRequest extends ApiRequest
             'type' => ['required', Rule::in(Tenant::TYPES)],
             'status' => ['required', Rule::in(Tenant::STATUSES)],
             'billingEmail' => ['nullable', 'email', 'max:255'],
+            // The client's own YouTube channel, from which it broadcasts its events.
+            'youtubeChannelUrl' => ['nullable', 'string', 'max:255', function ($attribute, $value, $fail) {
+                if (! YoutubeSettings::isChannelUrl($value)) {
+                    $fail('channel');
+                }
+            }],
         ];
     }
 
@@ -27,6 +34,7 @@ class TenantFormRequest extends ApiRequest
             'type' => 'invalid_tenant_type',
             'status' => 'invalid_tenant_status',
             'billingEmail' => 'invalid_billing_email',
+            'youtubeChannelUrl' => 'invalid_youtube_channel',
         ];
     }
 
@@ -38,6 +46,7 @@ class TenantFormRequest extends ApiRequest
             'type' => $this->input('type'),
             'status' => $this->input('status'),
             'billing_email' => $this->input('billingEmail') ?: null,
+            'youtube_channel_url' => filled($this->input('youtubeChannelUrl')) ? trim($this->input('youtubeChannelUrl')) : null,
         ];
     }
 }

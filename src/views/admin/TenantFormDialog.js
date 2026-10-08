@@ -18,7 +18,14 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 const TYPES = ['association', 'school', 'institution', 'government']
 const STATUSES = ['trial', 'active', 'suspended', 'cancelled']
 
-const emptyValues = { nameAr: '', nameEn: '', type: 'association', status: 'trial', billingEmail: '' }
+const emptyValues = {
+  nameAr: '',
+  nameEn: '',
+  type: 'association',
+  status: 'trial',
+  billingEmail: '',
+  youtubeChannelUrl: ''
+}
 
 // Add/edit form for a tenant. `tenant` is null when adding, or the record being edited.
 const TenantFormDialog = ({ open, tenant, submitting, errorCode, onSubmit, onClose }) => {
@@ -31,7 +38,14 @@ const TenantFormDialog = ({ open, tenant, submitting, errorCode, onSubmit, onClo
     formState: { errors }
   } = useForm({
     defaultValues: emptyValues,
-    values: tenant ? { ...emptyValues, ...tenant, billingEmail: tenant.billingEmail || '' } : emptyValues
+    values: tenant
+      ? {
+          ...emptyValues,
+          ...tenant,
+          billingEmail: tenant.billingEmail || '',
+          youtubeChannelUrl: tenant.youtubeChannelUrl || ''
+        }
+      : emptyValues
   })
 
   const handleClose = () => {
@@ -121,6 +135,22 @@ const TenantFormDialog = ({ open, tenant, submitting, errorCode, onSubmit, onClo
                     type='email'
                     label={t('admin.tenants.form.billingEmail')}
                     helperText={t('admin.tenants.form.billingEmailHelp')}
+                    inputProps={{ dir: 'ltr' }}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Controller
+                name='youtubeChannelUrl'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    {...field}
+                    fullWidth
+                    label={t('admin.tenants.form.youtubeChannelUrl')}
+                    helperText={t('admin.tenants.form.youtubeChannelUrlHelp')}
+                    placeholder='https://www.youtube.com/@...'
                     inputProps={{ dir: 'ltr' }}
                   />
                 )}

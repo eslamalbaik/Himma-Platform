@@ -100,6 +100,19 @@ const LiveCard = ({ event, actions, onRegistrations, now, youtube }) => {
               {t('admin.events.action.watch')}
             </Button>
           ) : null}
+          {event.organiserChannelUrl ? (
+            <Button
+              variant='tonal'
+              color='error'
+              component='a'
+              href={event.organiserChannelUrl}
+              target='_blank'
+              rel='noopener noreferrer'
+              startIcon={<Icon icon='tabler:brand-youtube' />}
+            >
+              {t('admin.events.live.organiserChannel', { name: localName(event, 'tenantName', lang) })}
+            </Button>
+          ) : null}
           {event.registrationRequired ? (
             <Button
               variant='tonal'

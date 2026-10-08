@@ -4,6 +4,7 @@ namespace Tests\Feature\Events;
 
 use App\Models\Event;
 use App\Models\Setting;
+use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -90,5 +91,25 @@ class YoutubeSettingsTest extends TestCase
         // A recording link already on the event is enough.
         $withRecording = Event::factory()->status('live')->create(['recording_url' => 'https://youtu.be/old123']);
         $this->postJson("/api/admin/events/{$withRecording->cuid}/end")->assertOk();
+    }
+
+    public function test_clients_broadcast_from_their_own_channel(): void
+    {
+        $this->signIn('sales_manager');
+        $tenant = Tenant::factory()->create();
+        $payload = ['nameAr' => 'جمعية البر', 'nameEn' => 'Al Birr', 'type' => 'association', 'status' => 'active'];
+
+        $this->putJson("/api/admin/tenants/{$tenant->cuid}", $payload + ['youtubeChannelUrl' => 'https://www.youtube.com/watch?v=abc123'])
+            ->assertStatus(422)->assertJsonPath('error.code', 'invalid_youtube_channel');
+        $this->putJson("/api/admin/tenants/{$tenant->cuid}", $payload + ['youtubeChannelUrl' => 'https://www.youtube.com/@albirr'])
+            ->assertOk()->assertJsonPath('data.youtubeChannelUrl', 'https://www.youtube.com/@albirr');
+
+        // Events show their organiser's channel; platform events have none of their own.
+        $this->signIn('broadcast_moderator');
+        $clientEvent = Event::factory()->status('live')->create(['tenant_id' => $tenant->id, 'visibility' => 'institutional']);
+        $platformEvent = Event::factory()->status('live')->create();
+        $this->getJson("/api/admin/events/{$clientEvent->cuid}")->assertOk()
+            ->assertJsonPath('data.organiserChannelUrl', 'https://www.youtube.com/@albirr');
+        $this->getJson("/api/admin/events/{$platformEvent->cuid}")->assertJsonPath('data.organiserChannelUrl', null);
     }
 }

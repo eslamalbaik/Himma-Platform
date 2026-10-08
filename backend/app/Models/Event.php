@@ -93,6 +93,8 @@ class Event extends Model
             'tenantId' => $this->tenant?->cuid,
             'tenantNameAr' => $this->tenant?->name_ar,
             'tenantNameEn' => $this->tenant?->name_en,
+            // Where the organiser broadcasts: the client's channel, or none for platform events (they use Settings → YouTube).
+            'organiserChannelUrl' => $this->tenant?->youtube_channel_url,
             'location' => $this->location,
             'startsAt' => optional($this->starts_at)->toIso8601String(),
             'endsAt' => optional($this->ends_at)->toIso8601String(),
