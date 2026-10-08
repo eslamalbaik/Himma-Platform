@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Billing\PaymentResultController;
 use App\Http\Controllers\Api\Billing\PlanController;
 use App\Http\Controllers\Api\Billing\SubscriptionController;
 use App\Http\Controllers\Api\Billing\WebhookController;
+use App\Http\Controllers\Api\BusinessStatsController;
 use App\Http\Controllers\Api\Content\ArticleController;
 use App\Http\Controllers\Api\Content\CommentController;
 use App\Http\Controllers\Api\Content\ContentReportController;
@@ -47,6 +48,7 @@ Route::prefix('billing')->group(function () {
 
 Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(function () {
     Route::get('stats', AdminStatsController::class)->middleware('ability:read,dashboard');
+    Route::get('stats/business', BusinessStatsController::class)->middleware('ability:read,dashboard');
 
     Route::get('tenants', [TenantController::class, 'index'])->middleware('ability:read,tenants');
     Route::get('tenants/{tenant}', [TenantController::class, 'show'])->middleware('ability:read,tenants');
