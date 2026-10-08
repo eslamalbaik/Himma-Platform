@@ -35,6 +35,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call(TenantSeeder::class);
         $this->call(TenantRequestSeeder::class);
+        $this->call(StaffSeeder::class);
+        $this->call(BillingSeeder::class);
         $this->call(ContentSeeder::class);
         $this->call(EventSeeder::class);
     }

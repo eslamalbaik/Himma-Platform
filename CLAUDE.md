@@ -65,6 +65,10 @@ Frontend (repo root):
 Backend (`backend/`, needs MySQL and Redis running):
 - `composer dev` — API on http://127.0.0.1:8000 + queue worker + scheduler
 - `php artisan migrate` — apply schema changes; `php artisan make:migration <name>` to add one
-- `php artisan db:seed` — create the first super admin from `SEED_ADMIN_*` in `backend/.env`
+- `php artisan db:seed` — create the first super admin from `SEED_ADMIN_*` in `backend/.env`, plus local test
+  data for every section (safe to rerun): clients, join requests, one staff account per role
+  (`sales|finance|editor|broadcast|support|auditor@himma.local`, password `SEED_DEMO_PASSWORD` or else
+  `SEED_ADMIN_PASSWORD`), client users, plans, subscriptions in every state, invoices, payments, bell alerts,
+  content and events. Billing rows are created directly, so seeding sends no emails.
 - `php artisan test` — run the tests (database `himma_test`)
 - `vendor/bin/pint <files>` — format PHP
