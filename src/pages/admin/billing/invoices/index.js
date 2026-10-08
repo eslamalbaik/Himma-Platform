@@ -357,6 +357,19 @@ const InvoiceDialog = ({ invoiceId, onClose, onChanged }) => {
             {t('admin.billing.invoices.void')}
           </Button>
         ) : null}
+        {invoice ? (
+          <Button
+            variant='tonal'
+            color='secondary'
+            startIcon={<Icon icon='tabler:file-download' />}
+            component='a'
+            href={`/api/admin/billing/invoices/${invoiceId}/pdf`}
+            target='_blank'
+            rel='noopener'
+          >
+            {t('admin.billing.invoices.downloadPdf')}
+          </Button>
+        ) : null}
         <Box sx={{ flex: 1 }} />
         {unpaid && canCheckout ? (
           <Button variant='tonal' startIcon={<Icon icon='tabler:link' />} onClick={createLink} disabled={busy}>

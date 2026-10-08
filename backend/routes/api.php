@@ -80,6 +80,7 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
         Route::get('subscriptions/{subscription}', [SubscriptionController::class, 'show'])->middleware('ability:read,billing');
         Route::get('invoices', [InvoiceController::class, 'index'])->middleware('ability:read,billing');
         Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->middleware('ability:read,billing');
+        Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->middleware('ability:read,billing');
         Route::get('payments', [PaymentController::class, 'index'])->middleware('ability:read,billing');
         Route::get('payments/{payment}', [PaymentController::class, 'show'])->middleware('ability:read,billing');
         // Gateways and billing rules: finance and the platform owner only (manage billing).

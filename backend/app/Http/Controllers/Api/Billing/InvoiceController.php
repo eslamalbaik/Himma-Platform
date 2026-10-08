@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Billing;
 
 use App\Billing\BillingService;
 use App\Billing\Gateways\GatewayException;
+use App\Billing\InvoicePdf;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Billing\InvoiceFormRequest;
 use App\Models\Invoice;
@@ -43,6 +44,16 @@ class InvoiceController extends Controller
             fn (Invoice $invoice) => $invoice->toPublicArray(),
             ['unpaidTotal' => (float) Invoice::where('status', 'unpaid')->sum('amount')]
         );
+    }
+
+    // The invoice as a PDF in both languages (App\Billing\InvoicePdf).
+    public function pdf(Invoice $invoice, InvoicePdf $pdf)
+    {
+        return response($pdf->render($invoice), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$invoice->number.'.pdf"',
+            'Cache-Control' => 'no-store',
+        ]);
     }
 
     public function show(Invoice $invoice)

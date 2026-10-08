@@ -41,6 +41,9 @@ Himma ships in two languages. Any code you add or change must work in both:
   (`billing_notices`, unique on kind + subject). Recipients: the client's `billing_email`, else its active users.
   Which alerts and the reminder days: Settings → Notifications (`Setting` group `notifications`). Mail goes to the
   log until `MAIL_*` is set in `backend/.env`.
+- **Invoice PDF:** `App\Billing\InvoicePdf` (mPDF, Arabic and English on one document, texts `pdf.invoice.*`),
+  served by `GET /api/admin/billing/invoices/{id}/pdf` and attached to the invoice issued, payment received and
+  overdue emails.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
 - Sidebar: `src/navigation/vertical/index.js`. Each item has a translation key and the CASL subject that

@@ -2,9 +2,12 @@
 
 namespace App\Mail;
 
+use App\Billing\InvoicePdf;
+use App\Models\Invoice;
 use App\Support\Locales;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Attachment;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -15,6 +18,8 @@ use Illuminate\Queue\SerializesModels;
 class BillingNoticeMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+
+    public const WITH_INVOICE = ['invoice_issued', 'payment_received', 'invoice_overdue'];
 
     public function __construct(public string $kind, public array $vars)
     {
@@ -43,6 +48,24 @@ class BillingNoticeMail extends Mailable implements ShouldQueue
         }
 
         return new Content(view: 'mail.billing-notice', with: ['sections' => $sections]);
+    }
+
+    // Alerts about an invoice carry it as a PDF, built when the email is sent.
+    public function attachments(): array
+    {
+        if (! in_array($this->kind, self::WITH_INVOICE, true) || empty($this->vars['invoiceId'])) {
+            return [];
+        }
+
+        $invoice = Invoice::where('cuid', $this->vars['invoiceId'])->first();
+        if (! $invoice) {
+            return [];
+        }
+
+        return [
+            Attachment::fromData(fn () => app(InvoicePdf::class)->render($invoice), $invoice->number.'.pdf')
+                ->withMime('application/pdf'),
+        ];
     }
 
     // Values that have a language (client name) are picked per section.
