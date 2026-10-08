@@ -25,6 +25,7 @@ class Tenant extends Model
         'type',
         'status',
         'youtube_channel_url',
+        'contact_phone',
         'billing_email',
         'billing_suspended_at',
     ];
@@ -33,6 +34,9 @@ class Tenant extends Model
     {
         return ['billing_suspended_at' => 'datetime'];
     }
+
+    // Suspended or cancelled clients cannot sign in to the client dashboard.
+    public const INACTIVE_STATUSES = ['suspended', 'cancelled'];
 
     // Route-model binding and the public API use the cuid, never the numeric id.
     public function getRouteKeyName(): string
@@ -72,6 +76,17 @@ class Tenant extends Model
         return $this->hasMany(Subscription::class);
     }
 
+    // The client's own content and events (institutional, or organised by the client).
+    public function articles(): HasMany
+    {
+        return $this->hasMany(Article::class);
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class);
+    }
+
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
@@ -89,6 +104,7 @@ class Tenant extends Model
             'status' => $this->status,
             'billingEmail' => $this->billing_email,
             'youtubeChannelUrl' => $this->youtube_channel_url,
+            'contactPhone' => $this->contact_phone,
             'usersCount' => $this->users_count ?? null,
             'createdAt' => optional($this->created_at)->toIso8601String(),
         ];

@@ -3,6 +3,7 @@
 namespace Tests;
 
 use App\Http\Middleware\EnsureApiUser;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use RuntimeException;
@@ -27,5 +28,13 @@ abstract class TestCase extends BaseTestCase
         $this->actingAs($user)->withSession([EnsureApiUser::SESSION_TOKEN_VERSION => $user->token_version]);
 
         return $user;
+    }
+
+    // Signs in as a client account of $tenant (a new active client when none is given).
+    protected function signInClient(?Tenant $tenant = null, array $attributes = []): User
+    {
+        $tenant ??= Tenant::factory()->create(['status' => 'active']);
+
+        return $this->signIn('institution', $attributes + ['tenant_id' => $tenant->id]);
     }
 }

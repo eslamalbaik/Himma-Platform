@@ -20,8 +20,15 @@ Himma ships in two languages. Any code you add or change must work in both:
 - **Frontend:** Next.js 15 (pages router) + MUI (Vuexy template). `next.config.js` proxies `/api/*` to the
   backend, so the browser only talks to the frontend's origin.
 - **Backend:** Laravel 11 in `backend/` (MySQL, Redis for sessions/cache/queue). Routes: `backend/routes/api.php`.
-- Two dashboards: the **super admin** dashboard (`/admin`, platform team) and, later, a **client (tenant)**
-  dashboard. Business requirements: `REQUIREMENTS.md`.
+- Two dashboards: the **super admin** dashboard (`/admin`, platform team) and the **client (tenant)** dashboard
+  (`/client`, built in phases: `docs/client-dashboard-plan.md`). Business requirements: `REQUIREMENTS.md`.
+- **Client dashboard:** client accounts are users with a `tenant_id` (`User::isClient()`; `auth/me` returns `kind` and
+  `tenant`). Their API is `/api/client/*` behind `auth.api` + `client` (`EnsureClientUser`: active client only;
+  `client:full` also refuses clients suspended for unpaid invoices). `/api/admin/*` is behind `platform`, so a client
+  account never reaches it. Client controllers (`app/Http/Controllers/Client`) read and write only through the
+  signed-in user's tenant: another client's record is a 404. In the browser `src/configs/acl.js` gives client accounts
+  the subjects `client_basic` / `client` (staff never get them), `getHomeRoute` and `navigationFor` pick the dashboard.
+  The platform team creates client accounts in Clients → accounts (`/api/admin/tenants/{id}/users`).
 - **Auth:** `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`. Laravel session in the httpOnly
   `himma_session` cookie; the browser never stores tokens. Changing a password bumps `users.token_version`,
   which ends that account's other sessions (`EnsureApiUser`).

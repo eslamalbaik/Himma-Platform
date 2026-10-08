@@ -2,7 +2,9 @@
 
 use App\Http\Middleware\EnsureAbility;
 use App\Http\Middleware\EnsureApiUser;
+use App\Http\Middleware\EnsureClientUser;
 use App\Http\Middleware\EnsureNotInMaintenance;
+use App\Http\Middleware\EnsurePlatformUser;
 use App\Http\Middleware\EnsureSameOriginJson;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -43,9 +45,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.api' => EnsureApiUser::class,
             'ability' => EnsureAbility::class,
             'not_maintenance' => EnsureNotInMaintenance::class,
+            'platform' => EnsurePlatformUser::class,
+            'client' => EnsureClientUser::class,
         ]);
         // Check the session before resolving {tenant} etc., so a signed-out caller gets 401, not 404.
         $middleware->prependToPriorityList(SubstituteBindings::class, EnsureApiUser::class);
+        // Then which dashboard the account belongs to, so a client account never learns whether a platform
+        // record exists (403 before any 404), and the other way round.
+        $middleware->prependToPriorityList(SubstituteBindings::class, EnsurePlatformUser::class);
+        $middleware->prependToPriorityList(SubstituteBindings::class, EnsureClientUser::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Every API failure is `{error: {code}}`; the browser translates `errors.<code>`.

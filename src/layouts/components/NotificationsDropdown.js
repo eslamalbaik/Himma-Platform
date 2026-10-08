@@ -1,6 +1,9 @@
 // ** React Imports
 import { useCallback, useEffect, useState } from 'react'
 
+// ** Hooks
+import { useAuth } from 'src/hooks/useAuth'
+
 // ** Next Import
 import { useRouter } from 'next/router'
 
@@ -163,4 +166,12 @@ const NotificationsDropdown = () => {
   )
 }
 
-export default NotificationsDropdown
+// Platform staff only for now: client accounts get their own bell with the client dashboard's alerts
+// (they cannot reach /api/admin/notifications).
+const StaffNotifications = () => {
+  const { user } = useAuth()
+
+  return user && user.kind !== 'client' ? <NotificationsDropdown /> : null
+}
+
+export default StaffNotifications

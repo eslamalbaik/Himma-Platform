@@ -23,8 +23,9 @@ import InputAdornment from '@mui/material/InputAdornment'
 import { useTranslation } from 'react-i18next'
 
 // ** Himma navigation and permissions
-import { adminNavigation } from 'src/navigation/vertical'
+import { navigationFor } from 'src/navigation/vertical'
 import { AbilityContext } from 'src/layouts/components/acl/Can'
+import { useAuth } from 'src/hooks/useAuth'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -345,6 +346,7 @@ const AutocompleteComponent = ({ hidden, settings }) => {
 
   const { t } = useTranslation()
   const ability = useContext(AbilityContext)
+  const auth = useAuth()
 
   // Searches the sidebar sections the user may open (no request; the template's mock API is gone).
   useEffect(() => {
@@ -355,7 +357,7 @@ const AutocompleteComponent = ({ hidden, settings }) => {
       return
     }
     const results = []
-    adminNavigation.forEach(section => {
+    navigationFor(auth.user).forEach(section => {
       const entries = section.children ? section.children.map(child => ({ ...child, icon: section.icon })) : [section]
       entries.forEach(entry => {
         if (!entry.path || !ability?.can(entry.action, entry.subject)) return
@@ -366,7 +368,7 @@ const AutocompleteComponent = ({ hidden, settings }) => {
       })
     })
     setOptions(results)
-  }, [searchValue, ability, t])
+  }, [searchValue, ability, t, auth.user])
   useEffect(() => {
     if (!openDialog) {
       setSearchValue('')

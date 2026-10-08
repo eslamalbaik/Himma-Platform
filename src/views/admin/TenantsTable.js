@@ -24,7 +24,7 @@ const statusColor = {
   cancelled: 'error'
 }
 
-const TenantsTable = ({ tenants, loading, canUpdate, canDelete, onEdit, onDelete }) => {
+const TenantsTable = ({ tenants, loading, canUpdate, canDelete, onEdit, onDelete, onAccounts }) => {
   const { t, i18n } = useTranslation()
   const lang = i18n.language === 'en' ? 'en' : 'ar'
 
@@ -38,7 +38,7 @@ const TenantsTable = ({ tenants, loading, canUpdate, canDelete, onEdit, onDelete
             <TableCell>{t('admin.tenants.table.status')}</TableCell>
             <TableCell>{t('admin.tenants.table.users')}</TableCell>
             <TableCell>{t('admin.tenants.table.createdAt')}</TableCell>
-            {canUpdate || canDelete ? <TableCell align='right'>{t('admin.tenants.table.actions')}</TableCell> : null}
+            <TableCell align='right'>{t('admin.tenants.table.actions')}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -74,27 +74,36 @@ const TenantsTable = ({ tenants, loading, canUpdate, canDelete, onEdit, onDelete
                 </TableCell>
                 <TableCell>{tenant.usersCount ?? 0}</TableCell>
                 <TableCell>{tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString(lang) : '-'}</TableCell>
-                {canUpdate || canDelete ? (
-                  <TableCell align='right'>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                      {canUpdate ? (
-                        <IconButton size='small' onClick={() => onEdit(tenant)} aria-label={t('admin.tenants.editButton')}>
-                          <Icon icon='tabler:edit' fontSize='1.25rem' />
-                        </IconButton>
-                      ) : null}
-                      {canDelete ? (
-                        <IconButton
-                          size='small'
-                          color='error'
-                          onClick={() => onDelete(tenant)}
-                          aria-label={t('admin.tenants.deleteButton')}
-                        >
-                          <Icon icon='tabler:trash' fontSize='1.25rem' />
-                        </IconButton>
-                      ) : null}
-                    </Box>
-                  </TableCell>
-                ) : null}
+                <TableCell align='right'>
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                    <IconButton
+                      size='small'
+                      onClick={() => onAccounts(tenant)}
+                      aria-label={t('admin.tenants.accounts.button')}
+                    >
+                      <Icon icon='tabler:users' fontSize='1.25rem' />
+                    </IconButton>
+                    {canUpdate ? (
+                      <IconButton
+                        size='small'
+                        onClick={() => onEdit(tenant)}
+                        aria-label={t('admin.tenants.editButton')}
+                      >
+                        <Icon icon='tabler:edit' fontSize='1.25rem' />
+                      </IconButton>
+                    ) : null}
+                    {canDelete ? (
+                      <IconButton
+                        size='small'
+                        color='error'
+                        onClick={() => onDelete(tenant)}
+                        aria-label={t('admin.tenants.deleteButton')}
+                      >
+                        <Icon icon='tabler:trash' fontSize='1.25rem' />
+                      </IconButton>
+                    ) : null}
+                  </Box>
+                </TableCell>
               </TableRow>
             ))
           )}

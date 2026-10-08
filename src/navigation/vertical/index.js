@@ -169,6 +169,29 @@ export const findNavItem = path => {
   return null
 }
 
-const navigation = () => adminNavigation
+// Client dashboard sidebar (/client). `client_basic` sections stay open to a client suspended for unpaid
+// invoices; sections added later for content, events and messages use `client` (see src/configs/acl.js).
+export const clientNavigation = [
+  { title: 'nav.client.home', icon: 'tabler:smart-home', path: '/client', action: 'read', subject: 'client_basic' },
+  {
+    title: 'nav.client.profile',
+    icon: 'tabler:building',
+    path: '/client/profile',
+    action: 'read',
+    subject: 'client_basic'
+  },
+  {
+    title: 'nav.client.account',
+    icon: 'tabler:user-shield',
+    path: '/client/account',
+    action: 'read',
+    subject: 'client_basic'
+  }
+]
+
+// The sidebar of the signed-in account's dashboard.
+export const navigationFor = user => (user?.kind === 'client' ? clientNavigation : adminNavigation)
+
+const navigation = user => navigationFor(user)
 
 export default navigation

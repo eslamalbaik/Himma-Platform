@@ -28,6 +28,7 @@ import { AbilityContext } from 'src/layouts/components/acl/Can'
 import TenantsTable from 'src/views/admin/TenantsTable'
 import TenantFormDialog from 'src/views/admin/TenantFormDialog'
 import TenantDeleteDialog from 'src/views/admin/TenantDeleteDialog'
+import TenantAccountsDialog from 'src/views/admin/TenantAccountsDialog'
 
 const TYPES = ['association', 'school', 'institution', 'government']
 const STATUSES = ['trial', 'active', 'suspended', 'cancelled']
@@ -58,6 +59,7 @@ const TenantsPage = () => {
   const [formError, setFormError] = useState(null)
 
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [accountsFor, setAccountsFor] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
   const [toast, setToast] = useState(null)
@@ -72,7 +74,7 @@ const TenantsPage = () => {
     return () => clearTimeout(timeout)
   }, [searchInput])
 
-  const fetchTenants = (signal) => {
+  const fetchTenants = signal => {
     setLoading(true)
     setLoadError(null)
     axios
@@ -227,6 +229,7 @@ const TenantsPage = () => {
               canDelete={canDelete}
               onEdit={openEditForm}
               onDelete={setDeleteTarget}
+              onAccounts={setAccountsFor}
             />
 
             <TablePagination
@@ -253,6 +256,8 @@ const TenantsPage = () => {
         onSubmit={handleFormSubmit}
         onClose={closeForm}
       />
+
+      <TenantAccountsDialog tenant={accountsFor} canUpdate={canUpdate} onClose={() => setAccountsFor(null)} />
 
       <TenantDeleteDialog
         open={Boolean(deleteTarget)}

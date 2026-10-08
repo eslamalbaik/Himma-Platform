@@ -32,9 +32,13 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoleTemplateController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
+use App\Http\Controllers\Api\TenantUserController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\Writers\WriterController;
 use App\Http\Controllers\Api\YoutubeSettingsController;
+use App\Http\Controllers\Client\AccountController;
+use App\Http\Controllers\Client\OverviewController;
+use App\Http\Controllers\Client\ProfileController;
 use App\Models\Policy;
 use App\Models\RoleTemplate;
 use Illuminate\Support\Facades\Route;
@@ -54,10 +58,22 @@ Route::prefix('billing')->group(function () {
     Route::get('payments/{cuid}/result', [PaymentResultController::class, 'show'])->middleware('throttle:30,1');
 });
 
+// Client dashboard (/client): client accounts of an active client only. `client` lets in clients suspended for
+// unpaid invoices (they keep their profile and billing); every other section will use `client:full`.
+Route::prefix('client')->middleware(['auth.api', 'client', 'not_maintenance'])->group(function () {
+    Route::get('overview', OverviewController::class);
+    Route::get('profile', [ProfileController::class, 'show']);
+
+    Route::middleware('same_origin')->group(function () {
+        Route::put('profile', [ProfileController::class, 'update']);
+        Route::put('account/password', [AccountController::class, 'changePassword']);
+    });
+});
+
 // The public policies page (REQUIREMENTS.md §7).
 Route::get('policies', [PolicyController::class, 'published'])->middleware('throttle:60,1');
 
-Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(function () {
+Route::prefix('admin')->middleware(['auth.api', 'platform', 'not_maintenance'])->group(function () {
     Route::get('stats', AdminStatsController::class)->middleware('ability:read,dashboard');
     Route::get('stats/business', BusinessStatsController::class)->middleware('ability:read,dashboard');
 
@@ -71,6 +87,7 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
 
     Route::get('tenants', [TenantController::class, 'index'])->middleware('ability:read,tenants');
     Route::get('tenants/{tenant}', [TenantController::class, 'show'])->middleware('ability:read,tenants');
+    Route::get('tenants/{tenant}/users', [TenantUserController::class, 'index'])->middleware('ability:read,tenants');
     Route::get('tenant-requests', [TenantRequestController::class, 'index'])->middleware('ability:read,tenants');
     Route::get('audit-logs', [AuditLogController::class, 'index'])->middleware('ability:read,audit');
     Route::get('users', [UserController::class, 'index'])->middleware('ability:read,users');
@@ -98,6 +115,9 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
         Route::post('tenants', [TenantController::class, 'store'])->middleware('ability:create,tenants');
         Route::put('tenants/{tenant}', [TenantController::class, 'update'])->middleware('ability:update,tenants');
         Route::delete('tenants/{tenant}', [TenantController::class, 'destroy'])->middleware('ability:delete,tenants');
+        Route::post('tenants/{tenant}/users', [TenantUserController::class, 'store'])->middleware('ability:update,tenants');
+        // Scoped: an account of another client is a 404, before any input check.
+        Route::put('tenants/{tenant}/users/{user:cuid}', [TenantUserController::class, 'update'])->middleware('ability:update,tenants')->scopeBindings();
 
         Route::post('tenant-requests', [TenantRequestController::class, 'store'])->middleware('ability:create,tenants');
         Route::post('tenant-requests/{tenantRequest}/approve', [TenantRequestController::class, 'approve'])->middleware('ability:update,tenants');

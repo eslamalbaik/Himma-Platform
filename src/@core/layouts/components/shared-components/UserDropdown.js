@@ -125,7 +125,13 @@ const UserDropdown = props => {
             </Badge>
             <Box sx={{ display: 'flex', ml: 2.5, alignItems: 'flex-start', flexDirection: 'column' }}>
               <Typography sx={{ fontWeight: 500 }}>{name}</Typography>
-              <Typography variant='body2'>{user ? roleLabel(user.role, lang) : null}</Typography>
+              <Typography variant='body2'>
+                {user?.kind === 'client'
+                  ? (lang === 'en' ? user.tenant?.nameEn : user.tenant?.nameAr) || ''
+                  : user
+                  ? roleLabel(user.role, lang)
+                  : null}
+              </Typography>
             </Box>
           </Box>
         </Box>

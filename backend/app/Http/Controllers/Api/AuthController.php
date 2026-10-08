@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\EnsureApiUser;
 use App\Models\PlatformSetting;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Ability;
 use App\Support\Audit;
@@ -60,15 +61,20 @@ class AuthController extends Controller
             return $this->error('invalid_credentials', 401);
         }
 
-        // Only the super admin dashboard exists so far; client (tenant) accounts get their own dashboard later.
-        if (! Ability::isPlatformRole($user->role)) {
+        // Platform staff use /admin, client accounts use /client. A client account needs an active client.
+        $denied = match (true) {
+            $user->isClient() && (! $user->tenant || in_array($user->tenant->status, Tenant::INACTIVE_STATUSES, true)) => 'tenant_inactive',
+            ! $user->isClient() && ! Ability::isPlatformRole($user->role) => 'dashboard_not_available',
+            default => null,
+        };
+        if ($denied) {
             Audit::log($request, [
                 'action' => 'auth.login_denied',
                 'actor' => $user,
-                'metadata' => ['reason' => 'no_dashboard_for_role'],
+                'metadata' => ['reason' => $denied],
             ]);
 
-            return $this->error('dashboard_not_available', 403);
+            return $this->error($denied, 403);
         }
 
         if (PlatformSetting::current()->maintenance_mode && $user->role !== 'super_admin') {

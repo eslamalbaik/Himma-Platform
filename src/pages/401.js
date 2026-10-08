@@ -7,6 +7,9 @@ import { styled } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 
+// ** Third Party Imports
+import { useTranslation } from 'react-i18next'
+
 // ** Layout Import
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 
@@ -33,23 +36,23 @@ const Img = styled('img')(({ theme }) => ({
   }
 }))
 
+// Shown by AclGuard when the signed-in account may not open a page (e.g. a client account opening /admin).
 const Error401 = () => {
+  const { t } = useTranslation()
+
   return (
     <Box className='content-center'>
       <Box sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
         <BoxWrapper>
           <Typography variant='h2' sx={{ mb: 1.5 }}>
-            You are not authorized!
+            {t('notAuthorized.title')}
           </Typography>
-          <Typography sx={{ color: 'text.secondary' }}>
-            You do not have permission to view this page using the credentials that you have provided while login.
-          </Typography>
-          <Typography sx={{ mb: 6, color: 'text.secondary' }}>Please contact your site administrator.</Typography>
+          <Typography sx={{ mb: 6, color: 'text.secondary' }}>{t('notAuthorized.body')}</Typography>
           <Button href='/' component={Link} variant='contained'>
-            Back to Home
+            {t('notAuthorized.home')}
           </Button>
         </BoxWrapper>
-        <Img height='500' alt='error-illustration' src='/images/pages/401.png' />
+        <Img height='500' alt='' src='/images/pages/401.png' />
       </Box>
       <FooterIllustrations />
     </Box>

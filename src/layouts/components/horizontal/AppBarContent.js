@@ -77,7 +77,8 @@ const AppBarContent = props => {
       <ModeToggler settings={settings} saveSettings={saveSettings} />
       {auth.user && (
         <>
-          <ShortcutsDropdown settings={settings} shortcuts={shortcuts} />
+          {/* The template's demo shortcuts mean nothing to client accounts. */}
+          {auth.user?.kind === 'client' ? null : <ShortcutsDropdown settings={settings} shortcuts={shortcuts} />}
           <NotificationsDropdown />
           <UserDropdown settings={settings} />
         </>

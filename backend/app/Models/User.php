@@ -49,6 +49,12 @@ class User extends Authenticatable
         });
     }
 
+    // Client (tenant) accounts belong to a client and use the client dashboard; platform staff have no client.
+    public function isClient(): bool
+    {
+        return $this->tenant_id !== null;
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
@@ -72,6 +78,16 @@ class User extends Authenticatable
             'locale' => $this->locale,
             'tenantId' => $this->tenant?->cuid,
             'lastLoginAt' => optional($this->last_login_at)->toIso8601String(),
+            // Which dashboard the account uses, and for client accounts what the client dashboard needs to know.
+            'kind' => $this->isClient() ? 'client' : 'platform',
+            'tenant' => $this->isClient() && $this->tenant ? [
+                'id' => $this->tenant->cuid,
+                'nameAr' => $this->tenant->name_ar,
+                'nameEn' => $this->tenant->name_en,
+                'type' => $this->tenant->type,
+                'status' => $this->tenant->status,
+                'billingSuspended' => $this->tenant->billing_suspended_at !== null,
+            ] : null,
         ];
     }
 }
