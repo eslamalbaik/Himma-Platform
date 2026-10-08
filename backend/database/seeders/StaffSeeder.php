@@ -47,8 +47,9 @@ class StaffSeeder extends Seeder
                 continue;
             }
 
+            // Roles of client accounts are the role templates (Permissions → Client role templates).
             User::updateOrCreate(['email' => $email], [
-                'password' => $password, 'role' => 'tenant_admin', 'tenant_id' => $tenant->id,
+                'password' => $password, 'role' => $tenant->type === 'government' ? 'government' : 'institution', 'tenant_id' => $tenant->id,
                 'name_ar' => $nameAr, 'name_en' => $nameEn, 'status' => 'active', 'locale' => 'ar',
             ]);
         }

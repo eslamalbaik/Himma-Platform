@@ -57,6 +57,11 @@ Himma ships in two languages. Any code you add or change must work in both:
   auditors read). Pending → verified (method + note recorded) → suspended. Articles link with `writer_id`; the byline
   (`author_name`) defaults to the writer's name. Suspended writers get no new articles; writers with articles are never
   deleted. Settings → Publishing can require a verified writer before review.
+- **Client role templates (`/admin/permissions/tenant-role-templates`, §10 ROL-01..08):** `role_templates` (eight system
+  roles inserted by the migration, plus custom ones), each with a three-state matrix (allowed / restricted / denied) over
+  `RoleTemplate::PERMISSION_GROUPS`. `users.role` of client accounts holds a template `key` (custom keys:
+  `custom_<english name>`). Only the owner edits (subject `permissions`); every change is audited (`role_template.*`).
+  Enforcing these permissions on content (ROL-03) waits for the client dashboard and the public site.
 - **Reports (`/admin/reports/*`):** `App\Http\Controllers\Api\ReportController`, period `?from&to` (`ReportPeriodRequest`,
   default last 12 months, at most 36). Each report needs `read reports` plus read access to its section (revenue →
   billing, ...); the sidebar entry says so with `requires`, checked by `CanViewNavLink`. The AI report waits for the AI agent.

@@ -29,11 +29,13 @@ use App\Http\Controllers\Api\PlatformSettingController;
 use App\Http\Controllers\Api\PolicyController;
 use App\Http\Controllers\Api\PublishingSettingsController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\RoleTemplateController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\Writers\WriterController;
 use App\Models\Policy;
+use App\Models\RoleTemplate;
 use Illuminate\Support\Facades\Route;
 
 // Every route that reads or changes data declares its permission with `ability:<action>,<subject>`
@@ -71,6 +73,7 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
     Route::get('tenant-requests', [TenantRequestController::class, 'index'])->middleware('ability:read,tenants');
     Route::get('audit-logs', [AuditLogController::class, 'index'])->middleware('ability:read,audit');
     Route::get('users', [UserController::class, 'index'])->middleware('ability:read,users');
+    Route::get('role-templates', [RoleTemplateController::class, 'index'])->middleware('ability:read,permissions');
     Route::get('writers', [WriterController::class, 'index'])->middleware('ability:read,writers');
     Route::get('writers/{writer}', [WriterController::class, 'show'])->middleware('ability:read,writers');
     Route::get('settings', [PlatformSettingController::class, 'show'])->middleware('ability:read,settings');
@@ -99,6 +102,12 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
         Route::post('users', [UserController::class, 'store'])->middleware('ability:create,users');
         Route::put('users/{cuid}', [UserController::class, 'update'])->middleware('ability:update,users');
         Route::delete('users/{cuid}', [UserController::class, 'destroy'])->middleware('ability:delete,users');
+
+        Route::post('role-templates', [RoleTemplateController::class, 'store'])->middleware('ability:create,permissions');
+        Route::put('role-templates/{roleTemplate}', [RoleTemplateController::class, 'update'])->middleware('ability:update,permissions');
+        Route::put('role-templates/{roleTemplate}/permissions/{permission}', [RoleTemplateController::class, 'setPermission'])
+            ->middleware('ability:update,permissions')->whereIn('permission', RoleTemplate::permissionKeys());
+        Route::delete('role-templates/{roleTemplate}', [RoleTemplateController::class, 'destroy'])->middleware('ability:delete,permissions');
 
         Route::post('writers', [WriterController::class, 'store'])->middleware('ability:create,writers');
         Route::put('writers/{writer}', [WriterController::class, 'update'])->middleware('ability:update,writers');
