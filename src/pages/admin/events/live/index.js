@@ -14,6 +14,7 @@ import Chip from '@mui/material/Chip'
 import CircularProgress from '@mui/material/CircularProgress'
 
 // ** Third Party Imports
+import axios from 'axios'
 import { useTranslation } from 'react-i18next'
 
 // ** Custom Components
@@ -36,10 +37,10 @@ const useNow = () => {
   return now
 }
 
-const LiveCard = ({ event, actions, onRegistrations, now }) => {
+const LiveCard = ({ event, actions, onRegistrations, now, youtube }) => {
   const { t, i18n } = useTranslation()
   const lang = pickLang(i18n)
-  const embed = event.streamUrl ? youtubeEmbedUrl(event.streamUrl) : null
+  const embed = event.streamUrl ? youtubeEmbedUrl(event.streamUrl, youtube?.privacyEnhanced) : null
   const minutes = event.liveStartedAt ? Math.max(0, Math.round((now - new Date(event.liveStartedAt)) / 60000)) : 0
 
   return (
@@ -138,6 +139,15 @@ const LivePage = () => {
   )
   const [registrationsFor, setRegistrationsFor] = useState(null)
 
+  // Settings → YouTube: privacy-enhanced embedding and the platform's channel link.
+  const [youtube, setYoutube] = useState(null)
+  useEffect(() => {
+    axios
+      .get('/api/admin/settings/youtube')
+      .then(response => setYoutube(response.data.data))
+      .catch(() => setYoutube(null))
+  }, [])
+
   const reload = () => {
     live.reload()
     upcoming.reload()
@@ -151,9 +161,24 @@ const LivePage = () => {
 
   return (
     <Grid container spacing={6}>
-      <Grid item xs={12}>
-        <Typography variant='h5'>{t('admin.events.live.title')}</Typography>
-        <Typography sx={{ color: 'text.secondary' }}>{t('admin.events.live.subtitle')}</Typography>
+      <Grid item xs={12} sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4 }}>
+        <Box sx={{ flexGrow: 1 }}>
+          <Typography variant='h5'>{t('admin.events.live.title')}</Typography>
+          <Typography sx={{ color: 'text.secondary' }}>{t('admin.events.live.subtitle')}</Typography>
+        </Box>
+        {youtube?.channelUrl ? (
+          <Button
+            variant='tonal'
+            color='error'
+            component='a'
+            href={youtube.channelUrl}
+            target='_blank'
+            rel='noopener noreferrer'
+            startIcon={<Icon icon='tabler:brand-youtube' />}
+          >
+            {localName(youtube, 'channelName', lang)}
+          </Button>
+        ) : null}
       </Grid>
 
       {live.loading ? (
@@ -169,7 +194,13 @@ const LivePage = () => {
       ) : (
         live.rows.map(event => (
           <Grid item xs={12} md={6} key={event.id}>
-            <LiveCard event={event} actions={actions} onRegistrations={setRegistrationsFor} now={now} />
+            <LiveCard
+              event={event}
+              actions={actions}
+              onRegistrations={setRegistrationsFor}
+              now={now}
+              youtube={youtube}
+            />
           </Grid>
         ))
       )}

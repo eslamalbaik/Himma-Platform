@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\Writers\WriterController;
+use App\Http\Controllers\Api\YoutubeSettingsController;
 use App\Models\Policy;
 use App\Models\RoleTemplate;
 use Illuminate\Support\Facades\Route;
@@ -80,6 +81,8 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
     Route::get('settings/notifications', [NotificationSettingsController::class, 'show'])->middleware('ability:read,settings');
     // The article form shows the publishing rules, so whoever reads content reads them.
     Route::get('settings/publishing', [PublishingSettingsController::class, 'show'])->middleware('ability:read,content');
+    // The live page embeds and links by these settings, so event staff read them.
+    Route::get('settings/youtube', [YoutubeSettingsController::class, 'show'])->middleware('ability:read,events');
     Route::get('policies', [PolicyController::class, 'index'])->middleware('ability:read,settings');
     Route::get('policies/{kind}/versions', [PolicyController::class, 'versions'])->middleware('ability:read,settings')->whereIn('kind', Policy::KINDS);
 
@@ -90,6 +93,7 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
     Route::middleware('same_origin')->group(function () {
         Route::put('settings/notifications', [NotificationSettingsController::class, 'update'])->middleware('ability:update,settings');
         Route::put('settings/publishing', [PublishingSettingsController::class, 'update'])->middleware('ability:update,settings');
+        Route::put('settings/youtube', [YoutubeSettingsController::class, 'update'])->middleware('ability:update,settings');
         Route::put('policies/{kind}', [PolicyController::class, 'update'])->middleware('ability:update,settings')->whereIn('kind', Policy::KINDS);
         Route::post('tenants', [TenantController::class, 'store'])->middleware('ability:create,tenants');
         Route::put('tenants/{tenant}', [TenantController::class, 'update'])->middleware('ability:update,tenants');

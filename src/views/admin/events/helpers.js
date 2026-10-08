@@ -31,17 +31,20 @@ export const toLocalInput = iso => {
 export const fromLocalInput = value => (value ? new Date(value).toISOString() : null)
 
 // Embed address for a YouTube watch, short, live or embed link; null for anything else.
-export const youtubeEmbedUrl = url => {
+// `privacyEnhanced` (Settings → YouTube) embeds from youtube-nocookie.com.
+export const youtubeEmbedUrl = (url, privacyEnhanced = false) => {
   try {
     const parsed = new URL(url)
     const host = parsed.hostname.replace(/^www\.|^m\./, '')
     let id = null
     if (host === 'youtu.be') id = parsed.pathname.slice(1)
-    else if (host === 'youtube.com') {
+    else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
       id = parsed.searchParams.get('v') || parsed.pathname.match(/^\/(?:live|embed|shorts)\/([^/?]+)/)?.[1]
     }
 
-    return id && /^[\w-]{6,20}$/.test(id) ? `https://www.youtube.com/embed/${id}` : null
+    const embedHost = privacyEnhanced ? 'https://www.youtube-nocookie.com' : 'https://www.youtube.com'
+
+    return id && /^[\w-]{6,20}$/.test(id) ? `${embedHost}/embed/${id}` : null
   } catch {
     return null
   }

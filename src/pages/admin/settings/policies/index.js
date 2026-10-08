@@ -268,7 +268,7 @@ const PoliciesPage = () => {
                         }
                         label={t('admin.settings.policies.publishSwitch')}
                       />
-                      <Typography variant='body2' sx={{ color: 'text.secondary', ps: 12 }}>
+                      <Typography variant='body2' sx={{ color: 'text.secondary', paddingInlineStart: 12 }}>
                         {t('admin.settings.policies.publishHelp')}
                       </Typography>
                     </Grid>

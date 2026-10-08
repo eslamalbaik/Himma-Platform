@@ -74,7 +74,7 @@ const PoliciesPage = () => {
                 <Typography variant='h6' sx={{ mb: 3 }}>
                   {t('policies.contents')}
                 </Typography>
-                <Box component='ol' sx={{ m: 0, ps: 5, display: 'grid', gap: 1.5 }}>
+                <Box component='ol' sx={{ m: 0, paddingInlineStart: 5, display: 'grid', gap: 1.5 }}>
                   {policies.map(policy => (
                     <li key={policy.kind}>
                       <Link href={`#${policy.kind}`} underline='hover'>

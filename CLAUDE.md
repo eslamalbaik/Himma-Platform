@@ -30,7 +30,7 @@ Himma ships in two languages. Any code you add or change must work in both:
 - **Permissions:** roles and rules live in `backend/config/roles.php` (checked by `App\Support\Ability`) and are
   mirrored in `src/configs/roles.js` for the UI (CASL, `src/configs/acl.js`). Change both together.
 - **Input checks:** a `FormRequest` extending `App\Http\Requests\ApiRequest`; `codes()` maps each field (or
-  `field.rule`) to its error code. Responses: list `{data, meta:{total, perPage, currentPage, lastPage}}`,
+  `field.rule`, where a rule object counts by its class name in snake case, e.g. `field.youtube_link`) to its error code. Responses: list `{data, meta:{total, perPage, currentPage, lastPage}}`,
   item `{data}`, delete `{ok:true}` (helpers in `App\Http\Controllers\Controller`). JSON keys are camelCase,
   columns snake_case, public ids are the `cuid` column (`HasCuid`), never the numeric id.
 - **Audit:** every sign-in and every change to data writes a row with `Audit::log()` (`backend/app/Support/Audit.php`).
@@ -62,6 +62,9 @@ Himma ships in two languages. Any code you add or change must work in both:
   `RoleTemplate::PERMISSION_GROUPS`. `users.role` of client accounts holds a template `key` (custom keys:
   `custom_<english name>`). Only the owner edits (subject `permissions`); every change is audited (`role_template.*`).
   Enforcing these permissions on content (ROL-03) waits for the client dashboard and the public site.
+- **YouTube (Settings → YouTube):** `App\Support\YoutubeSettings` (`Setting` group `youtube`): platform channel link,
+  YouTube-only stream/recording links (rule `App\Rules\YoutubeLink`), recording required to end a broadcast, and
+  privacy-enhanced embedding (youtube-nocookie.com) on the live page. Event staff read it; off by default.
 - **Reports (`/admin/reports/*`):** `App\Http\Controllers\Api\ReportController`, period `?from&to` (`ReportPeriodRequest`,
   default last 12 months, at most 36). Each report needs `read reports` plus read access to its section (revenue →
   billing, ...); the sidebar entry says so with `requires`, checked by `CanViewNavLink`. The AI report waits for the AI agent.

@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 
 // Base for API input checks. A failure answers 422 `{error: {code}}` for the first failing field,
 // using codes(): 'field.rule' => code wins over 'field' => code (e.g. 'email.unique' => 'email_taken').
+// A rule object counts by its class name in snake case (App\Rules\YoutubeLink → 'field.youtube_link').
 // Permission checks stay in the `ability` route middleware.
 abstract class ApiRequest extends FormRequest
 {
@@ -27,7 +28,8 @@ abstract class ApiRequest extends FormRequest
         $code = 'invalid_input';
 
         foreach ($validator->failed() as $field => $rules) {
-            $rule = Str::snake(array_key_first($rules));
+            // Rule objects are reported by class name: App\Rules\YoutubeLink → 'youtube_link'.
+            $rule = Str::snake(class_basename(array_key_first($rules)));
             // Array items ('audiences.2') fall back to their wildcard ('audiences.*').
             $wildcard = preg_replace('/\.\d+(?=\.|$)/', '.*', $field);
             $code = $codes["$field.$rule"] ?? $codes[$field]

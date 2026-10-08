@@ -80,7 +80,7 @@ const PublishingSettingsPage = () => {
         }
         label={t(`admin.settings.publishing.${name}`)}
       />
-      <Typography variant='body2' sx={{ color: 'text.secondary', ps: 12 }}>
+      <Typography variant='body2' sx={{ color: 'text.secondary', paddingInlineStart: 12 }}>
         {t(`admin.settings.publishing.${name}Help`)}
       </Typography>
     </Grid>

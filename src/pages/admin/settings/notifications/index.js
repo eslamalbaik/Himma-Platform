@@ -140,7 +140,7 @@ const NotificationSettingsPage = () => {
                 }
                 label={t('admin.settings.notifications.staffAlerts')}
               />
-              <Typography variant='body2' sx={{ color: 'text.secondary', ps: 12 }}>
+              <Typography variant='body2' sx={{ color: 'text.secondary', paddingInlineStart: 12 }}>
                 {t('admin.settings.notifications.staffAlertsHelp')}
               </Typography>
             </Grid>

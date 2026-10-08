@@ -5,6 +5,7 @@ namespace App\Http\Requests\Events;
 use App\Http\Requests\ApiRequest;
 use App\Models\Event;
 use App\Models\Tenant;
+use App\Rules\YoutubeLink;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
@@ -31,8 +32,9 @@ class EventFormRequest extends ApiRequest
             'capacity' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'registrationRequired' => ['sometimes', 'boolean'],
             'isSponsored' => ['sometimes', 'boolean'],
-            'streamUrl' => ['nullable', 'url:https', 'max:500'],
-            'recordingUrl' => ['nullable', 'url:https', 'max:500'],
+            // Settings → YouTube may allow YouTube links only.
+            'streamUrl' => ['nullable', 'url:https', 'max:500', new YoutubeLink],
+            'recordingUrl' => ['nullable', 'url:https', 'max:500', new YoutubeLink],
         ];
     }
 
@@ -52,6 +54,8 @@ class EventFormRequest extends ApiRequest
             'startsAt' => 'invalid_event_dates',
             'endsAt' => 'invalid_event_dates',
             'capacity' => 'invalid_capacity',
+            'streamUrl.youtube_link' => 'youtube_link_required',
+            'recordingUrl.youtube_link' => 'youtube_link_required',
             'streamUrl' => 'invalid_stream_url',
             'recordingUrl' => 'invalid_recording_url',
         ];
