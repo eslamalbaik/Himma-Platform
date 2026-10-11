@@ -7,7 +7,8 @@ export const AppAbility = Ability
 // Builds the CASL rules for the signed-in user (or a platform role name).
 // Platform staff: their role's rules from src/configs/roles.js. Client users (`kind: 'client'`, see
 // ClientAccess::sessionUser): `read client` for the client dashboard, plus `<permission> client` for every
-// permission of their client role template that is not denied (backend/config/tenant_permissions.php).
+// permission of their client role template that is not denied (backend/config/tenant_permissions.php), and
+// `<permission>:allowed client` for those fully allowed.
 // Unknown roles get no rules, so they can reach nothing.
 const defineRulesFor = user => {
   const { can, rules } = new AbilityBuilder(AppAbility)
@@ -16,6 +17,7 @@ const defineRulesFor = user => {
     can('read', 'client')
     Object.entries(user.clientPermissions || {}).forEach(([permission, state]) => {
       if (state !== 'denied') can(permission, 'client')
+      if (state === 'allowed') can(`${permission}:allowed`, 'client')
     })
 
     return rules

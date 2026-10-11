@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Billing\PlanController;
 use App\Http\Controllers\Api\Billing\SubscriptionController;
 use App\Http\Controllers\Api\Billing\WebhookController;
 use App\Http\Controllers\Api\BusinessStatsController;
+use App\Http\Controllers\Api\Client\BillingController as ClientBillingController;
 use App\Http\Controllers\Api\Client\MemberController as ClientMemberController;
 use App\Http\Controllers\Api\Client\OverviewController as ClientOverviewController;
 use App\Http\Controllers\Api\Content\ArticleController;
@@ -275,15 +276,26 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
 
 // Client (tenant) dashboard: only client users (`client`), each limited to their own organisation, with the
 // permissions of their client role template (`tperm:<permission>`, config/tenant_permissions.php). While the
-// organisation is suspended or cancelled, `client` refuses every write except billing.
-Route::prefix('client')->middleware(['auth.api', 'not_maintenance', 'client'])->group(function () {
-    Route::get('overview', ClientOverviewController::class);
+// organisation is suspended or cancelled, `client` refuses every write; `client:billing` still lets it pay.
+Route::prefix('client')->middleware(['auth.api', 'not_maintenance'])->group(function () {
+    Route::middleware('client')->group(function () {
+        Route::get('overview', ClientOverviewController::class);
 
-    Route::get('members', [ClientMemberController::class, 'index'])->middleware('tperm:manage_entity_members');
-    Route::get('roles', [ClientMemberController::class, 'roles'])->middleware('tperm:manage_entity_members');
+        Route::get('members', [ClientMemberController::class, 'index'])->middleware('tperm:manage_entity_members');
+        Route::get('roles', [ClientMemberController::class, 'roles'])->middleware('tperm:manage_entity_members');
 
-    Route::middleware('same_origin')->group(function () {
-        Route::post('members', [ClientMemberController::class, 'store'])->middleware('tperm:manage_entity_members');
-        Route::put('members/{cuid}', [ClientMemberController::class, 'update'])->middleware('tperm:manage_entity_members');
+        Route::middleware('same_origin')->group(function () {
+            Route::post('members', [ClientMemberController::class, 'store'])->middleware('tperm:manage_entity_members');
+            Route::put('members/{cuid}', [ClientMemberController::class, 'update'])->middleware('tperm:manage_entity_members');
+        });
+    });
+
+    // The organisation's subscription and invoices: for roles that run its account.
+    Route::prefix('billing')->middleware(['client:billing', 'tperm:general_settings,allowed'])->group(function () {
+        Route::get('/', [ClientBillingController::class, 'summary']);
+        Route::get('invoices', [ClientBillingController::class, 'invoices']);
+        Route::get('invoices/{cuid}', [ClientBillingController::class, 'show']);
+        Route::get('invoices/{cuid}/pdf', [ClientBillingController::class, 'pdf']);
+        Route::post('invoices/{cuid}/pay', [ClientBillingController::class, 'pay'])->middleware(['same_origin', 'throttle:20,1']);
     });
 });

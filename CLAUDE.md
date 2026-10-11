@@ -67,6 +67,8 @@ Himma ships in two languages. Any code you add or change must work in both:
   tenant. `/api/auth/me` returns `kind` (`platform`|`client`) plus, for clients, `tenant` and `clientPermissions`;
   the UI turns those into CASL rules `<permission> client` (`src/configs/acl.js`) and picks the client sidebar
   (`src/navigation/vertical/client.js`). Members may only be given roles that grant nothing beyond the actor's own.
+  Client billing (`/client/billing`: subscription, invoices, PDF, online payment) needs `general_settings` fully
+  allowed (`tperm:general_settings,allowed`, CASL action `general_settings:allowed`).
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
 - Sidebar: `src/navigation/vertical/index.js`. Each item has a translation key and the CASL subject that
