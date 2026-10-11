@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\Content;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Content\ArticleFormRequest;
 use App\Http\Requests\Content\ComplianceFormRequest;
+use App\Http\Requests\Content\CorrectionFormRequest;
 use App\Http\Requests\Content\ReasonFormRequest;
 use App\Models\Article;
+use App\Models\ArticleCorrection;
 use App\Models\ArticleVersion;
 use App\Models\MagazineSection;
 use App\Settings\Publishing;
@@ -60,12 +62,18 @@ class ArticleController extends Controller
         );
     }
 
-    public function show(Article $article)
+    public function show(Request $request, Article $article)
     {
-        $article->load(['section', 'issue', 'tenant', 'tags', 'reviewer', 'writer', 'versions.editor']);
+        $article->load(['section', 'issue', 'tenant', 'tags', 'reviewer', 'writer', 'versions.editor', 'corrections.corrector']);
+
+        // CLS-04: every access to confidential content is recorded.
+        if ($article->classification === 'confidential') {
+            $this->audit($request, 'confidential_viewed', $article);
+        }
 
         return $this->item($article->toPublicArray(true) + [
             'versions' => $article->versions->map(fn (ArticleVersion $version) => $version->toPublicArray())->values(),
+            'corrections' => $article->corrections->map(fn (ArticleCorrection $c) => $c->toPublicArray())->values(),
         ]);
     }
 
@@ -228,6 +236,73 @@ class ArticleController extends Controller
             'compliance_checks' => null,
             'compliance_checked_at' => null,
         ]);
+    }
+
+    // GOV-04: a published article is changed only through a correction, which stays visible with it.
+    // The corrected text, when given, is saved as a new version.
+    public function correct(CorrectionFormRequest $request, Article $article)
+    {
+        if ($article->status !== 'published') {
+            return $this->error('article_not_published', 409);
+        }
+
+        $correction = DB::transaction(function () use ($request, $article) {
+            $version = null;
+            if ($request->filled('title')) {
+                $article->title = trim($request->input('title'));
+            }
+            if ($request->filled('body')) {
+                $article->body = $request->input('body');
+            }
+            if ($article->isDirty(['title', 'body'])) {
+                $article->save();
+                $article->saveVersion($request->user());
+                $version = (int) $article->versions()->max('version');
+            }
+
+            return $article->corrections()->create([
+                'kind' => $request->input('kind'),
+                'note' => trim($request->input('note')),
+                'version' => $version,
+                'corrected_by' => $request->user()->id,
+                'created_at' => now(),
+            ]);
+        });
+
+        $this->audit($request, 'corrected', $article, ['kind' => $correction->kind, 'version' => $correction->version]);
+
+        return $this->show($request, $article->fresh());
+    }
+
+    // §6 Version Control: bring back an earlier title and text. Only while the article can still be edited;
+    // a published article is changed through a correction instead.
+    public function restoreVersion(Request $request, Article $article, int $version)
+    {
+        if (! $article->isEditable()) {
+            return $this->error('article_locked', 409);
+        }
+        $old = $article->versions()->where('version', $version)->first();
+        if (! $old) {
+            return $this->error('version_not_found', 404);
+        }
+
+        DB::transaction(function () use ($request, $article, $old) {
+            $article->fill(['title' => $old->title, 'body' => $old->body]);
+            if (! $article->isDirty(['title', 'body'])) {
+                return;
+            }
+            // Like any text change: a fresh compliance check is needed before approval.
+            $article->fill(['compliance_result' => null, 'compliance_checks' => null, 'compliance_checked_at' => null]);
+            if ($article->status === 'approved') {
+                $article->status = 'in_review';
+            }
+            $article->save();
+            $article->saveVersion($request->user());
+        });
+
+        $this->audit($request, 'version_restored', $article, ['version' => $version]);
+
+        return $this->show($request, $article->fresh());
     }
 
     private function transition(Request $request, Article $article, string $action, array $extra = [])

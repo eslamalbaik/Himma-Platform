@@ -127,6 +127,11 @@ class Article extends Model
         return $this->hasMany(ContentReport::class);
     }
 
+    public function corrections(): HasMany
+    {
+        return $this->hasMany(ArticleCorrection::class)->orderBy('created_at')->orderBy('id');
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);

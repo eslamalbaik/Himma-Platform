@@ -148,6 +148,8 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
             Route::post('articles/{article}/publish', [ArticleController::class, 'publish'])->middleware('ability:manage,content');
             Route::post('articles/{article}/withdraw', [ArticleController::class, 'withdraw'])->middleware('ability:manage,content');
             Route::post('articles/{article}/restore', [ArticleController::class, 'restore'])->middleware('ability:manage,content');
+            Route::post('articles/{article}/corrections', [ArticleController::class, 'correct'])->middleware('ability:manage,content');
+            Route::post('articles/{article}/versions/{version}/restore', [ArticleController::class, 'restoreVersion'])->whereNumber('version')->middleware('ability:update,content');
 
             Route::post('reports', [ContentReportController::class, 'store'])->middleware('ability:create,content');
             Route::post('reports/{report}/decide', [ContentReportController::class, 'decide'])->middleware('ability:update,content');
