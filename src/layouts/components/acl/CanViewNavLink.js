@@ -3,6 +3,7 @@ import { useContext } from 'react'
 
 // ** Component Imports
 import { AbilityContext } from 'src/layouts/components/acl/Can'
+import { canSeeNavItem } from 'src/navigation/vertical'
 
 const CanViewNavLink = props => {
   // ** Props
@@ -13,7 +14,7 @@ const CanViewNavLink = props => {
   if (navLink && navLink.auth === false) {
     return <>{children}</>
   } else {
-    return ability && ability.can(navLink?.action, navLink?.subject) ? <>{children}</> : null
+    return navLink && canSeeNavItem(ability, navLink) ? <>{children}</> : null
   }
 }
 

@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\Messages\MessageReportController;
 use App\Http\Controllers\Api\MyNotificationController;
 use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
 use App\Http\Controllers\Api\UserController;
@@ -182,6 +183,15 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
             Route::delete('blocks/{cuid}', [BlockController::class, 'destroy'])->middleware('ability:create,messages');
         });
     });
+
+    // Reports & Analytics: `read,reports` plus read access to the area each report covers. Exporting is a
+    // read too, but it is written to the audit log.
+    foreach (['revenue' => 'billing', 'tenants' => 'tenants', 'content' => 'content', 'events' => 'events'] as $report => $subject) {
+        Route::get("reports/$report", [ReportController::class, 'show'])
+            ->defaults('type', $report)->middleware(['ability:read,reports', "ability:read,$subject"]);
+        Route::get("reports/$report/export", [ReportController::class, 'export'])
+            ->defaults('type', $report)->middleware(['ability:read,reports', "ability:read,$subject", 'throttle:30,1']);
+    }
 
     Route::prefix('magazine')->group(function () {
         Route::get('sections', [SectionController::class, 'index'])->middleware('ability:read,magazine');

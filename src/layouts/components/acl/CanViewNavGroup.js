@@ -3,6 +3,7 @@ import { useContext } from 'react'
 
 // ** Component Imports
 import { AbilityContext } from 'src/layouts/components/acl/Can'
+import { canSeeNavItem } from 'src/navigation/vertical'
 
 const CanViewNavGroup = props => {
   // ** Props
@@ -16,7 +17,7 @@ const CanViewNavGroup = props => {
       if (i.children) {
         return checkForVisibleChild(i.children)
       } else {
-        return ability?.can(i.action, i.subject)
+        return canSeeNavItem(ability, i)
       }
     })
   }

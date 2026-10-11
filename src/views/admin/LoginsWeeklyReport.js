@@ -44,7 +44,7 @@ const LoginsWeeklyReport = ({ daily, total, growthPercent, successful, failed, u
       progress: attempts > 0 ? Math.round((successful / attempts) * 100) : 0,
       stats: successful,
       title: t('admin.stats.successfulLogins'),
-      avatarIcon: 'tabler:login-2'
+      avatarIcon: 'tabler:login'
     },
     {
       progress: attempts > 0 ? Math.round((failed / attempts) * 100) : 0,
@@ -81,9 +81,7 @@ const LoginsWeeklyReport = ({ daily, total, growthPercent, successful, failed, u
     legend: { show: false },
     tooltip: { enabled: false },
     dataLabels: { enabled: false },
-    colors: categories.map((_, i) =>
-      hexToRGBA(theme.palette.primary.main, i === peakIndex ? 1 : 0.16)
-    ),
+    colors: categories.map((_, i) => hexToRGBA(theme.palette.primary.main, i === peakIndex ? 1 : 0.16)),
     states: {
       hover: {
         filter: { type: 'none' }
@@ -118,7 +116,11 @@ const LoginsWeeklyReport = ({ daily, total, growthPercent, successful, failed, u
 
   return (
     <Card>
-      <CardHeader sx={{ pb: 0 }} title={t('admin.stats.loginsWeeklyTitle')} subheader={t('admin.stats.loginsWeeklySubtitle')} />
+      <CardHeader
+        sx={{ pb: 0 }}
+        title={t('admin.stats.loginsWeeklyTitle')}
+        subheader={t('admin.stats.loginsWeeklySubtitle')}
+      />
       <CardContent>
         <Grid container spacing={6}>
           <StyledGrid
