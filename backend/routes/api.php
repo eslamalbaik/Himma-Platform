@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\Settings\PublishingSettingsController;
 use App\Http\Controllers\Api\Settings\YouTubeSettingsController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
+use App\Http\Controllers\Api\TenantRoleController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -190,6 +191,15 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
             Route::post('blocks', [BlockController::class, 'store'])->middleware('ability:create,messages');
             Route::delete('blocks/{cuid}', [BlockController::class, 'destroy'])->middleware('ability:create,messages');
         });
+    });
+
+    // Permissions → Client role templates (§10). Changing roles is for those who manage permissions.
+    Route::get('tenant-roles', [TenantRoleController::class, 'index'])->middleware('ability:read,permissions');
+    Route::middleware('same_origin')->group(function () {
+        Route::post('tenant-roles', [TenantRoleController::class, 'store'])->middleware('ability:create,permissions');
+        Route::put('tenant-roles/{tenantRole}', [TenantRoleController::class, 'update'])->middleware('ability:update,permissions');
+        Route::put('tenant-roles/{tenantRole}/permissions', [TenantRoleController::class, 'updatePermissions'])->middleware('ability:update,permissions');
+        Route::delete('tenant-roles/{tenantRole}', [TenantRoleController::class, 'destroy'])->middleware('ability:delete,permissions');
     });
 
     // Users → Writers (NAV-03): listed with read access to users; editing is editorial work (`update,content`),
