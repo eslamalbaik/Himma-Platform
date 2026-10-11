@@ -1,3 +1,5 @@
+import { clientNavigation } from './client'
+
 // Super admin sidebar (sitemap in /mnt/project-files/himma/super-admin-dashboard.md §3).
 // `title` is a translation key (public/locales/{ar,en}.json); `subject` matches src/configs/roles.js.
 // `also` is a second permission the entry needs (a report also needs read access to the area it covers).
@@ -172,6 +174,9 @@ export const findNavItem = path => {
 
   return null
 }
+
+// The sidebar of the signed-in user's dashboard: client users get the client dashboard's.
+export const navigationFor = user => (user?.kind === 'client' ? clientNavigation : adminNavigation)
 
 const navigation = () => adminNavigation
 

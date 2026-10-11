@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\Billing\PlanController;
 use App\Http\Controllers\Api\Billing\SubscriptionController;
 use App\Http\Controllers\Api\Billing\WebhookController;
 use App\Http\Controllers\Api\BusinessStatsController;
+use App\Http\Controllers\Api\Client\MemberController as ClientMemberController;
+use App\Http\Controllers\Api\Client\OverviewController as ClientOverviewController;
 use App\Http\Controllers\Api\Content\ArticleController;
 use App\Http\Controllers\Api\Content\CommentController;
 use App\Http\Controllers\Api\Content\ContentReportController;
@@ -268,5 +270,20 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
             Route::post('issues/{issue}/publish', [IssueController::class, 'publish'])->middleware('ability:update,magazine');
             Route::delete('issues/{issue}', [IssueController::class, 'destroy'])->middleware('ability:delete,magazine');
         });
+    });
+});
+
+// Client (tenant) dashboard: only client users (`client`), each limited to their own organisation, with the
+// permissions of their client role template (`tperm:<permission>`, config/tenant_permissions.php). While the
+// organisation is suspended or cancelled, `client` refuses every write except billing.
+Route::prefix('client')->middleware(['auth.api', 'not_maintenance', 'client'])->group(function () {
+    Route::get('overview', ClientOverviewController::class);
+
+    Route::get('members', [ClientMemberController::class, 'index'])->middleware('tperm:manage_entity_members');
+    Route::get('roles', [ClientMemberController::class, 'roles'])->middleware('tperm:manage_entity_members');
+
+    Route::middleware('same_origin')->group(function () {
+        Route::post('members', [ClientMemberController::class, 'store'])->middleware('tperm:manage_entity_members');
+        Route::put('members/{cuid}', [ClientMemberController::class, 'update'])->middleware('tperm:manage_entity_members');
     });
 });

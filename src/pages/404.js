@@ -7,6 +7,9 @@ import { styled } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 
+// ** Third Party Imports
+import { useTranslation } from 'react-i18next'
+
 // ** Layout Import
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 
@@ -34,18 +37,18 @@ const Img = styled('img')(({ theme }) => ({
 }))
 
 const Error404 = () => {
+  const { t } = useTranslation()
+
   return (
     <Box className='content-center'>
       <Box sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
         <BoxWrapper>
           <Typography variant='h2' sx={{ mb: 1.5 }}>
-            Page Not Found :(
+            {t('errorPages.404.title')}
           </Typography>
-          <Typography sx={{ mb: 6, color: 'text.secondary' }}>
-            Oops! 😖 The requested URL was not found on this server.
-          </Typography>
+          <Typography sx={{ mb: 6, color: 'text.secondary' }}>{t('errorPages.404.message')}</Typography>
           <Button href='/' component={Link} variant='contained'>
-            Back to Home
+            {t('errorPages.backHome')}
           </Button>
         </BoxWrapper>
         <Img height='500' alt='error-illustration' src='/images/pages/404.png' />

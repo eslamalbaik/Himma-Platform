@@ -20,8 +20,8 @@ Himma ships in two languages. Any code you add or change must work in both:
 - **Frontend:** Next.js 15 (pages router) + MUI (Vuexy template). `next.config.js` proxies `/api/*` to the
   backend, so the browser only talks to the frontend's origin.
 - **Backend:** Laravel 12 in `backend/` (MySQL, Redis for sessions/cache/queue). Routes: `backend/routes/api.php`.
-- Two dashboards: the **super admin** dashboard (`/admin`, platform team) and, later, a **client (tenant)**
-  dashboard. Business requirements: `REQUIREMENTS.md`.
+- Two dashboards: the **super admin** dashboard (`/admin`, platform team) and the **client (tenant)**
+  dashboard (`/client`). Business requirements: `REQUIREMENTS.md`.
 - **Auth:** `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`. Laravel session in the httpOnly
   `himma_session` cookie; the browser never stores tokens. Changing a password bumps `users.token_version`,
   which ends that account's other sessions (`EnsureApiUser`).
@@ -60,6 +60,13 @@ Himma ships in two languages. Any code you add or change must work in both:
 - **AI Center** (`App\Ai\AiCenter`, `/admin/ai-agent`): Claude through the official Anthropic PHP SDK
   (`anthropic-ai/sdk`, client built by `App\Ai\Claude` so tests inject a fake HTTP transport), structured JSON output,
   model/effort/limit from Settings → AI. Every use is a row in `ai_usages` (AI-P-02); confidential articles are never sent.
+- **Client dashboard** (`/client`, API `/api/client/*`): users with a `tenant_id` and a client role template as
+  their `role` (`users.role` = `tenant_roles.key`). `App\Support\ClientAccess` reads their matrix; routes use
+  `client` (client users only; a suspended or cancelled client may read and pay but not change anything, except
+  routes marked `client:billing`) and `tperm:<permission>` (not denied). Data is always limited to the user's own
+  tenant. `/api/auth/me` returns `kind` (`platform`|`client`) plus, for clients, `tenant` and `clientPermissions`;
+  the UI turns those into CASL rules `<permission> client` (`src/configs/acl.js`) and picks the client sidebar
+  (`src/navigation/vertical/client.js`). Members may only be given roles that grant nothing beyond the actor's own.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
 - Sidebar: `src/navigation/vertical/index.js`. Each item has a translation key and the CASL subject that

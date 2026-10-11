@@ -77,7 +77,7 @@ const AppBarContent = props => {
       <ModeToggler settings={settings} saveSettings={saveSettings} />
       {auth.user && (
         <>
-          <ShortcutsDropdown settings={settings} shortcuts={shortcuts} />
+          {auth.user.role === 'super_admin' ? <ShortcutsDropdown settings={settings} shortcuts={shortcuts} /> : null}
           <NotificationsDropdown />
           <UserDropdown settings={settings} />
         </>
