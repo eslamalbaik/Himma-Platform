@@ -8,6 +8,7 @@ use App\Models\PlatformSetting;
 use App\Models\User;
 use App\Support\Ability;
 use App\Support\Audit;
+use App\Support\ClientAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -60,8 +61,9 @@ class AuthController extends Controller
             return $this->error('invalid_credentials', 401);
         }
 
-        // Only the super admin dashboard exists so far; client (tenant) accounts get their own dashboard later.
-        if (! Ability::isPlatformRole($user->role)) {
+        // Platform staff use the super admin dashboard, client users (a client role template and an organisation)
+        // the client dashboard. Anyone else (e.g. a role that no longer exists) has nowhere to go.
+        if (! Ability::isPlatformRole($user->role) && ! ClientAccess::isClientUser($user)) {
             Audit::log($request, [
                 'action' => 'auth.login_denied',
                 'actor' => $user,
@@ -97,7 +99,7 @@ class AuthController extends Controller
 
         Audit::log($request, ['action' => 'auth.login', 'actor' => $user, 'metadata' => ['remember' => $remember]]);
 
-        return response()->json(['user' => $user->toPublicArray()]);
+        return response()->json(['user' => ClientAccess::sessionUser($user)]);
     }
 
     public function logout(Request $request)
@@ -117,7 +119,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return response()
-            ->json(['user' => $request->user()->toPublicArray()])
+            ->json(['user' => ClientAccess::sessionUser($request->user())])
             ->header('Cache-Control', 'no-store');
     }
 }

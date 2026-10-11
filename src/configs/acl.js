@@ -4,11 +4,26 @@ import { PLATFORM_ROLES } from 'src/configs/roles'
 
 export const AppAbility = Ability
 
-// Builds the CASL rules for a role from src/configs/roles.js.
+// Builds the CASL rules for the signed-in user (or a platform role name).
+// Platform staff: their role's rules from src/configs/roles.js. Client users (`kind: 'client'`, see
+// ClientAccess::sessionUser): `read client` for the client dashboard, plus `<permission> client` for every
+// permission of their client role template that is not denied (backend/config/tenant_permissions.php), and
+// `<permission>:allowed client` for those fully allowed.
 // Unknown roles get no rules, so they can reach nothing.
-const defineRulesFor = role => {
+const defineRulesFor = user => {
   const { can, rules } = new AbilityBuilder(AppAbility)
-  const roleDef = PLATFORM_ROLES[role]
+
+  if (user && typeof user === 'object' && user.kind === 'client') {
+    can('read', 'client')
+    Object.entries(user.clientPermissions || {}).forEach(([permission, state]) => {
+      if (state !== 'denied') can(permission, 'client')
+      if (state === 'allowed') can(`${permission}:allowed`, 'client')
+    })
+
+    return rules
+  }
+
+  const roleDef = PLATFORM_ROLES[typeof user === 'object' ? user?.role : user]
 
   if (roleDef) {
     roleDef.rules.forEach(rule => can(rule.action, rule.subject))
@@ -17,8 +32,8 @@ const defineRulesFor = role => {
   return rules
 }
 
-export const buildAbilityFor = role => {
-  return new AppAbility(defineRulesFor(role), {
+export const buildAbilityFor = user => {
+  return new AppAbility(defineRulesFor(user), {
     // https://casl.js.org/v5/en/guide/subject-type-detection
     // @ts-ignore
     detectSubjectType: object => object.type

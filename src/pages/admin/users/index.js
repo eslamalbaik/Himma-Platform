@@ -245,6 +245,8 @@ const UsersPage = () => {
                 setPage(0)
               }}
               rowsPerPageOptions={[10, 25, 50, 100]}
+              labelRowsPerPage={t('admin.common.rowsPerPage')}
+              labelDisplayedRows={({ from, to, count }) => t('admin.common.pageRange', { from, to, count })}
             />
           </CardContent>
         </Card>

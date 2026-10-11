@@ -59,6 +59,8 @@ return [
                 ['action' => 'read', 'subject' => 'users'],
                 ['action' => 'manage', 'subject' => 'messages'],
                 ['action' => 'read', 'subject' => 'reports'],
+                // The AI Center assists editors (§8): they run its tools; settings stay with the owner.
+                ['action' => ['read', 'create'], 'subject' => 'ai_agent'],
             ],
         ],
         'broadcast_moderator' => [

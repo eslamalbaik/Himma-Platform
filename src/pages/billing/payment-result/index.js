@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 import Icon from 'src/@core/components/icon'
 import { formatMoney, localName, pickLang } from 'src/views/admin/billing/format'
+import { useAuth } from 'src/hooks/useAuth'
 
 const LOOK = {
   succeeded: { icon: 'tabler:circle-check', color: 'success.main' },
@@ -34,6 +35,7 @@ const PaymentResultPage = () => {
   const { t, i18n } = useTranslation()
   const lang = pickLang(i18n)
   const router = useRouter()
+  const { user } = useAuth()
   const [result, setResult] = useState(null)
   const [errorCode, setErrorCode] = useState(null)
 
@@ -91,6 +93,14 @@ const PaymentResultPage = () => {
                 <Button variant='contained' href={result.checkoutUrl}>
                   {t('paymentResult.payNow')}
                 </Button>
+              ) : null}
+              {/* A signed-in client user (who paid from their dashboard) goes back to their invoices. */}
+              {user?.kind === 'client' ? (
+                <Box sx={{ mt: 4 }}>
+                  <Button variant='tonal' href='/client/billing/'>
+                    {t('paymentResult.backToDashboard')}
+                  </Button>
+                </Box>
               ) : null}
             </>
           )}

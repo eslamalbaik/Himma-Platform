@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AdminStatsController;
+use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Billing\BillingSettingsController;
@@ -12,9 +13,15 @@ use App\Http\Controllers\Api\Billing\PlanController;
 use App\Http\Controllers\Api\Billing\SubscriptionController;
 use App\Http\Controllers\Api\Billing\WebhookController;
 use App\Http\Controllers\Api\BusinessStatsController;
+use App\Http\Controllers\Api\Client\ArticleController as ClientArticleController;
+use App\Http\Controllers\Api\Client\BillingController as ClientBillingController;
+use App\Http\Controllers\Api\Client\MemberController as ClientMemberController;
+use App\Http\Controllers\Api\Client\OverviewController as ClientOverviewController;
+use App\Http\Controllers\Api\Client\ReportController as ClientReportController;
 use App\Http\Controllers\Api\Content\ArticleController;
 use App\Http\Controllers\Api\Content\CommentController;
 use App\Http\Controllers\Api\Content\ContentReportController;
+use App\Http\Controllers\Api\Content\WriterController;
 use App\Http\Controllers\Api\Events\EventController;
 use App\Http\Controllers\Api\Events\RegistrationController;
 use App\Http\Controllers\Api\Magazine\IssueController;
@@ -26,8 +33,14 @@ use App\Http\Controllers\Api\Messages\MessageReportController;
 use App\Http\Controllers\Api\MyNotificationController;
 use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
+use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\Settings\AiSettingsController;
+use App\Http\Controllers\Api\Settings\PolicyController;
+use App\Http\Controllers\Api\Settings\PublishingSettingsController;
+use App\Http\Controllers\Api\Settings\YouTubeSettingsController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
+use App\Http\Controllers\Api\TenantRoleController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +58,9 @@ Route::prefix('billing')->group(function () {
     Route::post('webhook/{driver}', [WebhookController::class, 'handle'])->middleware('throttle:120,1');
     Route::get('payments/{cuid}/result', [PaymentResultController::class, 'show'])->middleware('throttle:30,1');
 });
+
+// Public site: the media policies page (§7) and the sponsored-content label. No session.
+Route::get('site/policies', [PolicyController::class, 'published'])->middleware('throttle:60,1');
 
 Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(function () {
     Route::get('stats', AdminStatsController::class)->middleware('ability:read,dashboard');
@@ -137,6 +153,8 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
             Route::post('articles/{article}/publish', [ArticleController::class, 'publish'])->middleware('ability:manage,content');
             Route::post('articles/{article}/withdraw', [ArticleController::class, 'withdraw'])->middleware('ability:manage,content');
             Route::post('articles/{article}/restore', [ArticleController::class, 'restore'])->middleware('ability:manage,content');
+            Route::post('articles/{article}/corrections', [ArticleController::class, 'correct'])->middleware('ability:manage,content');
+            Route::post('articles/{article}/versions/{version}/restore', [ArticleController::class, 'restoreVersion'])->whereNumber('version')->middleware('ability:update,content');
 
             Route::post('reports', [ContentReportController::class, 'store'])->middleware('ability:create,content');
             Route::post('reports/{report}/decide', [ContentReportController::class, 'decide'])->middleware('ability:update,content');
@@ -183,6 +201,59 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
         });
     });
 
+    // AI Center (§8): editors run its tools; every use is logged (AI-P-02). Settings → AI turns it on.
+    Route::get('ai', [AiController::class, 'overview'])->middleware('ability:read,ai_agent');
+    Route::get('ai/usages', [AiController::class, 'usages'])->middleware('ability:read,ai_agent');
+    Route::get('ai/usages/{aiUsage}', [AiController::class, 'show'])->middleware('ability:read,ai_agent');
+    Route::middleware('same_origin')->group(function () {
+        Route::post('ai/run', [AiController::class, 'run'])->middleware(['ability:create,ai_agent', 'throttle:20,1']);
+        Route::post('ai/usages/{aiUsage}/applied', [AiController::class, 'applied'])->middleware('ability:create,ai_agent');
+    });
+
+    // Permissions → Client role templates (§10). Changing roles is for those who manage permissions.
+    Route::get('tenant-roles', [TenantRoleController::class, 'index'])->middleware('ability:read,permissions');
+    Route::middleware('same_origin')->group(function () {
+        Route::post('tenant-roles', [TenantRoleController::class, 'store'])->middleware('ability:create,permissions');
+        Route::put('tenant-roles/{tenantRole}', [TenantRoleController::class, 'update'])->middleware('ability:update,permissions');
+        Route::put('tenant-roles/{tenantRole}/permissions', [TenantRoleController::class, 'updatePermissions'])->middleware('ability:update,permissions');
+        Route::delete('tenant-roles/{tenantRole}', [TenantRoleController::class, 'destroy'])->middleware('ability:delete,permissions');
+    });
+
+    // Users → Writers (NAV-03): listed with read access to users; editing is editorial work (`update,content`),
+    // and verifying or suspending a writer is an editorial decision (`manage,content`, PUB-02).
+    Route::get('writers', [WriterController::class, 'index'])->middleware('ability:read,users');
+    Route::get('writers/{writer}', [WriterController::class, 'show'])->middleware('ability:read,users');
+    Route::middleware('same_origin')->group(function () {
+        Route::post('writers', [WriterController::class, 'store'])->middleware('ability:create,content');
+        Route::put('writers/{writer}', [WriterController::class, 'update'])->middleware('ability:update,content');
+        Route::delete('writers/{writer}', [WriterController::class, 'destroy'])->middleware('ability:delete,content');
+        Route::post('writers/{writer}/verify', [WriterController::class, 'verify'])->middleware('ability:manage,content');
+        Route::post('writers/{writer}/suspend', [WriterController::class, 'suspend'])->middleware('ability:manage,content');
+    });
+
+    // Settings → Publishing, Policies, YouTube and AI. API keys are write-only (never returned).
+    Route::get('settings/publishing', [PublishingSettingsController::class, 'show'])->middleware('ability:read,settings');
+    Route::get('settings/policies', [PolicyController::class, 'index'])->middleware('ability:read,settings');
+    Route::get('settings/youtube', [YouTubeSettingsController::class, 'show'])->middleware('ability:read,settings');
+    Route::get('settings/ai', [AiSettingsController::class, 'show'])->middleware('ability:read,settings');
+    Route::middleware('same_origin')->group(function () {
+        Route::put('settings/publishing', [PublishingSettingsController::class, 'update'])->middleware('ability:update,settings');
+        Route::put('settings/policies/{key}', [PolicyController::class, 'update'])->middleware('ability:update,settings');
+        Route::put('settings/youtube', [YouTubeSettingsController::class, 'update'])->middleware('ability:update,settings');
+        Route::post('settings/youtube/test', [YouTubeSettingsController::class, 'test'])->middleware(['ability:update,settings', 'throttle:10,1']);
+        Route::put('settings/ai', [AiSettingsController::class, 'update'])->middleware('ability:update,settings');
+        Route::post('settings/ai/test', [AiSettingsController::class, 'test'])->middleware(['ability:update,settings', 'throttle:10,1']);
+    });
+
+    // Reports & Analytics: `read,reports` plus read access to the area each report covers. Exporting is a
+    // read too, but it is written to the audit log.
+    foreach (['revenue' => 'billing', 'tenants' => 'tenants', 'content' => 'content', 'events' => 'events', 'ai' => 'ai_agent'] as $report => $subject) {
+        Route::get("reports/$report", [ReportController::class, 'show'])
+            ->defaults('type', $report)->middleware(['ability:read,reports', "ability:read,$subject"]);
+        Route::get("reports/$report/export", [ReportController::class, 'export'])
+            ->defaults('type', $report)->middleware(['ability:read,reports', "ability:read,$subject", 'throttle:30,1']);
+    }
+
     Route::prefix('magazine')->group(function () {
         Route::get('sections', [SectionController::class, 'index'])->middleware('ability:read,magazine');
         Route::get('tags', [TagController::class, 'index'])->middleware('ability:read,magazine');
@@ -202,5 +273,44 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
             Route::post('issues/{issue}/publish', [IssueController::class, 'publish'])->middleware('ability:update,magazine');
             Route::delete('issues/{issue}', [IssueController::class, 'destroy'])->middleware('ability:delete,magazine');
         });
+    });
+});
+
+// Client (tenant) dashboard: only client users (`client`), each limited to their own organisation, with the
+// permissions of their client role template (`tperm:<permission>`, config/tenant_permissions.php). While the
+// organisation is suspended or cancelled, `client` refuses every write; `client:billing` still lets it pay.
+Route::prefix('client')->middleware(['auth.api', 'not_maintenance'])->group(function () {
+    Route::middleware('client')->group(function () {
+        Route::get('overview', ClientOverviewController::class);
+
+        Route::get('members', [ClientMemberController::class, 'index'])->middleware('tperm:manage_entity_members');
+        Route::get('roles', [ClientMemberController::class, 'roles'])->middleware('tperm:manage_entity_members');
+
+        Route::get('articles', [ClientArticleController::class, 'index'])->middleware('tperm:publish');
+        Route::get('articles/{cuid}', [ClientArticleController::class, 'show'])->middleware('tperm:publish');
+        Route::get('sections', [ClientArticleController::class, 'sections'])->middleware('tperm:publish');
+
+        Route::get('reports', [ClientReportController::class, 'show'])->middleware('tperm:entity_reports');
+        Route::get('reports/export', [ClientReportController::class, 'export'])
+            ->middleware(['tperm:entity_reports', 'tperm:export_data', 'throttle:30,1']);
+
+        Route::middleware('same_origin')->group(function () {
+            Route::post('members', [ClientMemberController::class, 'store'])->middleware('tperm:manage_entity_members');
+            Route::put('members/{cuid}', [ClientMemberController::class, 'update'])->middleware('tperm:manage_entity_members');
+
+            Route::post('articles', [ClientArticleController::class, 'store'])->middleware('tperm:publish');
+            Route::put('articles/{cuid}', [ClientArticleController::class, 'update'])->middleware('tperm:publish');
+            Route::delete('articles/{cuid}', [ClientArticleController::class, 'destroy'])->middleware('tperm:publish');
+            Route::post('articles/{cuid}/submit', [ClientArticleController::class, 'submit'])->middleware('tperm:submit_review');
+        });
+    });
+
+    // The organisation's subscription and invoices: for roles that run its account.
+    Route::prefix('billing')->middleware(['client:billing', 'tperm:general_settings,allowed'])->group(function () {
+        Route::get('/', [ClientBillingController::class, 'summary']);
+        Route::get('invoices', [ClientBillingController::class, 'invoices']);
+        Route::get('invoices/{cuid}', [ClientBillingController::class, 'show']);
+        Route::get('invoices/{cuid}/pdf', [ClientBillingController::class, 'pdf']);
+        Route::post('invoices/{cuid}/pay', [ClientBillingController::class, 'pay'])->middleware(['same_origin', 'throttle:20,1']);
     });
 });

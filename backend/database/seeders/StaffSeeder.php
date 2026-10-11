@@ -47,12 +47,28 @@ class StaffSeeder extends Seeder
                 continue;
             }
 
+            // Client role templates (§10): a government client's account is a government entity, the rest institutions.
             User::updateOrCreate(['email' => $email], [
-                'password' => $password, 'role' => 'tenant_admin', 'tenant_id' => $tenant->id,
+                'password' => $password, 'role' => $tenant->type === 'government' ? 'government' : 'institution', 'tenant_id' => $tenant->id,
                 'name_ar' => $nameAr, 'name_en' => $nameEn, 'status' => 'active', 'locale' => 'ar',
             ]);
         }
 
-        $this->command->info('Test accounts ready: '.count($staff).' staff, '.count($clients).' client users.');
+        // A few more accounts in one client, so its Members page has something to manage.
+        $birr = Tenant::where('slug', 'al-birr-charity-association')->first();
+        $members = [
+            ['editor@albirr.test', 'editor', 'محررة الجمعية', 'Association Editor', 'active'],
+            ['writer@albirr.test', 'writer', 'كاتب الجمعية', 'Association Writer', 'active'],
+            ['member@albirr.test', 'member', 'عضو الجمعية', 'Association Member', 'active'],
+            ['former@albirr.test', 'member', 'عضو سابق', 'Former Member', 'disabled'],
+        ];
+        foreach ($birr ? $members : [] as [$email, $role, $nameAr, $nameEn, $status]) {
+            User::updateOrCreate(['email' => $email], [
+                'password' => $password, 'role' => $role, 'tenant_id' => $birr->id,
+                'name_ar' => $nameAr, 'name_en' => $nameEn, 'status' => $status, 'locale' => 'ar',
+            ]);
+        }
+
+        $this->command->info('Test accounts ready: '.count($staff).' staff, '.(count($clients) + count($members)).' client users.');
     }
 }

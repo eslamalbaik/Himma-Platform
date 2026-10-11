@@ -23,8 +23,9 @@ import InputAdornment from '@mui/material/InputAdornment'
 import { useTranslation } from 'react-i18next'
 
 // ** Himma navigation and permissions
-import { adminNavigation } from 'src/navigation/vertical'
+import { canSeeNavItem, navigationFor } from 'src/navigation/vertical'
 import { AbilityContext } from 'src/layouts/components/acl/Can'
+import { useAuth } from 'src/hooks/useAuth'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -34,117 +35,6 @@ import CustomAutocomplete from 'src/@core/components/mui/autocomplete'
 
 // ** Configs Imports
 import themeConfig from 'src/configs/themeConfig'
-
-const defaultSuggestionsData = [
-  {
-    category: 'Popular Searches',
-    suggestions: [
-      {
-        icon: 'tabler:chart-pie-2',
-        suggestion: 'Analytics',
-        link: '/dashboards/analytics'
-      },
-      {
-        icon: 'tabler:device-analytics',
-        suggestion: 'CRM',
-        link: '/dashboards/crm'
-      },
-      {
-        icon: 'tabler:shopping-cart',
-        suggestion: 'eCommerce',
-        link: '/dashboards/ecommerce'
-      },
-      {
-        icon: 'tabler:users',
-        suggestion: 'User List',
-        link: '/apps/user/list'
-      }
-    ]
-  },
-  {
-    category: 'Apps & Pages',
-    suggestions: [
-      {
-        icon: 'tabler:calendar',
-        suggestion: 'Calendar',
-        link: '/apps/calendar'
-      },
-      {
-        icon: 'tabler:list-numbers',
-        suggestion: 'Invoice List',
-        link: '/apps/invoice/list'
-      },
-      {
-        icon: 'tabler:currency-dollar',
-        suggestion: 'Pricing',
-        link: '/pages/pricing'
-      },
-      {
-        icon: 'tabler:settings',
-        suggestion: 'Account Settings',
-        link: '/pages/account-settings/account'
-      }
-    ]
-  },
-  {
-    category: 'User Interface',
-    suggestions: [
-      {
-        icon: 'tabler:typography',
-        suggestion: 'Typography',
-        link: '/ui/typography'
-      },
-      {
-        icon: 'tabler:browser',
-        suggestion: 'Tabs',
-        link: '/components/tabs'
-      },
-      {
-        icon: 'tabler:hand-click',
-        suggestion: 'Buttons',
-        link: '/components/buttons'
-      },
-      {
-        icon: 'tabler:id',
-        suggestion: 'Advanced Cards',
-        link: '/ui/cards/advanced'
-      }
-    ]
-  },
-  {
-    category: 'Forms & Tables',
-    suggestions: [
-      {
-        icon: 'tabler:list-check',
-        suggestion: 'Select',
-        link: '/forms/form-elements/select'
-      },
-      {
-        icon: 'tabler:space',
-        suggestion: 'Autocomplete',
-        link: '/forms/form-elements/autocomplete'
-      },
-      {
-        icon: 'tabler:layout-grid',
-        suggestion: 'Table',
-        link: '/tables/mui'
-      },
-      {
-        icon: 'tabler:calendar-event',
-        suggestion: 'Date Pickers',
-        link: '/forms/form-elements/pickers'
-      }
-    ]
-  }
-]
-
-const categoryTitle = {
-  dashboards: 'Dashboards',
-  appsPages: 'Apps & Pages',
-  userInterface: 'User Interface',
-  formsTables: 'Forms & Tables',
-  chartsMisc: 'Charts & Misc'
-}
 
 // ** Styled Autocomplete component
 const Autocomplete = styled(CustomAutocomplete)(({ theme }) => ({
@@ -220,105 +110,54 @@ const Dialog = styled(MuiDialog)({
   }
 })
 
-const NoResult = ({ value, setOpenDialog }) => {
+// Nothing matched: say so in the page's language (the template's demo links are gone).
+const NoResult = ({ value }) => {
+  const { t } = useTranslation()
+
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', justifyContent: 'center' }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', justifyContent: 'center', py: 6 }}>
       <Box sx={{ mb: 2.5, color: 'text.primary' }}>
         <Icon icon='tabler:file-off' fontSize='5rem' />
       </Box>
-      <Typography variant='h5' sx={{ mb: 11.5, wordWrap: 'break-word' }}>
-        No results for{' '}
-        <Typography variant='h5' component='span' sx={{ wordWrap: 'break-word' }}>
-          {`"${value}"`}
-        </Typography>
+      <Typography variant='h5' sx={{ mb: 2.5, wordWrap: 'break-word', textAlign: 'center' }}>
+        {t('search.noResults', { value })}
       </Typography>
-
-      <Typography variant='body2' sx={{ mb: 2.5, color: 'text.disabled' }}>
-        Try searching for
+      <Typography variant='body2' sx={{ color: 'text.disabled' }}>
+        {t('search.hint')}
       </Typography>
-      <List sx={{ py: 0 }}>
-        <ListItem sx={{ py: 2 }} disablePadding onClick={() => setOpenDialog(false)}>
-          <Box
-            component={Link}
-            href='/dashboards/ecommerce'
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              '&:hover > *': { color: 'primary.main' }
-            }}
-          >
-            <Box sx={{ mr: 2.5, display: 'flex', color: 'text.primary' }}>
-              <Icon icon='tabler:shopping-cart' />
-            </Box>
-            <Typography>eCommerce Dashboard</Typography>
-          </Box>
-        </ListItem>
-        <ListItem sx={{ py: 2 }} disablePadding onClick={() => setOpenDialog(false)}>
-          <Box
-            component={Link}
-            href='/pages/user-profile/profile'
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              '&:hover > *': { color: 'primary.main' }
-            }}
-          >
-            <Box sx={{ mr: 2.5, display: 'flex', color: 'text.primary' }}>
-              <Icon icon='tabler:user' />
-            </Box>
-            <Typography>User Profile</Typography>
-          </Box>
-        </ListItem>
-        <ListItem sx={{ py: 2 }} disablePadding onClick={() => setOpenDialog(false)}>
-          <Box
-            component={Link}
-            href='/pages/account-settings/account'
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              '&:hover > *': { color: 'primary.main' }
-            }}
-          >
-            <Box sx={{ mr: 2.5, display: 'flex', color: 'text.primary' }}>
-              <Icon icon='tabler:settings' />
-            </Box>
-            <Typography>Account Settings</Typography>
-          </Box>
-        </ListItem>
-      </List>
     </Box>
   )
 }
 
-const DefaultSuggestions = ({ setOpenDialog }) => {
+// Before typing: the sections of the user's own sidebar they may open.
+const DefaultSuggestions = ({ sections, setOpenDialog }) => {
+  const { t } = useTranslation()
+
   return (
     <Grid container spacing={6} sx={{ ml: 0 }}>
-      {defaultSuggestionsData.map((item, index) => (
-        <Grid item xs={12} sm={6} key={index}>
+      {sections.map(section => (
+        <Grid item xs={12} sm={6} key={section.title}>
           <Typography component='p' variant='overline' sx={{ lineHeight: 1.25, color: 'text.disabled' }}>
-            {item.category}
+            {t(section.title)}
           </Typography>
           <List sx={{ py: 2.5 }}>
-            {item.suggestions.map((suggestionItem, index2) => (
-              <ListItem key={index2} sx={{ py: 2 }} disablePadding>
+            {section.entries.map(entry => (
+              <ListItem key={entry.path} sx={{ py: 2 }} disablePadding>
                 <Box
                   component={Link}
-                  href={suggestionItem.link}
+                  href={entry.path}
                   onClick={() => setOpenDialog(false)}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    '& svg': { mr: 2.5 },
+                    gap: 2.5,
                     color: 'text.primary',
                     textDecoration: 'none',
                     '&:hover > *': { color: 'primary.main' }
                   }}
                 >
-                  <Icon icon={suggestionItem.icon} />
-                  <Typography>{suggestionItem.suggestion}</Typography>
+                  <Icon icon={entry.icon || themeConfig.navSubItemIcon} />
+                  <Typography>{t(entry.title)}</Typography>
                 </Box>
               </ListItem>
             ))}
@@ -345,8 +184,21 @@ const AutocompleteComponent = ({ hidden, settings }) => {
 
   const { t } = useTranslation()
   const ability = useContext(AbilityContext)
+  const auth = useAuth()
 
-  // Searches the sidebar sections the user may open (no request; the template's mock API is gone).
+  // The sidebar sections and entries the user may open (no request; the template's mock API is gone).
+  // Single entries without children are grouped under their own title.
+  const sections = navigationFor(auth.user)
+    .map(section => ({
+      title: section.title,
+      entries: (section.children
+        ? section.children.map(child => ({ ...child, icon: section.icon }))
+        : [section]
+      ).filter(entry => entry.path && canSeeNavItem(ability, entry))
+    }))
+    .filter(section => section.entries.length)
+
+  // Searches those entries by their title or their section's title.
   useEffect(() => {
     const query = searchValue.trim().toLowerCase()
     if (!query) {
@@ -355,10 +207,8 @@ const AutocompleteComponent = ({ hidden, settings }) => {
       return
     }
     const results = []
-    adminNavigation.forEach(section => {
-      const entries = section.children ? section.children.map(child => ({ ...child, icon: section.icon })) : [section]
-      entries.forEach(entry => {
-        if (!entry.path || !ability?.can(entry.action, entry.subject)) return
+    sections.forEach(section => {
+      section.entries.forEach(entry => {
         const title = t(entry.title)
         if (title.toLowerCase().includes(query) || t(section.title).toLowerCase().includes(query)) {
           results.push({ id: entry.path, url: entry.path, icon: entry.icon, title, category: t(section.title) })
@@ -366,7 +216,8 @@ const AutocompleteComponent = ({ hidden, settings }) => {
       })
     })
     setOptions(results)
-  }, [searchValue, ability, t])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue, ability, t, auth.user])
   useEffect(() => {
     if (!openDialog) {
       setSearchValue('')
@@ -430,7 +281,9 @@ const AutocompleteComponent = ({ hidden, settings }) => {
           <Icon fontSize='1.625rem' icon='tabler:search' />
         </IconButton>
         {!hidden && layout === 'vertical' ? (
-          <Typography sx={{ userSelect: 'none', color: 'text.disabled' }}>Search (Ctrl+/)</Typography>
+          <Typography sx={{ userSelect: 'none', color: 'text.disabled' }}>
+            {t('search.label')} <bdi dir='ltr'>(Ctrl+/)</bdi>
+          </Typography>
         ) : null}
         {openDialog && (
           <Dialog fullWidth open={openDialog} fullScreen={fullScreenDialog} onClose={() => setOpenDialog(false)}>
@@ -443,9 +296,9 @@ const AutocompleteComponent = ({ hidden, settings }) => {
                 isOptionEqualToValue={() => true}
                 onInputChange={(event, value) => setSearchValue(value)}
                 onChange={(event, obj) => handleOptionClick(obj)}
-                noOptionsText={<NoResult value={searchValue} setOpenDialog={setOpenDialog} />}
+                noOptionsText={<NoResult value={searchValue} />}
                 getOptionLabel={option => option.title || ''}
-                groupBy={option => (searchValue.length ? categoryTitle[option.category] || option.category : '')}
+                groupBy={option => (searchValue.length ? option.category : '')}
                 sx={{
                   '& + .MuiAutocomplete-popper': {
                     ...(searchValue.length
@@ -544,7 +397,7 @@ const AutocompleteComponent = ({ hidden, settings }) => {
                   height: fullScreenDialog ? 'calc(100vh - 69px)' : '100%'
                 }}
               >
-                <DefaultSuggestions setOpenDialog={setOpenDialog} />
+                <DefaultSuggestions sections={sections} setOpenDialog={setOpenDialog} />
               </Box>
             ) : null}
           </Dialog>

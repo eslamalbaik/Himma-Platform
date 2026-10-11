@@ -28,6 +28,10 @@ import TenantsOverviewCard from 'src/views/admin/TenantsOverviewCard'
 import UsersOverviewCard from 'src/views/admin/UsersOverviewCard'
 import LoginsWeeklyReport from 'src/views/admin/LoginsWeeklyReport'
 import TenantsStatusTracker from 'src/views/admin/TenantsStatusTracker'
+import RevenueCard from 'src/views/admin/home/RevenueCard'
+import AttentionCard from 'src/views/admin/home/AttentionCard'
+import SubscriptionsCard from 'src/views/admin/home/SubscriptionsCard'
+import { ClientsCard, EventsCard } from 'src/views/admin/home/ClientsEventsCard'
 
 const StatusChips = ({ counts, labelKey, t }) => (
   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 4 }}>
@@ -44,6 +48,7 @@ const AdminOverview = () => {
   const name = lang === 'en' ? user?.nameEn : user?.nameAr
 
   const [stats, setStats] = useState(null)
+  const [business, setBusiness] = useState(null)
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -51,10 +56,18 @@ const AdminOverview = () => {
       .get('/api/admin/stats')
       .then(response => setStats(response.data))
       .catch(() => setError('loadError'))
+
+    // Revenue, subscriptions, clients, events and what needs attention; each block only for roles that may see it.
+    axios
+      .get('/api/admin/stats/business')
+      .then(response => setBusiness(response.data.data))
+      .catch(() => setError('loadError'))
   }, [])
 
   const tenantsActivePercent =
-    stats && stats.tenants.total > 0 ? Math.round(((stats.tenants.byStatus.active || 0) / stats.tenants.total) * 100) : 0
+    stats && stats.tenants.total > 0
+      ? Math.round(((stats.tenants.byStatus.active || 0) / stats.tenants.total) * 100)
+      : 0
 
   const usersGrowthPercent =
     stats && stats.users.total > 0 ? Math.round((stats.users.newThisMonth / stats.users.total) * 100) : 0
@@ -81,6 +94,32 @@ const AdminOverview = () => {
         {error ? (
           <Grid item xs={12}>
             <Alert severity='error'>{t(`admin.stats.${error}`)}</Alert>
+          </Grid>
+        ) : null}
+
+        {business?.revenue ? (
+          <Grid item xs={12} lg={8}>
+            <RevenueCard revenue={business.revenue} />
+          </Grid>
+        ) : null}
+        {business?.attention ? (
+          <Grid item xs={12} lg={business.revenue ? 4 : 12}>
+            <AttentionCard attention={business.attention} />
+          </Grid>
+        ) : null}
+        {business?.subscriptions ? (
+          <Grid item xs={12} md={6} lg={4}>
+            <SubscriptionsCard subscriptions={business.subscriptions} />
+          </Grid>
+        ) : null}
+        {business?.clients ? (
+          <Grid item xs={12} md={6} lg={4}>
+            <ClientsCard clients={business.clients} />
+          </Grid>
+        ) : null}
+        {business?.events ? (
+          <Grid item xs={12} md={6} lg={4}>
+            <EventsCard events={business.events} />
           </Grid>
         ) : null}
 

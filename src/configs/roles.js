@@ -56,7 +56,8 @@ export const PLATFORM_ROLES = {
       { action: 'manage', subject: 'magazine' },
       { action: 'read', subject: 'users' },
       { action: 'manage', subject: 'messages' },
-      { action: 'read', subject: 'reports' }
+      { action: 'read', subject: 'reports' },
+      { action: ['read', 'create'], subject: 'ai_agent' }
     ]
   },
   broadcast_moderator: {

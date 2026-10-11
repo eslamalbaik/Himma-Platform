@@ -1,3 +1,6 @@
+// ** React Imports
+import { useContext, useState } from 'react'
+
 // ** MUI Imports
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -12,12 +15,20 @@ import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 
 // ** Third Party Imports
+import axios from 'axios'
 import { useTranslation } from 'react-i18next'
+
+// ** Context
+import { AbilityContext } from 'src/layouts/components/acl/Can'
 
 // ** Views
 import { formatDate, localName, pickLang } from 'src/views/admin/billing/format'
 import { ArticleStatusChip, ComplianceChip, complianceValueColors } from './chips'
 import { COMPLIANCE_ITEMS } from './ComplianceDialog'
+import CorrectionDialog from './CorrectionDialog'
+import VersionCompareDialog from './VersionCompareDialog'
+
+const EDITABLE = ['draft', 'in_review', 'approved', 'rejected']
 
 const Row = ({ label, children }) => (
   <Box sx={{ display: 'flex', gap: 2, py: 1, flexWrap: 'wrap' }}>
@@ -26,12 +37,46 @@ const Row = ({ label, children }) => (
   </Box>
 )
 
-// Everything recorded about an article: metadata, compliance evidence, decisions and versions (§6).
-const ArticleDetailsDialog = ({ open, article, loading, onClose }) => {
+// Everything recorded about an article: metadata, compliance evidence, decisions, corrections (GOV-04)
+// and versions (§6), which can be compared and, while the article is editable, restored.
+// `onUpdated(article)` receives the article after a correction or a restore.
+const ArticleDetailsDialog = ({ open, article, loading, onClose, onUpdated }) => {
   const { t, i18n } = useTranslation()
   const lang = pickLang(i18n)
   const name = (row, prefix) => localName(row, prefix, lang)
   const sep = lang === 'en' ? ', ' : '، '
+  const ability = useContext(AbilityContext)
+  const canCorrect = Boolean(ability?.can('manage', 'content')) && article?.status === 'published'
+  const canRestore = Boolean(ability?.can('update', 'content')) && EDITABLE.includes(article?.status)
+
+  const [compare, setCompare] = useState(null) // the version to start the comparison from
+  const [correcting, setCorrecting] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [errorCode, setErrorCode] = useState(null)
+
+  const send = (request, after) => {
+    setBusy(true)
+    setErrorCode(null)
+    request()
+      .then(response => {
+        after()
+        onUpdated?.(response.data.data)
+      })
+      .catch(err => setErrorCode(err.response?.data?.error?.code || 'network_error'))
+      .finally(() => setBusy(false))
+  }
+
+  const correct = values =>
+    send(
+      () => axios.post(`/api/admin/content/articles/${article.id}/corrections`, values),
+      () => setCorrecting(false)
+    )
+
+  const restore = version =>
+    send(
+      () => axios.post(`/api/admin/content/articles/${article.id}/versions/${version}/restore`),
+      () => {}
+    )
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
@@ -117,6 +162,42 @@ const ArticleDetailsDialog = ({ open, article, loading, onClose }) => {
               </>
             ) : null}
 
+            {article.corrections?.length || canCorrect ? (
+              <>
+                <Divider sx={{ my: 4 }} />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+                  <Typography variant='h6' sx={{ flexGrow: 1 }}>
+                    {t('admin.content.corrections.title')}
+                  </Typography>
+                  {canCorrect ? (
+                    <Button size='small' variant='tonal' onClick={() => setCorrecting(true)}>
+                      {t('admin.content.corrections.add')}
+                    </Button>
+                  ) : null}
+                </Box>
+                {article.corrections?.length ? (
+                  article.corrections.map(c => (
+                    <Alert key={c.id} severity='info' icon={false} sx={{ mb: 2 }}>
+                      <Typography sx={{ fontWeight: 500 }}>
+                        {t(`admin.content.corrections.kind.${c.kind}`)} · {formatDate(c.createdAt, lang)}
+                        {c.version ? ` · ${t('admin.content.details.version', { n: c.version })}` : ''}
+                      </Typography>
+                      <Typography dir='auto'>{c.note}</Typography>
+                      {c.correctorNameAr || c.correctorNameEn ? (
+                        <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+                          {t('admin.content.details.editedBy', { name: name(c, 'correctorName') })}
+                        </Typography>
+                      ) : null}
+                    </Alert>
+                  ))
+                ) : (
+                  <Typography variant='body2' sx={{ color: 'text.disabled' }}>
+                    {t('admin.content.corrections.none')}
+                  </Typography>
+                )}
+              </>
+            ) : null}
+
             <Divider sx={{ my: 4 }} />
             {article.summary ? (
               <Typography sx={{ fontWeight: 500, mb: 2 }} dir='auto'>
@@ -133,6 +214,11 @@ const ArticleDetailsDialog = ({ open, article, loading, onClose }) => {
                 <Typography variant='h6' sx={{ mb: 2 }}>
                   {t('admin.content.details.versions')}
                 </Typography>
+                {errorCode && !correcting ? (
+                  <Alert severity='error' sx={{ mb: 2 }}>
+                    {t(`errors.${errorCode}`)}
+                  </Alert>
+                ) : null}
                 {article.versions.map(version => (
                   <Box key={version.version} sx={{ display: 'flex', gap: 2, py: 1, flexWrap: 'wrap' }}>
                     <Typography sx={{ fontWeight: 500 }}>
@@ -144,6 +230,16 @@ const ArticleDetailsDialog = ({ open, article, loading, onClose }) => {
                         ? ` · ${t('admin.content.details.editedBy', { name: name(version, 'editorName') })}`
                         : ''}
                     </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, ms: 'auto' }}>
+                      <Button size='small' onClick={() => setCompare(version.version)}>
+                        {t('admin.content.versions.compare')}
+                      </Button>
+                      {canRestore && version.version !== article.versions[article.versions.length - 1].version ? (
+                        <Button size='small' color='warning' disabled={busy} onClick={() => restore(version.version)}>
+                          {t('admin.content.versions.restore')}
+                        </Button>
+                      ) : null}
+                    </Box>
                     <Typography sx={{ flexBasis: '100%' }} dir='auto'>
                       {version.title}
                     </Typography>
@@ -159,6 +255,17 @@ const ArticleDetailsDialog = ({ open, article, loading, onClose }) => {
           {t('admin.common.close')}
         </Button>
       </DialogActions>
+      {article && compare !== null ? (
+        <VersionCompareDialog open article={article} initialVersion={compare} onClose={() => setCompare(null)} />
+      ) : null}
+      <CorrectionDialog
+        open={correcting}
+        article={article}
+        submitting={busy}
+        errorCode={correcting ? errorCode : null}
+        onSubmit={correct}
+        onClose={() => setCorrecting(false)}
+      />
     </Dialog>
   )
 }

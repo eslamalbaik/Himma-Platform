@@ -361,6 +361,11 @@ const ArticlesList = ({ titleKey, subtitleKey, fixedStatus = null }) => {
         article={details.article}
         loading={details.loading}
         onClose={() => setDetails({ open: false, article: null, loading: false })}
+        onUpdated={article => {
+          setDetails({ open: true, article, loading: false })
+          setToast('admin.common.saved')
+          list.reload()
+        }}
       />
       <ComplianceDialog
         open={pending?.action.key === 'compliance'}

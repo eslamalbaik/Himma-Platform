@@ -19,9 +19,9 @@ Himma ships in two languages. Any code you add or change must work in both:
 ## Architecture
 - **Frontend:** Next.js 15 (pages router) + MUI (Vuexy template). `next.config.js` proxies `/api/*` to the
   backend, so the browser only talks to the frontend's origin.
-- **Backend:** Laravel 11 in `backend/` (MySQL, Redis for sessions/cache/queue). Routes: `backend/routes/api.php`.
-- Two dashboards: the **super admin** dashboard (`/admin`, platform team) and, later, a **client (tenant)**
-  dashboard. Business requirements: `REQUIREMENTS.md`.
+- **Backend:** Laravel 12 in `backend/` (MySQL, Redis for sessions/cache/queue). Routes: `backend/routes/api.php`.
+- Two dashboards: the **super admin** dashboard (`/admin`, platform team) and the **client (tenant)**
+  dashboard (`/client`). Business requirements: `REQUIREMENTS.md`.
 - **Auth:** `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`. Laravel session in the httpOnly
   `himma_session` cookie; the browser never stores tokens. Changing a password bumps `users.token_version`,
   which ends that account's other sessions (`EnsureApiUser`).
@@ -48,6 +48,33 @@ Himma ships in two languages. Any code you add or change must work in both:
   Only the two participants can open a conversation (404 for anyone else, staff included). Moderators see a message
   only when it is reported (`message_reports`), and opening the reports list is audited. Audit rows for sent
   messages never hold the text. Blocks (`user_blocks`) stop messages both ways.
+- **Reports & Analytics:** `App\Http\Controllers\Api\ReportController`, `GET /api/admin/reports/{revenue,tenants,content,events,ai}`
+  over `from`/`to` (default the last 12 months) plus `/export` (CSV in the page's language, audited as `reports.exported`).
+  Each report needs `read,reports` and read access to its area; sidebar entries use `also: {action, subject}` for that.
+- **Settings groups** (`App\Settings\*`, stored in `settings` by group): `publishing` (editorial rules enforced by
+  `ArticleController`, all off by default), `policies` (public page texts, `GET /api/site/policies`), `youtube`, `ai`.
+  API keys are sealed with `App\Settings\Secrets`, write-only (empty keeps the stored key), never returned or audited.
+- **Writers** (`writers`, `/admin/users/writers`): register + identity verification (PUB-02); articles have `writer_id`.
+- **Client role templates** (`tenant_roles`, `config/tenant_permissions.php`, `/admin/permissions/tenant-role-templates`):
+  the §10 matrix, 3 states per cell; the 8 system roles are inserted by their migration.
+- **AI Center** (`App\Ai\AiCenter`, `/admin/ai-agent`): Claude through the official Anthropic PHP SDK
+  (`anthropic-ai/sdk`, client built by `App\Ai\Claude` so tests inject a fake HTTP transport), structured JSON output,
+  model/effort/limit from Settings → AI. Every use is a row in `ai_usages` (AI-P-02); confidential articles are never sent.
+- **Client dashboard** (`/client`, API `/api/client/*`): users with a `tenant_id` and a client role template as
+  their `role` (`users.role` = `tenant_roles.key`). `App\Support\ClientAccess` reads their matrix; routes use
+  `client` (client users only; a suspended or cancelled client may read and pay but not change anything, except
+  routes marked `client:billing`) and `tperm:<permission>` (not denied). Data is always limited to the user's own
+  tenant. `/api/auth/me` returns `kind` (`platform`|`client`) plus, for clients, `tenant` and `clientPermissions`;
+  the UI turns those into CASL rules `<permission> client` (`src/configs/acl.js`) and picks the client sidebar
+  (`src/navigation/vertical/client.js`). Members may only be given roles that grant nothing beyond the actor's own.
+  Client billing (`/client/billing`: subscription, invoices, PDF, online payment) needs `general_settings` fully
+  allowed (`tperm:general_settings,allowed`, CASL action `general_settings:allowed`). Client articles
+  (`/client/articles`): `publish` writes drafts, `submit_review` sends them to the platform's review; "allowed"
+  reaches every article of the organisation, "restricted" only the user's own; clients edit only drafts and
+  rejected articles. Submission follows Settings → Publishing (`Publishing::submitError`) minus the writer rule.
+  Client reports (`/client/reports`, `GET /api/client/reports` + `/export`): `entity_reports` to read, plus
+  `export_data` for the CSV (audited as `client.reports_exported`); billing figures only with `general_settings`
+  allowed.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
 - Sidebar: `src/navigation/vertical/index.js`. Each item has a translation key and the CASL subject that

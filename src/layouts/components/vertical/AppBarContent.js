@@ -134,7 +134,8 @@ const AppBarContent = props => {
         <ModeToggler settings={settings} saveSettings={saveSettings} />
         {auth.user && (
           <>
-            <ShortcutsDropdown settings={settings} shortcuts={shortcuts} />
+            {/* The shortcuts open the template's reference pages, which only the platform owner can reach. */}
+            {auth.user.role === 'super_admin' ? <ShortcutsDropdown settings={settings} shortcuts={shortcuts} /> : null}
             <NotificationsDropdown />
             <UserDropdown settings={settings} />
           </>
