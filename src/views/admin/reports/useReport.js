@@ -31,8 +31,9 @@ export const presets = {
   }
 }
 
-// Loads one report (`/api/admin/reports/<type>`) for a period and downloads its CSV export.
-const useReport = type => {
+// Loads one report (`/api/admin/reports/<type>`, or `url` when given) for a period and downloads its CSV
+// export (`<url>/export`).
+const useReport = (type, { url = `/api/admin/reports/${type}` } = {}) => {
   const [range, setRange] = useState(presets.last12Months)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -45,7 +46,7 @@ const useReport = type => {
     setLoading(true)
     setError(null)
     axios
-      .get(`/api/admin/reports/${type}`, { signal: controller.signal, params: range })
+      .get(url, { signal: controller.signal, params: range })
       .then(response => setData(response.data.data))
       .catch(err => {
         if (axios.isCancel(err)) return
@@ -54,25 +55,25 @@ const useReport = type => {
       .finally(() => setLoading(false))
 
     return () => controller.abort()
-  }, [type, range])
+  }, [url, range])
 
   const exportCsv = useCallback(
     async lang => {
       setExporting(true)
       setError(null)
       try {
-        const response = await axios.get(`/api/admin/reports/${type}/export`, {
+        const response = await axios.get(`${url}/export`, {
           params: { ...range, lang },
           responseType: 'blob'
         })
-        const url = URL.createObjectURL(response.data)
+        const blobUrl = URL.createObjectURL(response.data)
         const link = document.createElement('a')
-        link.href = url
+        link.href = blobUrl
         link.download = `himma-${type}-${range.from}-${range.to}.csv`
         document.body.appendChild(link)
         link.click()
         link.remove()
-        URL.revokeObjectURL(url)
+        URL.revokeObjectURL(blobUrl)
       } catch (err) {
         // The error body is a Blob here: read the code out of it.
         let code = 'network_error'
@@ -84,7 +85,7 @@ const useReport = type => {
         setExporting(false)
       }
     },
-    [type, range]
+    [type, url, range]
   )
 
   return { range, setRange, data, loading, error, exporting, exportCsv }

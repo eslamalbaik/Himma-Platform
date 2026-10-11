@@ -72,6 +72,9 @@ Himma ships in two languages. Any code you add or change must work in both:
   (`/client/articles`): `publish` writes drafts, `submit_review` sends them to the platform's review; "allowed"
   reaches every article of the organisation, "restricted" only the user's own; clients edit only drafts and
   rejected articles. Submission follows Settings → Publishing (`Publishing::submitError`) minus the writer rule.
+  Client reports (`/client/reports`, `GET /api/client/reports` + `/export`): `entity_reports` to read, plus
+  `export_data` for the CSV (audited as `client.reports_exported`); billing figures only with `general_settings`
+  allowed.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
 - Sidebar: `src/navigation/vertical/index.js`. Each item has a translation key and the CASL subject that

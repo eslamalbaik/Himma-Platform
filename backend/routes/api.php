@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Client\ArticleController as ClientArticleController
 use App\Http\Controllers\Api\Client\BillingController as ClientBillingController;
 use App\Http\Controllers\Api\Client\MemberController as ClientMemberController;
 use App\Http\Controllers\Api\Client\OverviewController as ClientOverviewController;
+use App\Http\Controllers\Api\Client\ReportController as ClientReportController;
 use App\Http\Controllers\Api\Content\ArticleController;
 use App\Http\Controllers\Api\Content\CommentController;
 use App\Http\Controllers\Api\Content\ContentReportController;
@@ -288,6 +289,10 @@ Route::prefix('client')->middleware(['auth.api', 'not_maintenance'])->group(func
         Route::get('articles', [ClientArticleController::class, 'index'])->middleware('tperm:publish');
         Route::get('articles/{cuid}', [ClientArticleController::class, 'show'])->middleware('tperm:publish');
         Route::get('sections', [ClientArticleController::class, 'sections'])->middleware('tperm:publish');
+
+        Route::get('reports', [ClientReportController::class, 'show'])->middleware('tperm:entity_reports');
+        Route::get('reports/export', [ClientReportController::class, 'export'])
+            ->middleware(['tperm:entity_reports', 'tperm:export_data', 'throttle:30,1']);
 
         Route::middleware('same_origin')->group(function () {
             Route::post('members', [ClientMemberController::class, 'store'])->middleware('tperm:manage_entity_members');

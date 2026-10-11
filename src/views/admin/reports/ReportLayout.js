@@ -31,7 +31,8 @@ import { presets } from './useReport'
 // The frame every report page shares: title, period filter, CSV export, loading and errors.
 // `subject` is the area the report covers; the API checks it too, this only avoids a request
 // that would be refused.
-const ReportLayout = ({ title, subtitle, subject, report, children }) => {
+// `canExport` hides the CSV button for users who may read the report but not take its data out.
+const ReportLayout = ({ title, subtitle, subject, report, canExport = true, children }) => {
   const { t, i18n } = useTranslation()
   const ability = useContext(AbilityContext)
   const { range, setRange, data, loading, error, exporting, exportCsv } = report
@@ -59,14 +60,16 @@ const ReportLayout = ({ title, subtitle, subject, report, children }) => {
                     {t(subtitle)}
                   </Typography>
                 </Box>
-                <Button
-                  variant='tonal'
-                  disabled={exporting || !data}
-                  onClick={() => exportCsv(i18n.language === 'en' ? 'en' : 'ar')}
-                  startIcon={<Icon icon='tabler:file-download' />}
-                >
-                  {t('admin.reports.export')}
-                </Button>
+                {canExport ? (
+                  <Button
+                    variant='tonal'
+                    disabled={exporting || !data}
+                    onClick={() => exportCsv(i18n.language === 'en' ? 'en' : 'ar')}
+                    startIcon={<Icon icon='tabler:file-download' />}
+                  >
+                    {t('admin.reports.export')}
+                  </Button>
+                ) : null}
               </Box>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 4 }}>
                 <ToggleButtonGroup

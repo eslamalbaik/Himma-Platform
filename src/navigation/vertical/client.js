@@ -20,6 +20,13 @@ export const clientNavigation = [
     subject: 'client'
   },
   {
+    title: 'client.nav.reports',
+    icon: 'tabler:chart-bar',
+    path: '/client/reports',
+    action: 'entity_reports',
+    subject: 'client'
+  },
+  {
     title: 'client.nav.billing',
     icon: 'tabler:credit-card',
     path: '/client/billing',
