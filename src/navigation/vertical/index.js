@@ -105,7 +105,13 @@ export const adminNavigation = [
         subject: 'reports',
         also: { action: 'read', subject: 'events' }
       },
-      { title: 'nav.reports.ai', path: '/admin/reports/ai', action: 'read', subject: 'reports' }
+      {
+        title: 'nav.reports.ai',
+        path: '/admin/reports/ai',
+        action: 'read',
+        subject: 'reports',
+        also: { action: 'read', subject: 'ai_agent' }
+      }
     ]
   },
   {

@@ -48,6 +48,18 @@ Himma ships in two languages. Any code you add or change must work in both:
   Only the two participants can open a conversation (404 for anyone else, staff included). Moderators see a message
   only when it is reported (`message_reports`), and opening the reports list is audited. Audit rows for sent
   messages never hold the text. Blocks (`user_blocks`) stop messages both ways.
+- **Reports & Analytics:** `App\Http\Controllers\Api\ReportController`, `GET /api/admin/reports/{revenue,tenants,content,events,ai}`
+  over `from`/`to` (default the last 12 months) plus `/export` (CSV in the page's language, audited as `reports.exported`).
+  Each report needs `read,reports` and read access to its area; sidebar entries use `also: {action, subject}` for that.
+- **Settings groups** (`App\Settings\*`, stored in `settings` by group): `publishing` (editorial rules enforced by
+  `ArticleController`, all off by default), `policies` (public page texts, `GET /api/site/policies`), `youtube`, `ai`.
+  API keys are sealed with `App\Settings\Secrets`, write-only (empty keeps the stored key), never returned or audited.
+- **Writers** (`writers`, `/admin/users/writers`): register + identity verification (PUB-02); articles have `writer_id`.
+- **Client role templates** (`tenant_roles`, `config/tenant_permissions.php`, `/admin/permissions/tenant-role-templates`):
+  the §10 matrix, 3 states per cell; the 8 system roles are inserted by their migration.
+- **AI Center** (`App\Ai\AiCenter`, `/admin/ai-agent`): Claude through the official Anthropic PHP SDK
+  (`anthropic-ai/sdk`, client built by `App\Ai\Claude` so tests inject a fake HTTP transport), structured JSON output,
+  model/effort/limit from Settings → AI. Every use is a row in `ai_usages` (AI-P-02); confidential articles are never sent.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
 - Sidebar: `src/navigation/vertical/index.js`. Each item has a translation key and the CASL subject that

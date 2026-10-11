@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AdminStatsController;
+use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Billing\BillingSettingsController;
@@ -193,6 +194,15 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
         });
     });
 
+    // AI Center (§8): editors run its tools; every use is logged (AI-P-02). Settings → AI turns it on.
+    Route::get('ai', [AiController::class, 'overview'])->middleware('ability:read,ai_agent');
+    Route::get('ai/usages', [AiController::class, 'usages'])->middleware('ability:read,ai_agent');
+    Route::get('ai/usages/{aiUsage}', [AiController::class, 'show'])->middleware('ability:read,ai_agent');
+    Route::middleware('same_origin')->group(function () {
+        Route::post('ai/run', [AiController::class, 'run'])->middleware(['ability:create,ai_agent', 'throttle:20,1']);
+        Route::post('ai/usages/{aiUsage}/applied', [AiController::class, 'applied'])->middleware('ability:create,ai_agent');
+    });
+
     // Permissions → Client role templates (§10). Changing roles is for those who manage permissions.
     Route::get('tenant-roles', [TenantRoleController::class, 'index'])->middleware('ability:read,permissions');
     Route::middleware('same_origin')->group(function () {
@@ -230,7 +240,7 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
 
     // Reports & Analytics: `read,reports` plus read access to the area each report covers. Exporting is a
     // read too, but it is written to the audit log.
-    foreach (['revenue' => 'billing', 'tenants' => 'tenants', 'content' => 'content', 'events' => 'events'] as $report => $subject) {
+    foreach (['revenue' => 'billing', 'tenants' => 'tenants', 'content' => 'content', 'events' => 'events', 'ai' => 'ai_agent'] as $report => $subject) {
         Route::get("reports/$report", [ReportController::class, 'show'])
             ->defaults('type', $report)->middleware(['ability:read,reports', "ability:read,$subject"]);
         Route::get("reports/$report/export", [ReportController::class, 'export'])

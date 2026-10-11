@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Billing\BillingService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Reports\ReportRangeRequest;
+use App\Models\AiUsage;
 use App\Models\Article;
 use App\Models\Event;
 use App\Models\Payment;
@@ -23,7 +24,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 // access to the area it covers, so a platform editor never sees revenue.
 class ReportController extends Controller
 {
-    public const TYPES = ['revenue', 'tenants', 'content', 'events'];
+    public const TYPES = ['revenue', 'tenants', 'content', 'events', 'ai'];
 
     private const MAX_DAYS = 3 * 366;
 
@@ -349,6 +350,65 @@ class ReportController extends Controller
         ])->values()->all();
 
         return [['date', 'event', 'type', 'format', 'status', 'capacity', 'registered', 'attended'], $rows];
+    }
+
+    // AI usage (AI-P-02): who used which tool, how often it worked, what was applied, and what became of the article.
+    private function ai(Carbon $from, Carbon $to): array
+    {
+        $usages = fn () => AiUsage::whereBetween('ai_usages.created_at', [$from, $to])->toBase();
+        $monthly = $this->perMonth($usages(), 'ai_usages.created_at');
+        $byStatus = $this->counts($usages(), 'status');
+
+        $byUser = $usages()->join('users', 'users.id', '=', 'ai_usages.user_id')
+            ->selectRaw('users.cuid, users.name_ar, users.name_en, count(*) as c')
+            ->groupBy('users.cuid', 'users.name_ar', 'users.name_en')->orderByDesc('c')->limit(10)->get()
+            ->map(fn ($r) => ['userId' => $r->cuid, 'nameAr' => $r->name_ar, 'nameEn' => $r->name_en, 'uses' => (int) $r->c]);
+
+        $completed = (int) ($byStatus['completed'] ?? 0);
+        $applied = $usages()->whereNotNull('applied_at')->count();
+
+        $recent = AiUsage::with(['user', 'article.reviewer'])->whereBetween('created_at', [$from, $to])
+            ->orderByDesc('created_at')->orderByDesc('id')->limit(50)->get()
+            ->map(fn (AiUsage $u) => $u->toPublicArray());
+
+        return [
+            'totals' => [
+                'uses' => (int) $monthly->sum(),
+                'completed' => $completed,
+                'refused' => (int) ($byStatus['refused'] ?? 0),
+                'failed' => (int) ($byStatus['failed'] ?? 0),
+                'applied' => $applied,
+                'appliedRate' => $completed > 0 ? (int) round($applied / $completed * 100) : 0,
+                'inputTokens' => (int) $usages()->sum('input_tokens'),
+                'outputTokens' => (int) $usages()->sum('output_tokens'),
+            ],
+            'monthly' => $this->months($from, $to)->map(fn ($m) => ['month' => $m, 'uses' => (int) ($monthly[$m] ?? 0)])->values(),
+            'byTool' => $this->countBy($usages(), 'tool'),
+            'byStatus' => $byStatus->isEmpty() ? (object) [] : $byStatus,
+            'byUser' => $byUser,
+            'usages' => $recent,
+        ];
+    }
+
+    private function aiRows(Carbon $from, Carbon $to, string $lang): array
+    {
+        $rows = AiUsage::with(['user', 'article.reviewer'])->whereBetween('created_at', [$from, $to])->orderBy('created_at')->get()
+            ->map(fn (AiUsage $u) => [
+                $u->created_at->toDateTimeString(),
+                $this->name($u->user, $lang),
+                $this->label($lang, "admin.ai.tool.{$u->tool}", $u->tool),
+                $u->article?->title ?? $u->subject,
+                $this->label($lang, "admin.ai.status.{$u->status}", $u->status),
+                $u->model,
+                $u->input_tokens,
+                $u->output_tokens,
+                $u->applied_fields ? implode(' | ', $u->applied_fields) : '',
+                $u->article ? $this->label($lang, "admin.content.status.{$u->article->status}", $u->article->status) : '',
+                $this->name($u->article?->reviewer, $lang),
+                optional($u->article?->published_at)->toDateString(),
+            ])->all();
+
+        return [['date', 'user', 'tool', 'subject', 'status', 'model', 'inputTokens', 'outputTokens', 'applied', 'articleStatus', 'reviewer', 'publishedAt'], $rows];
     }
 
     // The text for a code in the export's language, or the code itself when there is no text for it.
