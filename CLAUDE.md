@@ -19,7 +19,7 @@ Himma ships in two languages. Any code you add or change must work in both:
 ## Architecture
 - **Frontend:** Next.js 15 (pages router) + MUI (Vuexy template). `next.config.js` proxies `/api/*` to the
   backend, so the browser only talks to the frontend's origin.
-- **Backend:** Laravel 11 in `backend/` (MySQL, Redis for sessions/cache/queue). Routes: `backend/routes/api.php`.
+- **Backend:** Laravel 12 in `backend/` (MySQL, Redis for sessions/cache/queue). Routes: `backend/routes/api.php`.
 - Two dashboards: the **super admin** dashboard (`/admin`, platform team) and, later, a **client (tenant)**
   dashboard. Business requirements: `REQUIREMENTS.md`.
 - **Auth:** `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`. Laravel session in the httpOnly

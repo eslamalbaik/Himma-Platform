@@ -8,8 +8,8 @@
     "require": {
         "php": "^8.2",
         "anthropic-ai/sdk": "^0.57.0",
-        "laravel/framework": "^11.31",
-        "laravel/tinker": "^2.9",
+        "laravel/framework": "^12.69",
+        "laravel/tinker": "^2.10.1",
         "mpdf/mpdf": "^8.3",
         "predis/predis": "^3.6"
     },
