@@ -8,6 +8,7 @@ use App\Models\Issue;
 use App\Models\MagazineSection;
 use App\Models\Tag;
 use App\Models\Tenant;
+use App\Models\Writer;
 use Illuminate\Validation\Rule;
 
 class ArticleFormRequest extends ApiRequest
@@ -28,6 +29,8 @@ class ArticleFormRequest extends ApiRequest
             'sectionId' => ['nullable', 'string', Rule::exists('magazine_sections', 'cuid')],
             'issueId' => ['nullable', 'string', Rule::exists('issues', 'cuid')],
             'authorName' => ['required', 'string', 'max:255'],
+            // A suspended writer cannot be named on an article.
+            'writerId' => ['nullable', 'string', Rule::exists('writers', 'cuid')->whereNot('status', 'suspended')],
             'audiences' => ['nullable', 'array'],
             'audiences.*' => [Rule::in(Article::AUDIENCES)],
             'isSponsored' => ['sometimes', 'boolean'],
@@ -51,6 +54,7 @@ class ArticleFormRequest extends ApiRequest
             'sectionId' => 'invalid_section',
             'issueId' => 'invalid_issue',
             'authorName' => 'invalid_author',
+            'writerId' => 'invalid_writer',
             'audiences' => 'invalid_audience',
             'audiences.*' => 'invalid_audience',
             'source' => 'invalid_source',
@@ -76,6 +80,7 @@ class ArticleFormRequest extends ApiRequest
             'section_id' => $this->filled('sectionId') ? MagazineSection::where('cuid', $this->input('sectionId'))->value('id') : null,
             'issue_id' => $this->filled('issueId') ? Issue::where('cuid', $this->input('issueId'))->value('id') : null,
             'author_name' => trim($this->input('authorName')),
+            'writer_id' => $this->filled('writerId') ? Writer::where('cuid', $this->input('writerId'))->value('id') : null,
             'audiences' => array_values(array_unique($this->input('audiences', []))),
             'is_sponsored' => $this->boolean('isSponsored'),
             'source' => $this->input('source'),

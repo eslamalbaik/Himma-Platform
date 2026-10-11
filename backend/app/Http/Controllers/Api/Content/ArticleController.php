@@ -27,7 +27,7 @@ class ArticleController extends Controller
 
     public function index(Request $request)
     {
-        $query = Article::with(['section', 'issue', 'tenant', 'tags', 'reviewer'])
+        $query = Article::with(['section', 'issue', 'tenant', 'tags', 'reviewer', 'writer'])
             ->withCount(['reports as open_reports_count' => fn ($q) => $q->where('status', 'open')]);
 
         if ($search = trim((string) $request->query('search', ''))) {
@@ -62,7 +62,7 @@ class ArticleController extends Controller
 
     public function show(Article $article)
     {
-        $article->load(['section', 'issue', 'tenant', 'tags', 'reviewer', 'versions.editor']);
+        $article->load(['section', 'issue', 'tenant', 'tags', 'reviewer', 'writer', 'versions.editor']);
 
         return $this->item($article->toPublicArray(true) + [
             'versions' => $article->versions->map(fn (ArticleVersion $version) => $version->toPublicArray())->values(),
@@ -162,6 +162,9 @@ class ArticleController extends Controller
             }
             if ($rules['requireSection'] && ! $article->section_id) {
                 return $this->error('section_required', 409);
+            }
+            if ($rules['requireVerifiedWriter'] && $article->writer?->status !== 'verified') {
+                return $this->error('verified_writer_required', 409);
             }
         }
 

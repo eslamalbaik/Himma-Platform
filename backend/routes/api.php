@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\BusinessStatsController;
 use App\Http\Controllers\Api\Content\ArticleController;
 use App\Http\Controllers\Api\Content\CommentController;
 use App\Http\Controllers\Api\Content\ContentReportController;
+use App\Http\Controllers\Api\Content\WriterController;
 use App\Http\Controllers\Api\Events\EventController;
 use App\Http\Controllers\Api\Events\RegistrationController;
 use App\Http\Controllers\Api\Magazine\IssueController;
@@ -189,6 +190,18 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
             Route::post('blocks', [BlockController::class, 'store'])->middleware('ability:create,messages');
             Route::delete('blocks/{cuid}', [BlockController::class, 'destroy'])->middleware('ability:create,messages');
         });
+    });
+
+    // Users → Writers (NAV-03): listed with read access to users; editing is editorial work (`update,content`),
+    // and verifying or suspending a writer is an editorial decision (`manage,content`, PUB-02).
+    Route::get('writers', [WriterController::class, 'index'])->middleware('ability:read,users');
+    Route::get('writers/{writer}', [WriterController::class, 'show'])->middleware('ability:read,users');
+    Route::middleware('same_origin')->group(function () {
+        Route::post('writers', [WriterController::class, 'store'])->middleware('ability:create,content');
+        Route::put('writers/{writer}', [WriterController::class, 'update'])->middleware('ability:update,content');
+        Route::delete('writers/{writer}', [WriterController::class, 'destroy'])->middleware('ability:delete,content');
+        Route::post('writers/{writer}/verify', [WriterController::class, 'verify'])->middleware('ability:manage,content');
+        Route::post('writers/{writer}/suspend', [WriterController::class, 'suspend'])->middleware('ability:manage,content');
     });
 
     // Settings → Publishing, Policies, YouTube and AI. API keys are write-only (never returned).

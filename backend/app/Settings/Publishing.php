@@ -12,6 +12,7 @@ class Publishing
         'requireSource',       // submitting for review needs the source (PUB-03, mandatory metadata §6)
         'requireRightsNote',   // ... and the rights note
         'requireSection',      // ... and a magazine section
+        'requireVerifiedWriter', // ... and a writer whose identity was verified (PUB-02)
         'publishNeedsCompliant', // publishing needs a compliant check, "needs review" is not enough
         'separatePublisher',   // whoever approved an article cannot also publish it
     ];
@@ -20,6 +21,7 @@ class Publishing
         'requireSource' => false,
         'requireRightsNote' => false,
         'requireSection' => false,
+        'requireVerifiedWriter' => false,
         'publishNeedsCompliant' => false,
         'separatePublisher' => false,
         // The label shown on sponsored content and advertising (ADS-01).

@@ -19,6 +19,7 @@ import { useForm, Controller } from 'react-hook-form'
 // ** Custom Components
 import CustomTextField from 'src/@core/components/mui/text-field'
 import TenantPicker from 'src/views/admin/billing/TenantPicker'
+import WriterPicker from 'src/views/admin/content/WriterPicker'
 import { localName, pickLang } from 'src/views/admin/billing/format'
 
 // Same lists as App\Models\Article.
@@ -35,6 +36,7 @@ const emptyArticle = {
   issueId: '',
   classification: 'public',
   tenant: null,
+  writer: null,
   authorName: '',
   audiences: [],
   tagIds: [],
@@ -55,6 +57,9 @@ const toForm = article => ({
   tenant: article.tenantId
     ? { id: article.tenantId, nameAr: article.tenantNameAr, nameEn: article.tenantNameEn }
     : null,
+  writer: article.writerId
+    ? { id: article.writerId, nameAr: article.writerNameAr, nameEn: article.writerNameEn, status: article.writerStatus }
+    : null,
   authorName: article.authorName,
   audiences: article.audiences || [],
   tagIds: (article.tags || []).map(tag => tag.id),
@@ -72,6 +77,7 @@ const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, 
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors }
   } = useForm({ values: article ? toForm(article) : emptyArticle })
 
@@ -79,9 +85,10 @@ const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, 
   const needsTenant = TENANT_CLASSIFICATIONS.includes(classification)
 
   const submit = data => {
-    const { tenant, ...rest } = data
+    const { tenant, writer, ...rest } = data
     onSubmit({
       ...rest,
+      writerId: writer?.id || null,
       sectionId: rest.sectionId || null,
       issueId: rest.issueId || null,
       tenantId: needsTenant ? tenant?.id || null : null
@@ -136,9 +143,31 @@ const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, 
               />
             </Grid>
             <Grid item xs={12} md={6}>
+              <Controller
+                name='writer'
+                control={control}
+                render={({ field }) => (
+                  <WriterPicker
+                    value={field.value}
+                    onChange={writer => {
+                      field.onChange(writer)
+                      // The byline follows the chosen writer, in the article's language.
+                      if (writer) {
+                        setValue('authorName', watch('language') === 'en' ? writer.nameEn : writer.nameAr, {
+                          shouldValidate: true
+                        })
+                      }
+                    }}
+                    label={t('admin.content.field.writer')}
+                    helperText={t('admin.content.writerHint')}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
               {text('authorName', { required: true })}
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={6}>
               <Controller
                 name='sectionId'
                 control={control}
@@ -154,7 +183,7 @@ const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, 
                 )}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={6}>
               <Controller
                 name='issueId'
                 control={control}

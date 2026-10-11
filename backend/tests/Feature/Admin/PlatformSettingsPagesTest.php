@@ -23,7 +23,7 @@ class PlatformSettingsPagesTest extends TestCase
     private function publishing(array $override = []): array
     {
         return $override + [
-            'requireSource' => false, 'requireRightsNote' => false, 'requireSection' => false,
+            'requireSource' => false, 'requireRightsNote' => false, 'requireSection' => false, 'requireVerifiedWriter' => false,
             'publishNeedsCompliant' => false, 'separatePublisher' => false,
             'sponsoredLabelAr' => 'محتوى مدعوم', 'sponsoredLabelEn' => 'Sponsored content',
         ];

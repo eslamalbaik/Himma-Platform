@@ -45,7 +45,7 @@ class Article extends Model
     ];
 
     protected $fillable = [
-        'title', 'summary', 'body', 'language', 'section_id', 'issue_id', 'tenant_id', 'author_name', 'author_id',
+        'title', 'summary', 'body', 'language', 'section_id', 'issue_id', 'tenant_id', 'author_name', 'author_id', 'writer_id',
         'classification', 'audiences', 'is_sponsored', 'source', 'rights_note', 'status',
         'compliance_checks', 'compliance_result', 'compliance_checked_at', 'review_note', 'reviewed_by',
         'published_at', 'withdrawn_at', 'withdrawal_reason',
@@ -107,6 +107,11 @@ class Article extends Model
         return $this->belongsTo(User::class, 'reviewed_by');
     }
 
+    public function writer(): BelongsTo
+    {
+        return $this->belongsTo(Writer::class);
+    }
+
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
@@ -155,6 +160,10 @@ class Article extends Model
             'tenantNameAr' => $this->tenant?->name_ar,
             'tenantNameEn' => $this->tenant?->name_en,
             'authorName' => $this->author_name,
+            'writerId' => $this->writer?->cuid,
+            'writerNameAr' => $this->writer?->name_ar,
+            'writerNameEn' => $this->writer?->name_en,
+            'writerStatus' => $this->writer?->status,
             'classification' => $this->classification,
             'audiences' => $this->audiences ?? [],
             'isSponsored' => $this->is_sponsored,

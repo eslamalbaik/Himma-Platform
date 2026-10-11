@@ -14,7 +14,14 @@ import SettingsCard from 'src/views/admin/settings/SettingsCard'
 import useSettingsGroup from 'src/views/admin/settings/useSettingsGroup'
 
 // Same order as App\Settings\Publishing::RULES.
-const RULES = ['requireSource', 'requireRightsNote', 'requireSection', 'publishNeedsCompliant', 'separatePublisher']
+const RULES = [
+  'requireSource',
+  'requireRightsNote',
+  'requireSection',
+  'requireVerifiedWriter',
+  'publishNeedsCompliant',
+  'separatePublisher'
+]
 
 const PublishingSettingsPage = () => {
   const { t } = useTranslation()
