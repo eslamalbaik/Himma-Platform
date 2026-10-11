@@ -56,6 +56,13 @@ class ClientAccess
         return (self::permissions($user)[$permission] ?? 'denied') === 'allowed';
     }
 
+    // Who a client user's article may be for (§2): everyone, members, academics, or their own organisation
+    // (institutional, or government for a government client). Confidential content stays with the platform.
+    public static function classifications(User $user): array
+    {
+        return ['public', 'members', 'academic', $user->tenant?->type === 'government' ? 'government' : 'institutional'];
+    }
+
     // A client user may give a role only if it grants nothing beyond their own permissions.
     public static function mayAssign(User $user, TenantRole $role): bool
     {

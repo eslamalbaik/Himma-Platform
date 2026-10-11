@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Billing\PlanController;
 use App\Http\Controllers\Api\Billing\SubscriptionController;
 use App\Http\Controllers\Api\Billing\WebhookController;
 use App\Http\Controllers\Api\BusinessStatsController;
+use App\Http\Controllers\Api\Client\ArticleController as ClientArticleController;
 use App\Http\Controllers\Api\Client\BillingController as ClientBillingController;
 use App\Http\Controllers\Api\Client\MemberController as ClientMemberController;
 use App\Http\Controllers\Api\Client\OverviewController as ClientOverviewController;
@@ -284,9 +285,18 @@ Route::prefix('client')->middleware(['auth.api', 'not_maintenance'])->group(func
         Route::get('members', [ClientMemberController::class, 'index'])->middleware('tperm:manage_entity_members');
         Route::get('roles', [ClientMemberController::class, 'roles'])->middleware('tperm:manage_entity_members');
 
+        Route::get('articles', [ClientArticleController::class, 'index'])->middleware('tperm:publish');
+        Route::get('articles/{cuid}', [ClientArticleController::class, 'show'])->middleware('tperm:publish');
+        Route::get('sections', [ClientArticleController::class, 'sections'])->middleware('tperm:publish');
+
         Route::middleware('same_origin')->group(function () {
             Route::post('members', [ClientMemberController::class, 'store'])->middleware('tperm:manage_entity_members');
             Route::put('members/{cuid}', [ClientMemberController::class, 'update'])->middleware('tperm:manage_entity_members');
+
+            Route::post('articles', [ClientArticleController::class, 'store'])->middleware('tperm:publish');
+            Route::put('articles/{cuid}', [ClientArticleController::class, 'update'])->middleware('tperm:publish');
+            Route::delete('articles/{cuid}', [ClientArticleController::class, 'destroy'])->middleware('tperm:publish');
+            Route::post('articles/{cuid}/submit', [ClientArticleController::class, 'submit'])->middleware('tperm:submit_review');
         });
     });
 

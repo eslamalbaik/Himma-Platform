@@ -160,20 +160,8 @@ class ArticleController extends Controller
     // Settings → Publishing can require metadata before an article goes to review (§6).
     public function submit(Request $request, Article $article)
     {
-        if ($article->canDo('submit')) {
-            $rules = Publishing::all();
-            if ($rules['requireSource'] && blank($article->source)) {
-                return $this->error('source_required', 409);
-            }
-            if ($rules['requireRightsNote'] && blank($article->rights_note)) {
-                return $this->error('rights_note_required', 409);
-            }
-            if ($rules['requireSection'] && ! $article->section_id) {
-                return $this->error('section_required', 409);
-            }
-            if ($rules['requireVerifiedWriter'] && $article->writer?->status !== 'verified') {
-                return $this->error('verified_writer_required', 409);
-            }
+        if ($article->canDo('submit') && $code = Publishing::submitError($article)) {
+            return $this->error($code, 409);
         }
 
         return $this->transition($request, $article, 'submit');

@@ -6,6 +6,13 @@
 export const clientNavigation = [
   { title: 'client.nav.home', icon: 'tabler:smart-home', path: '/client', action: 'read', subject: 'client' },
   {
+    title: 'client.nav.articles',
+    icon: 'tabler:article',
+    path: '/client/articles',
+    action: 'publish',
+    subject: 'client'
+  },
+  {
     title: 'client.nav.members',
     icon: 'tabler:users',
     path: '/client/members',
