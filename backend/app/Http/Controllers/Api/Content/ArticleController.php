@@ -9,6 +9,7 @@ use App\Http\Requests\Content\ReasonFormRequest;
 use App\Models\Article;
 use App\Models\ArticleVersion;
 use App\Models\MagazineSection;
+use App\Settings\Publishing;
 use App\Support\Audit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -148,8 +149,22 @@ class ArticleController extends Controller
         return $this->item($article->fresh(['section', 'issue', 'tenant', 'tags'])->toPublicArray());
     }
 
+    // Settings → Publishing can require metadata before an article goes to review (§6).
     public function submit(Request $request, Article $article)
     {
+        if ($article->canDo('submit')) {
+            $rules = Publishing::all();
+            if ($rules['requireSource'] && blank($article->source)) {
+                return $this->error('source_required', 409);
+            }
+            if ($rules['requireRightsNote'] && blank($article->rights_note)) {
+                return $this->error('rights_note_required', 409);
+            }
+            if ($rules['requireSection'] && ! $article->section_id) {
+                return $this->error('section_required', 409);
+            }
+        }
+
         return $this->transition($request, $article, 'submit');
     }
 
@@ -175,8 +190,18 @@ class ArticleController extends Controller
 
     public function publish(Request $request, Article $article)
     {
-        if ($article->canDo('publish') && $article->compliance_result === 'non_compliant') {
-            return $this->error('compliance_failed', 409);
+        if ($article->canDo('publish')) {
+            if ($article->compliance_result === 'non_compliant') {
+                return $this->error('compliance_failed', 409);
+            }
+            $rules = Publishing::all();
+            if ($rules['publishNeedsCompliant'] && $article->compliance_result !== 'compliant') {
+                return $this->error('compliance_not_clear', 409);
+            }
+            // Four eyes: the approver (the last reviewer) cannot also publish.
+            if ($rules['separatePublisher'] && $article->reviewed_by === $request->user()->id) {
+                return $this->error('approver_cannot_publish', 409);
+            }
         }
 
         return $this->transition($request, $article, 'publish', ['published_at' => now()]);

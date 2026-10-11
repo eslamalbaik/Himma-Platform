@@ -27,6 +27,10 @@ use App\Http\Controllers\Api\MyNotificationController;
 use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\Settings\AiSettingsController;
+use App\Http\Controllers\Api\Settings\PolicyController;
+use App\Http\Controllers\Api\Settings\PublishingSettingsController;
+use App\Http\Controllers\Api\Settings\YouTubeSettingsController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
 use App\Http\Controllers\Api\UserController;
@@ -46,6 +50,9 @@ Route::prefix('billing')->group(function () {
     Route::post('webhook/{driver}', [WebhookController::class, 'handle'])->middleware('throttle:120,1');
     Route::get('payments/{cuid}/result', [PaymentResultController::class, 'show'])->middleware('throttle:30,1');
 });
+
+// Public site: the media policies page (§7) and the sponsored-content label. No session.
+Route::get('site/policies', [PolicyController::class, 'published'])->middleware('throttle:60,1');
 
 Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(function () {
     Route::get('stats', AdminStatsController::class)->middleware('ability:read,dashboard');
@@ -182,6 +189,20 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
             Route::post('blocks', [BlockController::class, 'store'])->middleware('ability:create,messages');
             Route::delete('blocks/{cuid}', [BlockController::class, 'destroy'])->middleware('ability:create,messages');
         });
+    });
+
+    // Settings → Publishing, Policies, YouTube and AI. API keys are write-only (never returned).
+    Route::get('settings/publishing', [PublishingSettingsController::class, 'show'])->middleware('ability:read,settings');
+    Route::get('settings/policies', [PolicyController::class, 'index'])->middleware('ability:read,settings');
+    Route::get('settings/youtube', [YouTubeSettingsController::class, 'show'])->middleware('ability:read,settings');
+    Route::get('settings/ai', [AiSettingsController::class, 'show'])->middleware('ability:read,settings');
+    Route::middleware('same_origin')->group(function () {
+        Route::put('settings/publishing', [PublishingSettingsController::class, 'update'])->middleware('ability:update,settings');
+        Route::put('settings/policies/{key}', [PolicyController::class, 'update'])->middleware('ability:update,settings');
+        Route::put('settings/youtube', [YouTubeSettingsController::class, 'update'])->middleware('ability:update,settings');
+        Route::post('settings/youtube/test', [YouTubeSettingsController::class, 'test'])->middleware(['ability:update,settings', 'throttle:10,1']);
+        Route::put('settings/ai', [AiSettingsController::class, 'update'])->middleware('ability:update,settings');
+        Route::post('settings/ai/test', [AiSettingsController::class, 'test'])->middleware(['ability:update,settings', 'throttle:10,1']);
     });
 
     // Reports & Analytics: `read,reports` plus read access to the area each report covers. Exporting is a
