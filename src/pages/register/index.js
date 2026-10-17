@@ -117,7 +117,7 @@ const Register = () => {
           }}
         >
           <Box sx={{ width: '100%', maxWidth: 400 }}>
-            <img src='/images/logos/himma-logo.png' alt='Himma' style={{ height: 110 }} />
+            <img src='/images/logos/hinnah-logo.png' alt='Hinnah' style={{ height: 110 }} />
             <Box sx={{ my: 6 }}>
               <Typography variant='h3' sx={{ mb: 1.5 }}>
                 Adventure starts here 🚀

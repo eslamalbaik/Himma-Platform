@@ -20,7 +20,7 @@ class InvoicePdf
             $sections[] = $this->section($invoice, $locale);
         }
 
-        $logo = base_path('../public/images/logos/himma-logo.png');
+        $logo = base_path('../public/images/logos/hinnah-logo.png');
         $html = view('pdf.invoice', [
             'sections' => $sections,
             'logo' => is_file($logo) ? $logo : null,

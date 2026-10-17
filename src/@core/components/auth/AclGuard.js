@@ -31,17 +31,20 @@ const AclGuard = props => {
 
   // ** Vars
   let ability
+
+  // `/` is the public landing page (authGuard false), so it is only a redirect to the dashboard when a page
+  // there requires sign-in.
+  const redirectHome = authGuard && !guestGuard && router.route === '/'
   useEffect(() => {
-    if (auth.user && auth.user.role && !guestGuard && router.route === '/') {
-      const homeRoute = getHomeRoute(auth.user.role)
-      router.replace(homeRoute)
+    if (auth.user && auth.user.role && redirectHome) {
+      router.replace(getHomeRoute(auth.user.role))
     }
-  }, [auth.user, guestGuard, router])
+  }, [auth.user, redirectHome, router])
 
   // User is logged in, build ability for the user based on his role
   if (auth.user && !ability) {
     ability = buildAbilityFor(auth.user.role)
-    if (router.route === '/') {
+    if (redirectHome) {
       return <Spinner />
     }
   }
@@ -59,7 +62,7 @@ const AclGuard = props => {
 
   // Check the access of current user and render pages
   if (ability && auth.user && ability.can(aclAbilities.action, aclAbilities.subject)) {
-    if (router.route === '/') {
+    if (redirectHome) {
       return <Spinner />
     }
 

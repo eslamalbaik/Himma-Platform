@@ -13,7 +13,7 @@ class SettingsAuditStatsTest extends TestCase
     private function settings(array $override = []): array
     {
         return $override + [
-            'platformNameAr' => 'همّة', 'platformNameEn' => 'Himma', 'defaultLocale' => 'ar',
+            'platformNameAr' => 'هنّة', 'platformNameEn' => 'Hinnah', 'defaultLocale' => 'ar',
             'supportEmail' => '', 'maintenanceMode' => false,
         ];
     }

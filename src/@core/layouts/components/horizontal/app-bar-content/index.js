@@ -1,5 +1,6 @@
 // ** Next Import
 import Link from 'next/link'
+import getHomeRoute from 'src/layouts/components/acl/getHomeRoute'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -28,8 +29,8 @@ const AppBarContent = props => {
       {userAppBarBranding ? (
         userAppBarBranding(props)
       ) : (
-        <LinkStyled href='/'>
-          <img src='/images/logos/himma-mark.png' alt='Himma' style={{ height: 44 }} />
+        <LinkStyled href={getHomeRoute()}>
+          <img src='/images/logos/hinnah-mark.png' alt='Hinnah' style={{ height: 44 }} />
         </LinkStyled>
       )}
       {userAppBarContent ? userAppBarContent(props) : null}

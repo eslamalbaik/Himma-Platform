@@ -9,6 +9,7 @@ import axios from 'axios'
 
 // ** Config
 import authConfig from 'src/configs/auth'
+import getHomeRoute from 'src/layouts/components/acl/getHomeRoute'
 
 // The session lives in an httpOnly cookie set by /api/auth/login; the browser never sees the token.
 
@@ -55,7 +56,10 @@ const AuthProvider = ({ children }) => {
       .then(response => {
         const returnUrl = router.query.returnUrl
         setUser(response.data.user)
-        const redirectURL = returnUrl && returnUrl !== '/' && returnUrl.startsWith('/') ? returnUrl : '/'
+        const redirectURL =
+          returnUrl && returnUrl !== '/' && returnUrl.startsWith('/')
+            ? returnUrl
+            : getHomeRoute(response.data.user.role)
         router.replace(redirectURL)
       })
       .catch(err => {

@@ -85,7 +85,7 @@ class ContentSeeder extends Seeder
                 'language' => 'ar',
                 'section_id' => $section($sectionEn),
                 'issue_id' => $issueId,
-                'author_name' => 'فريق تحرير همّة',
+                'author_name' => 'فريق تحرير هنّة',
                 'classification' => 'public',
                 'audiences' => $audiences,
                 'source' => 'تحرير المجلة',
