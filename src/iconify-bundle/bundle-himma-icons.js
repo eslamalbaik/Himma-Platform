@@ -20,6 +20,8 @@ const sources = [
   'src/context',
   'src/hooks',
   'src/views/admin',
+  'src/views/landing',
+  'src/pages/index.js',
   'src/pages/admin',
   'src/pages/billing',
   'src/pages/login',

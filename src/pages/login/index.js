@@ -1,6 +1,10 @@
 // ** React Imports
 import { useState } from 'react'
 
+// ** Next Imports
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+
 // ** MUI Components
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
@@ -55,6 +59,10 @@ const LoginPage = () => {
   const [loginError, setLoginError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const { t, i18n } = useTranslation()
+  const router = useRouter()
+
+  // Organizations arrive from the landing page with ?portal=entity (src/configs/landing.js).
+  const isEntityPortal = router.query.portal === 'entity'
 
   // ** Hooks
   const auth = useAuth()
@@ -98,89 +106,94 @@ const LoginPage = () => {
         }}
       >
         <Box sx={{ width: '100%', maxWidth: 400 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <img src='/images/logos/himma-logo.png' alt={t('login.title')} style={{ height: 110 }} />
-              <Button size='small' variant='text' onClick={toggleLanguage} startIcon={<Icon icon='tabler:language' />}>
-                {t(i18n.language === 'en' ? 'language.ar' : 'language.en')}
-              </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <img src='/images/logos/hinnah-logo.png' alt={t('login.title')} style={{ height: 110 }} />
+            <Button size='small' variant='text' onClick={toggleLanguage} startIcon={<Icon icon='tabler:language' />}>
+              {t(i18n.language === 'en' ? 'language.ar' : 'language.en')}
+            </Button>
+          </Box>
+          <Box sx={{ my: 6 }}>
+            <Typography variant='h3' sx={{ mb: 1.5 }}>
+              {t('login.title')}
+            </Typography>
+            <Typography sx={{ color: 'text.secondary' }}>
+              {t(isEntityPortal ? 'login.entitySubtitle' : 'login.subtitle')}
+            </Typography>
+          </Box>
+          {loginError ? (
+            <Alert severity='error' sx={{ mb: 4 }}>
+              {t(`errors.${loginError}`)}
+            </Alert>
+          ) : null}
+          <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+            <Box sx={{ mb: 4 }}>
+              <Controller
+                name='email'
+                control={control}
+                rules={{ required: true }}
+                render={({ field: { value, onChange, onBlur } }) => (
+                  <CustomTextField
+                    fullWidth
+                    autoFocus
+                    type='email'
+                    autoComplete='username'
+                    label={t('login.email')}
+                    value={value}
+                    onBlur={onBlur}
+                    onChange={onChange}
+                    error={Boolean(errors.email)}
+                    {...(errors.email && { helperText: t(errors.email.message) })}
+                  />
+                )}
+              />
             </Box>
-            <Box sx={{ my: 6 }}>
-              <Typography variant='h3' sx={{ mb: 1.5 }}>
-                {t('login.title')}
-              </Typography>
-              <Typography sx={{ color: 'text.secondary' }}>{t('login.subtitle')}</Typography>
+            <Box sx={{ mb: 1.5 }}>
+              <Controller
+                name='password'
+                control={control}
+                rules={{ required: true }}
+                render={({ field: { value, onChange, onBlur } }) => (
+                  <CustomTextField
+                    fullWidth
+                    value={value}
+                    onBlur={onBlur}
+                    label={t('login.password')}
+                    onChange={onChange}
+                    id='auth-login-v2-password'
+                    autoComplete='current-password'
+                    error={Boolean(errors.password)}
+                    {...(errors.password && { helperText: t(errors.password.message) })}
+                    type={showPassword ? 'text' : 'password'}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <IconButton
+                            edge='end'
+                            onMouseDown={e => e.preventDefault()}
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            <Icon fontSize='1.25rem' icon={showPassword ? 'tabler:eye' : 'tabler:eye-off'} />
+                          </IconButton>
+                        </InputAdornment>
+                      )
+                    }}
+                  />
+                )}
+              />
             </Box>
-            {loginError ? (
-              <Alert severity='error' sx={{ mb: 4 }}>
-                {t(`errors.${loginError}`)}
-              </Alert>
-            ) : null}
-            <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-              <Box sx={{ mb: 4 }}>
-                <Controller
-                  name='email'
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field: { value, onChange, onBlur } }) => (
-                    <CustomTextField
-                      fullWidth
-                      autoFocus
-                      type='email'
-                      autoComplete='username'
-                      label={t('login.email')}
-                      value={value}
-                      onBlur={onBlur}
-                      onChange={onChange}
-                      error={Boolean(errors.email)}
-                      {...(errors.email && { helperText: t(errors.email.message) })}
-                    />
-                  )}
-                />
-              </Box>
-              <Box sx={{ mb: 1.5 }}>
-                <Controller
-                  name='password'
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field: { value, onChange, onBlur } }) => (
-                    <CustomTextField
-                      fullWidth
-                      value={value}
-                      onBlur={onBlur}
-                      label={t('login.password')}
-                      onChange={onChange}
-                      id='auth-login-v2-password'
-                      autoComplete='current-password'
-                      error={Boolean(errors.password)}
-                      {...(errors.password && { helperText: t(errors.password.message) })}
-                      type={showPassword ? 'text' : 'password'}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position='end'>
-                            <IconButton
-                              edge='end'
-                              onMouseDown={e => e.preventDefault()}
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              <Icon fontSize='1.25rem' icon={showPassword ? 'tabler:eye' : 'tabler:eye-off'} />
-                            </IconButton>
-                          </InputAdornment>
-                        )
-                      }}
-                    />
-                  )}
-                />
-              </Box>
-              <Box sx={{ mb: 1.75, display: 'flex', alignItems: 'center' }}>
-                <FormControlLabel
-                  label={t('login.remember')}
-                  control={<Checkbox checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />}
-                />
-              </Box>
-              <Button fullWidth type='submit' variant='contained' disabled={submitting} sx={{ mb: 4 }}>
-                {t('login.submit')}
-              </Button>
-            </form>
+            <Box sx={{ mb: 1.75, display: 'flex', alignItems: 'center' }}>
+              <FormControlLabel
+                label={t('login.remember')}
+                control={<Checkbox checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />}
+              />
+            </Box>
+            <Button fullWidth type='submit' variant='contained' disabled={submitting} sx={{ mb: 4 }}>
+              {t('login.submit')}
+            </Button>
+          </form>
+          <Typography component={Link} href='/' sx={{ display: 'block', textAlign: 'center', color: 'primary.main' }}>
+            {t('login.backHome')}
+          </Typography>
         </Box>
       </Box>
     </Box>

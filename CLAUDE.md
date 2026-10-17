@@ -1,7 +1,7 @@
-# Himma (همّة) — working rules for this repository
+# Hinnah (هنّة) — working rules for this repository
 
 ## Every change is bilingual: Arabic and English (قرار المالك)
-Himma ships in two languages. Any code you add or change must work in both:
+Hinnah ships in two languages. Any code you add or change must work in both:
 
 - **No hard-coded UI text.** Put every visible string (labels, buttons, menu titles, placeholders, validation
   messages, errors, empty states, emails) in both `public/locales/ar.json` and `public/locales/en.json`
@@ -14,7 +14,8 @@ Himma ships in two languages. Any code you add or change must work in both:
   `errors.<code>`. Every new code goes into both locale files.
 - **Data that users write has both languages where it names something shared**: e.g. `nameAr`/`nameEn` on
   users, tenants, plans, sections, tags. Articles themselves carry a `language` field instead.
-- The platform name is **همّة / Himma** only.
+- The platform name is **هنّة / Hinnah** only (renamed from همّة / Himma on 2026-10-12). Internal identifiers that still say
+  `himma` (`himma_test`, `himma_session`, `@himma.local`, `icons-himma`) are not shown to users and stay as they are.
 
 ## Architecture
 - **Frontend:** Next.js 15 (pages router) + MUI (Vuexy template). `next.config.js` proxies `/api/*` to the
@@ -50,10 +51,20 @@ Himma ships in two languages. Any code you add or change must work in both:
   messages never hold the text. Blocks (`user_blocks`) stop messages both ways.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
+- **Public landing page** at `/` (`src/pages/index.js`, sections in `src/views/landing`, texts `landing.*`), ported
+  from the `hemma-ideas-hub` prototype and rebuilt with MUI so it uses the dashboard's theme, fonts and RTL/LTR.
+  It is the only page with `authGuard = false` besides the auth pages: guests see **دخول الجهات** (organization
+  sign-in, `/login?portal=entity`, which only changes the login subtitle), signed-in users see a link to their
+  dashboard. After sign-in (and when a signed-in user opens a guest page) users go to `getHomeRoute()` (`/admin`),
+  never back to `/`. "Request to join" is a mailto to `contactEmail` in `src/configs/landing.js` until a public
+  join form exists. Numbers in the hero's dashboard preview are illustrative; the facts strip comes from
+  `REQUIREMENTS.md`.
+- Icons used by Hinnah code are bundled into `src/iconify-bundle/icons-himma.js`; run `npm run build:icons:himma`
+  after adding an icon (the source folders are listed in `bundle-himma-icons.js`).
 - Sidebar: `src/navigation/vertical/index.js`. Each item has a translation key and the CASL subject that
   gates it. Sections without a page yet render `src/pages/admin/[...slug].js`.
 - The remaining Vuexy demo pages (`/apps/*`, `/dashboards/*`, `/ui/*`, ...) are reference only and are
-  reachable by `super_admin` alone. `src/@fake-db` still mocks their data; never use it for Himma features.
+  reachable by `super_admin` alone. `src/@fake-db` still mocks their data; never use it for Hinnah features.
 
 ## Commands
 Frontend (repo root):

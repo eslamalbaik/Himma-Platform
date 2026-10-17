@@ -7,6 +7,9 @@ import { useRouter } from 'next/router'
 // ** Hooks Import
 import { useAuth } from 'src/hooks/useAuth'
 
+// ** Util Import
+import getHomeRoute from 'src/layouts/components/acl/getHomeRoute'
+
 const GuestGuard = props => {
   const { children, fallback } = props
   const auth = useAuth()
@@ -16,7 +19,7 @@ const GuestGuard = props => {
       return
     }
     if (auth.user) {
-      router.replace('/')
+      router.replace(getHomeRoute(auth.user.role))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.route, auth.loading, auth.user])

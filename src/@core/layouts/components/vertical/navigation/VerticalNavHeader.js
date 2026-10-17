@@ -1,5 +1,6 @@
 // ** Next Import
 import Link from 'next/link'
+import getHomeRoute from 'src/layouts/components/acl/getHomeRoute'
 
 // ** MUI Imports
 import IconButton from '@mui/material/IconButton'
@@ -74,9 +75,9 @@ const VerticalNavHeader = props => {
       {userNavMenuBranding ? (
         userNavMenuBranding(props)
       ) : (
-        <LinkStyled href='/'>
+        <LinkStyled href={getHomeRoute()}>
           <img
-            src='/images/logos/himma-mark.png'
+            src='/images/logos/hinnah-mark.png'
             alt={themeConfig.templateName}
             style={{ height: 44, width: navCollapsed && !navHover ? 44 : 'auto', objectFit: 'contain' }}
           />
