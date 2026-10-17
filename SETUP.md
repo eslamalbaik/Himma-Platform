@@ -1,4 +1,4 @@
-# دليل تشغيل منصة همّة (Himma Platform)
+# دليل تشغيل منصة هنّة (Hinnah Platform)
 
 المشروع مبني على قالب **Vuexy Next.js Admin Template** (Next.js 15 + React 18 + MUI).
 

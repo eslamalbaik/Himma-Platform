@@ -12,8 +12,8 @@ return new class extends Migration
     {
         Schema::create('platform_settings', function (Blueprint $table) {
             $table->id();
-            $table->string('platform_name_ar')->default('همّة');
-            $table->string('platform_name_en')->default('Himma');
+            $table->string('platform_name_ar')->default('هنّة');
+            $table->string('platform_name_en')->default('Hinnah');
             $table->string('default_locale')->default('ar'); // ar | en
             $table->string('support_email')->nullable();
             $table->boolean('maintenance_mode')->default(false);
@@ -21,8 +21,8 @@ return new class extends Migration
         });
 
         DB::table('platform_settings')->insert([
-            'platform_name_ar' => 'همّة',
-            'platform_name_en' => 'Himma',
+            'platform_name_ar' => 'هنّة',
+            'platform_name_en' => 'Hinnah',
             'default_locale' => 'ar',
             'created_at' => now(),
             'updated_at' => now(),

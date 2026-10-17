@@ -35,7 +35,7 @@ class ZiinaDriver implements GatewayDriver
         $body = $this->call($gateway, fn (PendingRequest $http) => $http->post('/payment_intent', [
             'amount' => $this->minorUnits($payment->amount),
             'currency_code' => $invoice->currency,
-            'message' => "Himma {$invoice->number}",
+            'message' => "Hinnah {$invoice->number}",
             'success_url' => $returnUrls['success'],
             'cancel_url' => $returnUrls['cancel'],
             'failure_url' => $returnUrls['failure'],

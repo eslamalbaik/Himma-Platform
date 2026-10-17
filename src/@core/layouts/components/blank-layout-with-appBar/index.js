@@ -44,7 +44,7 @@ const BlankLayoutAppBar = () => {
         }}
       >
         <LinkStyled href='/'>
-          <img src='/images/logos/himma-mark.png' alt='Himma' style={{ height: 44 }} />
+          <img src='/images/logos/hinnah-mark.png' alt='Hinnah' style={{ height: 44 }} />
         </LinkStyled>
       </Toolbar>
     </AppBar>
