@@ -10,6 +10,7 @@ import axios from 'axios'
 // ** Config
 import authConfig from 'src/configs/auth'
 import getHomeRoute from 'src/layouts/components/acl/getHomeRoute'
+import { isMemberRole } from 'src/configs/roles'
 
 // The session lives in an httpOnly cookie set by /api/auth/login; the browser never sees the token.
 
@@ -20,6 +21,7 @@ const defaultProvider = {
   setUser: () => null,
   setLoading: () => Boolean,
   login: () => Promise.resolve(),
+  register: () => Promise.resolve(),
   logout: () => Promise.resolve()
 }
 const AuthContext = createContext(defaultProvider)
@@ -45,36 +47,57 @@ const AuthProvider = ({ children }) => {
     initAuth()
   }, [])
 
+  // After signing in or up: back to the page that asked for it, else the user's home (site or dashboard).
+  const goHome = user => {
+    const returnUrl = router.query.returnUrl
+    const redirectURL =
+      typeof returnUrl === 'string' && returnUrl !== '/' && returnUrl.startsWith('/') && !returnUrl.startsWith('//')
+        ? returnUrl
+        : getHomeRoute(user.role)
+    router.replace(redirectURL)
+  }
+
   // errorCallback receives the error code from the API (see public/locales `errors.*`).
+  const reportError = (err, errorCallback) => {
+    // A rejected request is expected; only unexpected failures are logged (see SETUP.md troubleshooting).
+    if (!err.response) console.warn('Auth request failed:', err)
+    if (errorCallback) errorCallback(err.response?.data?.error?.code || 'network_error')
+  }
+
+  // `portal` is the door the user came through: 'member' (/login) or 'admin' (/admin/login).
   const handleLogin = (params, errorCallback) => {
     axios
       .post(authConfig.loginEndpoint, {
         email: params.email,
         password: params.password,
-        remember: Boolean(params.rememberMe)
+        remember: Boolean(params.rememberMe),
+        portal: params.portal || 'admin'
       })
       .then(response => {
-        const returnUrl = router.query.returnUrl
         setUser(response.data.user)
-        const redirectURL =
-          returnUrl && returnUrl !== '/' && returnUrl.startsWith('/')
-            ? returnUrl
-            : getHomeRoute(response.data.user.role)
-        router.replace(redirectURL)
+        goHome(response.data.user)
       })
-      .catch(err => {
-        // A rejected sign-in is expected; only unexpected failures are logged (see SETUP.md troubleshooting).
-        if (!err.response) console.warn('Login failed:', err)
-        if (errorCallback) errorCallback(err.response?.data?.error?.code || 'network_error')
+      .catch(err => reportError(err, errorCallback))
+  }
+
+  // Individuals sign up themselves (organizations send a join request instead).
+  const handleRegister = (params, errorCallback) => {
+    axios
+      .post(authConfig.registerEndpoint, params)
+      .then(response => {
+        setUser(response.data.user)
+        goHome(response.data.user)
       })
+      .catch(err => reportError(err, errorCallback))
   }
 
   const handleLogout = async () => {
+    const member = isMemberRole(user?.role)
     try {
       await axios.post(authConfig.logoutEndpoint, {})
     } finally {
       setUser(null)
-      router.push('/login')
+      router.push(member ? '/' : '/admin/login')
     }
   }
 
@@ -84,6 +107,7 @@ const AuthProvider = ({ children }) => {
     setUser,
     setLoading,
     login: handleLogin,
+    register: handleRegister,
     logout: handleLogout
   }
 

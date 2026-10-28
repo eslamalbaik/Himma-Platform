@@ -26,6 +26,8 @@ use App\Http\Controllers\Api\Messages\MessageReportController;
 use App\Http\Controllers\Api\MyNotificationController;
 use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
+use App\Http\Controllers\Api\Site\ReadController;
+use App\Http\Controllers\Api\Site\StoryController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
 use App\Http\Controllers\Api\UserController;
@@ -36,11 +38,33 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->middleware('same_origin');
+    Route::post('register', [AuthController::class, 'register'])->middleware(['same_origin', 'throttle:10,60']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('same_origin');
     Route::get('me', [AuthController::class, 'me'])->middleware('auth.api');
 });
 
 // Called by payment providers and by payers returning from checkout: no session, no same_origin.
+// The public site: anyone can read published public articles and an organization can ask to join.
+Route::prefix('public')->middleware('not_maintenance')->group(function () {
+    Route::get('articles', [ReadController::class, 'articles'])->middleware('throttle:120,1');
+    Route::get('articles/{cuid}', [ReadController::class, 'article'])->middleware('throttle:120,1');
+    Route::get('sections', [ReadController::class, 'sections'])->middleware('throttle:120,1');
+    Route::post('join-requests', [TenantRequestController::class, 'store'])->middleware(['same_origin', 'throttle:5,60']);
+});
+
+// A signed-in member's own stories (members write; editors review and publish in the dashboard).
+Route::prefix('me/stories')->middleware(['auth.api', 'not_maintenance'])->group(function () {
+    Route::get('/', [StoryController::class, 'index'])->middleware('ability:read,stories');
+    Route::get('{cuid}', [StoryController::class, 'show'])->middleware('ability:read,stories');
+
+    Route::middleware('same_origin')->group(function () {
+        Route::post('/', [StoryController::class, 'store'])->middleware(['ability:create,stories', 'throttle:30,1']);
+        Route::put('{cuid}', [StoryController::class, 'update'])->middleware('ability:update,stories');
+        Route::post('{cuid}/submit', [StoryController::class, 'submit'])->middleware('ability:update,stories');
+        Route::delete('{cuid}', [StoryController::class, 'destroy'])->middleware('ability:delete,stories');
+    });
+});
+
 Route::prefix('billing')->group(function () {
     Route::post('webhook/{driver}', [WebhookController::class, 'handle'])->middleware('throttle:120,1');
     Route::get('payments/{cuid}/result', [PaymentResultController::class, 'show'])->middleware('throttle:30,1');

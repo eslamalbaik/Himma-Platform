@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\EnsureApiUser;
+use App\Http\Requests\Auth\RegisterFormRequest;
 use App\Models\PlatformSetting;
 use App\Models\User;
 use App\Support\Ability;
@@ -60,15 +61,25 @@ class AuthController extends Controller
             return $this->error('invalid_credentials', 401);
         }
 
-        // Only the super admin dashboard exists so far; client (tenant) accounts get their own dashboard later.
-        if (! Ability::isPlatformRole($user->role)) {
+        // Two separate doors: staff sign in at /admin/login (`portal: admin`, the default), readers and
+        // writers (individuals and client organizations' users) at /login (`portal: member`).
+        $portal = $request->input('portal') === 'member' ? 'member' : 'admin';
+        $denied = match (true) {
+            $portal === 'admin' && Ability::isMemberRole($user->role) => 'use_member_login',
+            $portal === 'member' && Ability::isPlatformRole($user->role) => 'use_admin_login',
+            ! Ability::isPlatformRole($user->role) && ! Ability::isMemberRole($user->role) => 'dashboard_not_available',
+            $user->tenant_id && in_array($user->tenant?->status, ['suspended', 'cancelled'], true) => 'tenant_inactive',
+            default => null,
+        };
+
+        if ($denied) {
             Audit::log($request, [
                 'action' => 'auth.login_denied',
                 'actor' => $user,
-                'metadata' => ['reason' => 'no_dashboard_for_role'],
+                'metadata' => ['reason' => $denied, 'portal' => $portal],
             ]);
 
-            return $this->error('dashboard_not_available', 403);
+            return $this->error($denied, 403);
         }
 
         if (PlatformSetting::current()->maintenance_mode && $user->role !== 'super_admin') {
@@ -85,6 +96,35 @@ class AuthController extends Controller
             RateLimiter::clear($key);
         }
 
+        $this->startSession($request, $user, $remember);
+        Audit::log($request, ['action' => 'auth.login', 'actor' => $user, 'metadata' => ['remember' => $remember, 'portal' => $portal]]);
+
+        return response()->json(['user' => $user->toPublicArray()]);
+    }
+
+    // Individuals create their own reader/writer account and are signed in at once. Organizations do not
+    // sign up here: they send a join request (`POST /api/public/join-requests`) that staff review.
+    public function register(RegisterFormRequest $request)
+    {
+        if (PlatformSetting::current()->maintenance_mode) {
+            return $this->error('maintenance_mode', 503);
+        }
+
+        $user = User::create($request->fields() + ['role' => 'member', 'status' => 'active']);
+
+        $this->startSession($request, $user->fresh(), false);
+        Audit::log($request, [
+            'action' => 'auth.registered',
+            'actor' => $user,
+            'entity_type' => 'user',
+            'entity_id' => $user->cuid,
+        ]);
+
+        return response()->json(['user' => $user->toPublicArray()], 201);
+    }
+
+    private function startSession(Request $request, User $user, bool $remember): void
+    {
         $request->session()->regenerate();
         Auth::login($user, $remember);
         $request->session()->put(EnsureApiUser::SESSION_TOKEN_VERSION, $user->token_version);
@@ -94,10 +134,6 @@ class AuthController extends Controller
             // Session cookie ends with the browser session (Laravel defaults to persistent otherwise).
             config(['session.expire_on_close' => true]);
         }
-
-        Audit::log($request, ['action' => 'auth.login', 'actor' => $user, 'metadata' => ['remember' => $remember]]);
-
-        return response()->json(['user' => $user->toPublicArray()]);
     }
 
     public function logout(Request $request)
