@@ -1,6 +1,9 @@
+import { isMemberRole } from 'src/configs/roles'
+
 /**
- *  Home URL after sign-in. Every platform role starts on the super admin overview.
+ *  Home URL after sign-in: members (individuals and organizations' users) go to the reading site,
+ *  staff to the dashboard.
  */
-const getHomeRoute = () => '/admin'
+const getHomeRoute = role => (isMemberRole(role) ? '/' : '/admin')
 
 export default getHomeRoute

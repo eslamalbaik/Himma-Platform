@@ -55,7 +55,20 @@ const clientSideEmotionCache = createEmotionCache()
 // when one of those pages is opened, so Himma pages stay small.
 const DemoProvider = dynamic(() => import('src/@core/demo/DemoProvider'), { ssr: false, loading: () => <Spinner /> })
 
-const HIMMA_ROUTES = ['/admin', '/billing', '/login', '/forgot-password', '/register', '/401', '/404', '/500']
+const HIMMA_ROUTES = [
+  '/admin',
+  '/billing',
+  '/login',
+  '/forgot-password',
+  '/register',
+  '/join',
+  '/stories',
+  '/write',
+  '/me',
+  '/401',
+  '/404',
+  '/500'
+]
 
 const isDemoRoute = pathname =>
   pathname !== '/' &&

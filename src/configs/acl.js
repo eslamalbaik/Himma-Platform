@@ -1,14 +1,14 @@
 import { AbilityBuilder, Ability } from '@casl/ability'
 
-import { PLATFORM_ROLES } from 'src/configs/roles'
+import { MEMBER_ROLES, PLATFORM_ROLES } from 'src/configs/roles'
 
 export const AppAbility = Ability
 
-// Builds the CASL rules for a role from src/configs/roles.js.
+// Builds the CASL rules for a role (staff or member) from src/configs/roles.js.
 // Unknown roles get no rules, so they can reach nothing.
 const defineRulesFor = role => {
   const { can, rules } = new AbilityBuilder(AppAbility)
-  const roleDef = PLATFORM_ROLES[role]
+  const roleDef = PLATFORM_ROLES[role] ?? MEMBER_ROLES[role]
 
   if (roleDef) {
     roleDef.rules.forEach(rule => can(rule.action, rule.subject))
