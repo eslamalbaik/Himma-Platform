@@ -90,4 +90,28 @@ return [
             ],
         ],
     ],
+
+    // Readers and writers on the public site (`/login`, never `/admin/login`): individuals who signed up
+    // themselves (`member`) and the users of a client organization. They write stories (their own articles),
+    // which go through the same editorial review as staff articles.
+    'member_roles' => [
+        'member' => [
+            'label' => ['ar' => 'عضو فرد', 'en' => 'Individual member'],
+            'rules' => [
+                ['action' => 'manage', 'subject' => 'stories'],
+            ],
+        ],
+        'tenant_admin' => [
+            'label' => ['ar' => 'مسؤول الجهة', 'en' => 'Organization admin'],
+            'rules' => [
+                ['action' => 'manage', 'subject' => 'stories'],
+            ],
+        ],
+        'tenant_member' => [
+            'label' => ['ar' => 'عضو جهة', 'en' => 'Organization member'],
+            'rules' => [
+                ['action' => 'manage', 'subject' => 'stories'],
+            ],
+        ],
+    ],
 ];

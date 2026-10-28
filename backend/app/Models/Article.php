@@ -138,6 +138,49 @@ class Article extends Model
         ]);
     }
 
+    // Published articles anyone may read on the public site (no sign-in needed).
+    public function scopeReadable($query)
+    {
+        return $query->where('status', 'published')->where('classification', 'public');
+    }
+
+    // What the public site shows: no review, compliance or reporting details.
+    public function toReaderArray(bool $withBody = false): array
+    {
+        return [
+            'id' => $this->cuid,
+            'title' => $this->title,
+            'summary' => $this->summary,
+            'language' => $this->language,
+            'sectionId' => $this->section?->cuid,
+            'sectionNameAr' => $this->section?->name_ar,
+            'sectionNameEn' => $this->section?->name_en,
+            'tenantNameAr' => $this->tenant?->name_ar,
+            'tenantNameEn' => $this->tenant?->name_en,
+            'authorName' => $this->author_name,
+            'tags' => $this->tags->map(fn (Tag $tag) => $tag->toPublicArray())->values(),
+            'wordCount' => count(preg_split('/\s+/u', trim(strip_tags((string) $this->body)), -1, PREG_SPLIT_NO_EMPTY)),
+            'publishedAt' => optional($this->published_at)->toIso8601String(),
+        ] + ($withBody ? ['body' => $this->body] : []);
+    }
+
+    // A member's own story as they see it while writing: its review status and the editor's note.
+    public function toStoryArray(bool $withBody = false): array
+    {
+        return [
+            'id' => $this->cuid,
+            'title' => $this->title,
+            'summary' => $this->summary,
+            'language' => $this->language,
+            'sectionId' => $this->section?->cuid,
+            'status' => $this->status,
+            'reviewNote' => $this->review_note,
+            'publishedAt' => optional($this->published_at)->toIso8601String(),
+            'createdAt' => optional($this->created_at)->toIso8601String(),
+            'updatedAt' => optional($this->updated_at)->toIso8601String(),
+        ] + ($withBody ? ['body' => $this->body] : []);
+    }
+
     public function toPublicArray(bool $withBody = false): array
     {
         return [

@@ -23,11 +23,6 @@ const config = {
     }
   },
 
-  // Accounts are created by the platform team; there is no public sign-up.
-  async redirects() {
-    return [{ source: '/register', destination: '/login', permanent: false }]
-  },
-
   // The backend is now Laravel (see backend/). Proxied so the browser only ever talks to
   // this origin — the httpOnly session cookie Laravel sets stays first-party, no CORS needed.
   async rewrites() {

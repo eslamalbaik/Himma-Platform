@@ -86,6 +86,19 @@ export const PLATFORM_ROLES = {
   }
 }
 
+// Readers and writers on the public site (they sign in at /login, never /admin/login). Mirrors
+// `member_roles` in backend/config/roles.php.
+const STORY_WRITER = [{ action: 'manage', subject: 'stories' }]
+
+export const MEMBER_ROLES = {
+  member: { label: { ar: 'عضو فرد', en: 'Individual member' }, rules: STORY_WRITER },
+  tenant_admin: { label: { ar: 'مسؤول الجهة', en: 'Organization admin' }, rules: STORY_WRITER },
+  tenant_member: { label: { ar: 'عضو جهة', en: 'Organization member' }, rules: STORY_WRITER }
+}
+
 export const isPlatformRole = role => Object.prototype.hasOwnProperty.call(PLATFORM_ROLES, role)
 
-export const roleLabel = (role, lang = 'ar') => PLATFORM_ROLES[role]?.label[lang === 'en' ? 'en' : 'ar'] ?? role
+export const isMemberRole = role => Object.prototype.hasOwnProperty.call(MEMBER_ROLES, role)
+
+export const roleLabel = (role, lang = 'ar') =>
+  (PLATFORM_ROLES[role] ?? MEMBER_ROLES[role])?.label[lang === 'en' ? 'en' : 'ar'] ?? role

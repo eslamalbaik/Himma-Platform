@@ -9,6 +9,7 @@ import { AbilityContext } from 'src/layouts/components/acl/Can'
 
 // ** Config Import
 import { buildAbilityFor } from 'src/configs/acl'
+import { isMemberRole } from 'src/configs/roles'
 
 // ** Component Import
 import NotAuthorized from 'src/pages/401'
@@ -34,7 +35,9 @@ const AclGuard = props => {
 
   // `/` is the public landing page (authGuard false), so it is only a redirect to the dashboard when a page
   // there requires sign-in.
-  const redirectHome = authGuard && !guestGuard && router.route === '/'
+  // Members (readers and writers) never see the staff dashboard: /admin/* sends them back to the site.
+  const memberOnStaffPage = Boolean(auth.user && isMemberRole(auth.user.role) && router.route.startsWith('/admin'))
+  const redirectHome = (authGuard && !guestGuard && router.route === '/') || memberOnStaffPage
   useEffect(() => {
     if (auth.user && auth.user.role && redirectHome) {
       router.replace(getHomeRoute(auth.user.role))

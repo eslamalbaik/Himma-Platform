@@ -17,13 +17,15 @@ const AuthGuard = props => {
         return
       }
       if (auth.user === null) {
+        // Staff pages send guests to the staff door, everything else to the members' door.
+        const pathname = router.route.startsWith('/admin') ? '/admin/login' : '/login'
         if (router.asPath !== '/') {
           router.replace({
-            pathname: '/login',
+            pathname,
             query: { returnUrl: router.asPath }
           })
         } else {
-          router.replace('/login')
+          router.replace(pathname)
         }
       }
     },
