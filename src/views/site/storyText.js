@@ -28,8 +28,32 @@ export const formatDate = (iso, lang) =>
 
 export const initialOf = name => (name || '?').trim().charAt(0).toUpperCase()
 
-// Stories are plain text. A blank line starts a new paragraph; a paragraph that starts with "## " is a
-// subheading and one that starts with "> " is a quote.
+// Stories are plain text with a few marks. A blank line starts a new block. A block that starts with "## " is a
+// subheading and one that starts with "> " is a quote; "![caption](/storage/...)" alone is a picture and
+// "@[video](https://...)" alone is a YouTube or Vimeo video. Inside text: **bold**, *italic*, [text](url).
+const IMAGE = /^!\[([^\]]*)\]\((\/storage\/[^\s)]+|https:\/\/[^\s)]+)\)$/
+const VIDEO = /^@\[video\]\((https:\/\/[^\s)]+)\)$/
+
+// The embeddable address of a YouTube or Vimeo link, or null for anything else.
+export const videoEmbed = link => {
+  let url
+  try {
+    url = new URL(link)
+  } catch (e) {
+    return null
+  }
+  const host = url.hostname.replace(/^www\./, '')
+  let id = null
+  if (host === 'youtu.be') id = url.pathname.slice(1)
+  else if (host === 'youtube.com' || host === 'm.youtube.com') {
+    id = url.searchParams.get('v') || (url.pathname.match(/^\/(?:embed|shorts)\/([\w-]+)/) || [])[1]
+  } else if (host === 'vimeo.com') id = (url.pathname.match(/^\/(\d+)/) || [])[1]
+  else return null
+  if (!id || !/^[\w-]+$/.test(id)) return null
+
+  return host === 'vimeo.com' ? `https://player.vimeo.com/video/${id}` : `https://www.youtube-nocookie.com/embed/${id}`
+}
+
 export const toBlocks = body =>
   (body || '')
     .replace(/\r\n/g, '\n')
@@ -37,8 +61,28 @@ export const toBlocks = body =>
     .map(part => part.trim())
     .filter(Boolean)
     .map(part => {
+      const image = part.match(IMAGE)
+      if (image) return { type: 'image', alt: image[1], url: image[2] }
+      const video = part.match(VIDEO)
+      if (video && videoEmbed(video[1])) return { type: 'video', url: video[1] }
       if (part.startsWith('## ')) return { type: 'heading', text: part.slice(3).trim() }
       if (part.startsWith('> ')) return { type: 'quote', text: part.replace(/^>\s?/gm, '') }
 
       return { type: 'paragraph', text: part }
     })
+
+// The reverse of toBlocks, used by the editor.
+export const fromBlocks = blocks =>
+  blocks
+    .map(block => {
+      if (block.type === 'image') return `![${(block.alt || '').replace(/[\]\n]/g, ' ')}](${block.url})`
+      if (block.type === 'video') return `@[video](${block.url})`
+      const text = (block.text || '').trim()
+      if (!text) return ''
+      if (block.type === 'heading') return `## ${text.replace(/\n+/g, ' ')}`
+      if (block.type === 'quote') return text.replace(/^/gm, '> ')
+
+      return text
+    })
+    .filter(Boolean)
+    .join('\n\n')

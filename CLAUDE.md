@@ -49,6 +49,13 @@ Hinnah ships in two languages. Any code you add or change must work in both:
   Only the two participants can open a conversation (404 for anyone else, staff included). Moderators see a message
   only when it is reported (`message_reports`), and opening the reports list is audited. Audit rows for sent
   messages never hold the text. Blocks (`user_blocks`) stop messages both ways.
+- **Smart cards (NFC + QR):** `smart_cards` (subject `cards`, `/admin/cards`). The NFC tag and the printed QR code both
+  open `/c/{slug}` (`?src=nfc` / `?src=qr` feed the open counters), so details change without reprinting. Books (ISBN),
+  events (with a minute-by-minute programme) and links are JSON on the card; each book and event keeps its `id` across
+  saves, and every event has its own landing page `/c/{slug}/events/{id}`. Readers ask for a digital dedication or a
+  signed copy (`smart_card_requests`, bell alert `card_request` to staff who `update,cards`) and subscribe to news
+  (`smart_card_subscribers`). Drafts answer 404 publicly. QR images are drawn in the browser (`qrcode` package).
+  Audit rows for readers' requests never hold their name or address.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
 - **Public landing page** at `/` (`src/pages/index.js`, sections in `src/views/landing`, texts `landing.*`), ported

@@ -18,7 +18,9 @@ export const SUBJECTS = [
   'permissions',
   'settings',
   'audit',
-  'ai_agent'
+  'ai_agent',
+  'landing',
+  'cards'
 ]
 
 export const PLATFORM_ROLES = {
@@ -34,7 +36,8 @@ export const PLATFORM_ROLES = {
       { action: ['read', 'create'], subject: 'billing' },
       { action: 'read', subject: 'users' },
       { action: 'manage', subject: 'messages' },
-      { action: 'read', subject: 'reports' }
+      { action: 'read', subject: 'reports' },
+      { action: 'manage', subject: 'cards' }
     ]
   },
   finance: {
@@ -54,6 +57,8 @@ export const PLATFORM_ROLES = {
       { action: 'manage', subject: 'content' },
       { action: 'manage', subject: 'events' },
       { action: 'manage', subject: 'magazine' },
+      { action: 'manage', subject: 'landing' },
+      { action: 'manage', subject: 'cards' },
       { action: 'read', subject: 'users' },
       { action: 'manage', subject: 'messages' },
       { action: 'read', subject: 'reports' }
@@ -74,7 +79,8 @@ export const PLATFORM_ROLES = {
       { action: 'read', subject: 'billing' },
       { action: 'read', subject: 'content' },
       { action: ['read', 'update'], subject: 'users' },
-      { action: 'manage', subject: 'messages' }
+      { action: 'manage', subject: 'messages' },
+      { action: 'read', subject: 'cards' }
     ]
   },
   auditor: {

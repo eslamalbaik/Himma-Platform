@@ -75,7 +75,7 @@ const TenantRequestsPage = () => {
     return () => clearTimeout(timeout)
   }, [searchInput])
 
-  const fetchRequests = (signal) => {
+  const fetchRequests = signal => {
     setLoading(true)
     setLoadError(null)
     axios
@@ -130,8 +130,18 @@ const TenantRequestsPage = () => {
         setToast('approveSuccess')
         fetchRequests()
       })
-      .catch(() => setToast(null))
+      .catch(err => {
+        setApproveTarget(null)
+        setToast(err.response?.data?.error?.code === 'contact_email_in_use' ? 'emailInUse' : null)
+      })
       .finally(() => setReviewing(false))
+  }
+
+  const handleResend = req => {
+    axios
+      .post(`/api/admin/tenant-requests/${req.id}/resend-invitation`, {})
+      .then(() => setToast('resendSuccess'))
+      .catch(err => setToast(err.response?.data?.error?.code === 'invitation_not_needed' ? 'resendNotNeeded' : null))
   }
 
   const handleRejectConfirm = reason => {
@@ -203,6 +213,7 @@ const TenantRequestsPage = () => {
               canReview={canReview}
               onApprove={setApproveTarget}
               onReject={setRejectTarget}
+              onResend={handleResend}
             />
 
             <TablePagination

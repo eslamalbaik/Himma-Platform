@@ -24,6 +24,8 @@ import { useTranslation } from 'react-i18next'
 import Icon from 'src/@core/components/icon'
 import SiteShell from 'src/views/site/SiteShell'
 import StoryListItem from 'src/views/site/StoryListItem'
+import PricingSection from 'src/views/site/landing/PricingSection'
+import TestimonialsSection from 'src/views/site/landing/TestimonialsSection'
 import { pillSx } from 'src/views/site/SiteHeader'
 
 // ** Hooks
@@ -78,7 +80,25 @@ const Hero = () => {
   )
 }
 
-// Abstract shapes in the brand colour, standing in for Medium's illustration (desktop only).
+// The hero drawing (a hand writing, and a flower): the PNGs only supply the shape, a mask paints them in
+// the brand colour, so they follow the theme. Desktop only.
+const MaskedArt = ({ src, color, sx }) => (
+  <Box
+    aria-hidden
+    sx={{
+      position: 'absolute',
+      backgroundColor: color,
+      WebkitMaskImage: `url(${src})`,
+      maskImage: `url(${src})`,
+      WebkitMaskSize: '100% 100%',
+      maskSize: '100% 100%',
+      WebkitMaskRepeat: 'no-repeat',
+      maskRepeat: 'no-repeat',
+      ...sx
+    }}
+  />
+)
+
 const HeroArt = () => (
   <Box
     aria-hidden
@@ -88,49 +108,20 @@ const HeroArt = () => (
       insetInlineEnd: { md: 0, lg: 24 },
       top: '50%',
       transform: 'translateY(-50%)',
-      width: 420,
-      height: 420
+      width: { md: 400, lg: 520 },
+      height: { md: 440, lg: 560 }
     }}
   >
-    <Box sx={{ position: 'absolute', inset: 40, borderRadius: '50%', backgroundColor: 'primary.main' }} />
-    <Box
-      sx={{
-        position: 'absolute',
-        top: 0,
-        insetInlineEnd: 0,
-        width: 170,
-        height: 170,
-        borderRadius: '0 0 0 100%',
-        backgroundColor: ink
-      }}
+    <MaskedArt
+      src='/images/pages/hero-write.png'
+      color='primary.main'
+      sx={{ insetInlineEnd: 0, bottom: 0, width: '88%', aspectRatio: '808 / 660' }}
     />
-    <Box
-      sx={{
-        position: 'absolute',
-        bottom: 10,
-        insetInlineStart: 10,
-        width: 130,
-        height: 130,
-        borderRadius: '50%',
-        border: theme => `2px solid ${ink(theme)}`,
-        backgroundColor: 'background.paper'
-      }}
+    <MaskedArt
+      src='/images/pages/hero-flower.png'
+      color='#E0B25B'
+      sx={{ insetInlineStart: 0, top: 0, width: '42%', aspectRatio: '588 / 590', transform: 'rotate(-8deg)' }}
     />
-    <Box
-      sx={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        color: 'common.white',
-        fontFamily: serifFont('ar'),
-        fontSize: '9rem',
-        fontWeight: 700,
-        lineHeight: 1
-      }}
-    >
-      هـ
-    </Box>
   </Box>
 )
 
@@ -217,6 +208,7 @@ const Home = () => {
   const [failed, setFailed] = useState(false)
   const [sections, setSections] = useState([])
   const [activeSection, setActiveSection] = useState(null)
+  const [landing, setLanding] = useState(null)
 
   const load = useCallback(
     (page, append) => {
@@ -247,6 +239,14 @@ const Home = () => {
       .catch(() => setSections([]))
   }, [])
 
+  // Pricing and testimonials for guests; a section that is off or empty comes back as null and is not drawn.
+  useEffect(() => {
+    axios
+      .get('/api/public/landing')
+      .then(({ data }) => setLanding(data.data))
+      .catch(() => setLanding(null))
+  }, [])
+
   const activeSectionName = sections.find(section => section.id === activeSection)
   const hasMore = meta && meta.currentPage < meta.lastPage
 
@@ -257,6 +257,8 @@ const Home = () => {
   return (
     <SiteShell>
       {!auth.user && !search ? <Hero /> : null}
+      {!auth.user && !search && landing?.pricing ? <PricingSection data={landing.pricing} /> : null}
+      {!auth.user && !search && landing?.testimonials ? <TestimonialsSection data={landing.testimonials} /> : null}
 
       <Box
         id='stories'

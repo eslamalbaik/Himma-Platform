@@ -61,6 +61,8 @@ const HIMMA_ROUTES = [
   '/login',
   '/forgot-password',
   '/register',
+  '/set-password',
+  '/set-password',
   '/join',
   '/stories',
   '/write',

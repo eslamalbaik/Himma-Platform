@@ -13,7 +13,8 @@ use Symfony\Component\HttpFoundation\Response;
 // origin (FRONTEND_URL), not this server's own Host header.
 class EnsureSameOriginJson
 {
-    public function handle(Request $request, Closure $next): Response
+    // `same_origin:multipart` is for file uploads, which are not JSON.
+    public function handle(Request $request, Closure $next, string $kind = 'json'): Response
     {
         $origin = $request->header('origin');
 
@@ -26,7 +27,8 @@ class EnsureSameOriginJson
             }
         }
 
-        if (! str_starts_with((string) $request->header('content-type'), 'application/json')) {
+        $type = $kind === 'multipart' ? 'multipart/form-data' : 'application/json';
+        if (! str_starts_with((string) $request->header('content-type'), $type)) {
             return response()->json(['error' => ['code' => 'bad_origin']], 403);
         }
 

@@ -20,7 +20,7 @@ const statusColor = {
   rejected: 'error'
 }
 
-const TenantRequestsTable = ({ requests, loading, canReview, onApprove, onReject }) => {
+const TenantRequestsTable = ({ requests, loading, canReview, onApprove, onReject, onResend }) => {
   const { t, i18n } = useTranslation()
   const lang = i18n.language === 'en' ? 'en' : 'ar'
 
@@ -91,6 +91,11 @@ const TenantRequestsTable = ({ requests, loading, canReview, onApprove, onReject
                           {t('admin.tenants.requests.rejectButton')}
                         </Button>
                       </Box>
+                    ) : null}
+                    {req.status === 'approved' ? (
+                      <Button size='small' variant='tonal' color='secondary' onClick={() => onResend(req)}>
+                        {t('admin.tenants.requests.resendButton')}
+                      </Button>
                     ) : null}
                   </TableCell>
                 ) : null}

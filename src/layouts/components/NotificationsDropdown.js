@@ -36,7 +36,13 @@ const KIND_META = {
     color: 'warning',
     href: vars => `/admin/billing/invoices/?search=${vars.number || ''}`
   },
-  tenant_suspended: { icon: 'tabler:building-off', color: 'error', href: () => '/admin/tenants/' }
+  tenant_suspended: { icon: 'tabler:building-off', color: 'error', href: () => '/admin/tenants/' },
+  join_request: { icon: 'tabler:building-plus', color: 'info', href: () => '/admin/tenants/requests/' },
+  card_request: {
+    icon: 'tabler:id-badge-2',
+    color: 'info',
+    href: vars => `/admin/cards/${vars.cardId || ''}/?tab=requests`
+  }
 }
 
 const DEFAULT_META = { icon: 'tabler:bell', color: 'primary', href: () => null }
@@ -87,7 +93,9 @@ const NotificationsDropdown = () => {
   const text = item =>
     t(`notifications.${item.group}.${item.kind}`, {
       ...item.vars,
-      client: (lang === 'en' ? item.vars?.clientEn : item.vars?.clientAr) || ''
+      client: (lang === 'en' ? item.vars?.clientEn : item.vars?.clientAr) || '',
+      card: (lang === 'en' ? item.vars?.cardEn : item.vars?.cardAr) || '',
+      request: item.vars?.requestKind ? t(`cards.requestKinds.${item.vars.requestKind}`) : ''
     })
 
   const when = iso =>

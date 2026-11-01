@@ -68,6 +68,8 @@ export const adminNavigation = [
       { title: 'nav.users.writers', path: '/admin/users/writers', action: 'read', subject: 'users' }
     ]
   },
+  { title: 'nav.cards', icon: 'tabler:id-badge-2', path: '/admin/cards', action: 'read', subject: 'cards' },
+  { title: 'nav.landing', icon: 'tabler:layout-dashboard', path: '/admin/landing', action: 'read', subject: 'landing' },
   { title: 'nav.messages', icon: 'tabler:messages', path: '/admin/messages', action: 'read', subject: 'messages' },
   { title: 'nav.aiAgent', icon: 'tabler:robot', path: '/admin/ai-agent', action: 'read', subject: 'ai_agent' },
   {

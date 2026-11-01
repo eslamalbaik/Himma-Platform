@@ -12,11 +12,16 @@ use App\Http\Controllers\Api\Billing\PlanController;
 use App\Http\Controllers\Api\Billing\SubscriptionController;
 use App\Http\Controllers\Api\Billing\WebhookController;
 use App\Http\Controllers\Api\BusinessStatsController;
+use App\Http\Controllers\Api\Cards\CardRequestController;
+use App\Http\Controllers\Api\Cards\PublicCardController;
+use App\Http\Controllers\Api\Cards\SmartCardController;
 use App\Http\Controllers\Api\Content\ArticleController;
 use App\Http\Controllers\Api\Content\CommentController;
 use App\Http\Controllers\Api\Content\ContentReportController;
 use App\Http\Controllers\Api\Events\EventController;
 use App\Http\Controllers\Api\Events\RegistrationController;
+use App\Http\Controllers\Api\Landing\LandingController;
+use App\Http\Controllers\Api\Landing\TestimonialController;
 use App\Http\Controllers\Api\Magazine\IssueController;
 use App\Http\Controllers\Api\Magazine\SectionController;
 use App\Http\Controllers\Api\Magazine\TagController;
@@ -28,6 +33,7 @@ use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
 use App\Http\Controllers\Api\Site\ReadController;
 use App\Http\Controllers\Api\Site\StoryController;
+use App\Http\Controllers\Api\Site\StoryImageController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantRequestController;
 use App\Http\Controllers\Api\UserController;
@@ -39,6 +45,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->middleware('same_origin');
     Route::post('register', [AuthController::class, 'register'])->middleware(['same_origin', 'throttle:10,60']);
+    Route::post('set-password', [AuthController::class, 'setPassword'])->middleware(['same_origin', 'throttle:10,60']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('same_origin');
     Route::get('me', [AuthController::class, 'me'])->middleware('auth.api');
 });
@@ -49,7 +56,13 @@ Route::prefix('public')->middleware('not_maintenance')->group(function () {
     Route::get('articles', [ReadController::class, 'articles'])->middleware('throttle:120,1');
     Route::get('articles/{cuid}', [ReadController::class, 'article'])->middleware('throttle:120,1');
     Route::get('sections', [ReadController::class, 'sections'])->middleware('throttle:120,1');
+    Route::get('landing', [LandingController::class, 'publicShow'])->middleware('throttle:120,1');
     Route::post('join-requests', [TenantRequestController::class, 'store'])->middleware(['same_origin', 'throttle:5,60']);
+
+    // A smart card's page (opened by its NFC tag or QR code), and what a reader can ask from it.
+    Route::get('cards/{slug}', [PublicCardController::class, 'show'])->middleware('throttle:120,1');
+    Route::post('cards/{slug}/requests', [PublicCardController::class, 'storeRequest'])->middleware(['same_origin', 'throttle:5,60']);
+    Route::post('cards/{slug}/subscribe', [PublicCardController::class, 'subscribe'])->middleware(['same_origin', 'throttle:10,60']);
 });
 
 // A signed-in member's own stories (members write; editors review and publish in the dashboard).
@@ -64,6 +77,10 @@ Route::prefix('me/stories')->middleware(['auth.api', 'not_maintenance'])->group(
         Route::delete('{cuid}', [StoryController::class, 'destroy'])->middleware('ability:delete,stories');
     });
 });
+
+// Pictures inside a story. Whoever may write stories may add pictures to them.
+Route::post('me/media', [StoryImageController::class, 'store'])
+    ->middleware(['auth.api', 'not_maintenance', 'same_origin:multipart', 'ability:create,stories', 'throttle:30,1']);
 
 Route::prefix('billing')->group(function () {
     Route::post('webhook/{driver}', [WebhookController::class, 'handle'])->middleware('throttle:120,1');
@@ -95,6 +112,7 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
         Route::post('tenant-requests', [TenantRequestController::class, 'store'])->middleware('ability:create,tenants');
         Route::post('tenant-requests/{tenantRequest}/approve', [TenantRequestController::class, 'approve'])->middleware('ability:update,tenants');
         Route::post('tenant-requests/{tenantRequest}/reject', [TenantRequestController::class, 'reject'])->middleware('ability:update,tenants');
+        Route::post('tenant-requests/{tenantRequest}/resend-invitation', [TenantRequestController::class, 'resendInvitation'])->middleware('ability:update,tenants');
 
         Route::post('users', [UserController::class, 'store'])->middleware('ability:create,users');
         Route::put('users/{cuid}', [UserController::class, 'update'])->middleware('ability:update,users');
@@ -204,6 +222,39 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
             Route::post('reports/{report}/decide', [MessageReportController::class, 'decide'])->middleware('ability:update,messages');
             Route::post('blocks', [BlockController::class, 'store'])->middleware('ability:create,messages');
             Route::delete('blocks/{cuid}', [BlockController::class, 'destroy'])->middleware('ability:create,messages');
+        });
+    });
+
+    // The landing page: texts and switch of each section, how plans are displayed, student testimonials.
+    Route::prefix('landing')->group(function () {
+        Route::get('sections', [LandingController::class, 'sections'])->middleware('ability:read,landing');
+        Route::get('plans', [LandingController::class, 'plans'])->middleware('ability:read,landing');
+        Route::get('testimonials', [TestimonialController::class, 'index'])->middleware('ability:read,landing');
+
+        Route::middleware('same_origin')->group(function () {
+            Route::put('sections/{section}', [LandingController::class, 'updateSection'])->middleware('ability:update,landing');
+            Route::put('plans/order', [LandingController::class, 'orderPlans'])->middleware('ability:update,landing');
+            Route::put('plans/{plan}', [LandingController::class, 'updatePlan'])->middleware('ability:update,landing');
+
+            Route::put('testimonials/order', [TestimonialController::class, 'order'])->middleware('ability:update,landing');
+            Route::post('testimonials', [TestimonialController::class, 'store'])->middleware('ability:create,landing');
+            Route::put('testimonials/{testimonial}', [TestimonialController::class, 'update'])->middleware('ability:update,landing');
+            Route::delete('testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->middleware('ability:delete,landing');
+        });
+    });
+
+    // Smart cards (NFC + QR) and their public pages. Readers' requests are handled with `update,cards`.
+    Route::prefix('cards')->group(function () {
+        Route::get('/', [SmartCardController::class, 'index'])->middleware('ability:read,cards');
+        Route::get('{card}', [SmartCardController::class, 'show'])->middleware('ability:read,cards');
+        Route::get('{card}/requests', [CardRequestController::class, 'index'])->middleware('ability:read,cards');
+        Route::get('{card}/subscribers', [CardRequestController::class, 'subscribers'])->middleware('ability:read,cards');
+
+        Route::middleware('same_origin')->group(function () {
+            Route::post('/', [SmartCardController::class, 'store'])->middleware('ability:create,cards');
+            Route::put('{card}', [SmartCardController::class, 'update'])->middleware('ability:update,cards');
+            Route::delete('{card}', [SmartCardController::class, 'destroy'])->middleware('ability:delete,cards');
+            Route::post('{card}/requests/{cuid}/status', [CardRequestController::class, 'updateStatus'])->middleware('ability:update,cards');
         });
     });
 

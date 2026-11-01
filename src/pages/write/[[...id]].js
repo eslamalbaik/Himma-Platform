@@ -29,6 +29,7 @@ import { useTranslation } from 'react-i18next'
 // ** Components
 import SiteShell from 'src/views/site/SiteShell'
 import SiteHeader, { pillSx } from 'src/views/site/SiteHeader'
+import StoryEditor from 'src/views/site/StoryEditor'
 
 // ** Utils
 import { countWords, serifFont, storyDir, ink } from 'src/views/site/storyText'
@@ -295,21 +296,13 @@ const WritePage = () => {
               inputProps={{ 'aria-label': t('site.write.summaryPlaceholder'), maxLength: 2000 }}
               sx={{ fontSize: { xs: '1.15rem', md: '1.3rem' }, color: 'text.secondary', mb: 6 }}
             />
-            <InputBase
-              fullWidth
-              multiline
-              minRows={14}
+            <StoryEditor
               value={story.body}
-              onChange={change('body')}
-              readOnly={!editable}
-              placeholder={t('site.write.bodyPlaceholder')}
-              inputProps={{ 'aria-label': t('site.write.bodyPlaceholder') }}
-              sx={{
-                fontFamily: font,
-                fontSize: { xs: '1.125rem', md: '1.25rem' },
-                color: ink,
-                lineHeight: story.language === 'en' ? 1.65 : 1.95,
-                alignItems: 'flex-start'
+              language={story.language}
+              disabled={!editable}
+              onChange={body => {
+                setStory(prev => ({ ...prev, body }))
+                setDirty(true)
               }}
             />
             {editable ? (

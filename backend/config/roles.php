@@ -19,6 +19,8 @@ return [
         'settings',
         'audit',
         'ai_agent',
+        'landing',
+        'cards',
     ],
 
     'platform_roles' => [
@@ -37,6 +39,7 @@ return [
                 ['action' => 'read', 'subject' => 'users'],
                 ['action' => 'manage', 'subject' => 'messages'],
                 ['action' => 'read', 'subject' => 'reports'],
+                ['action' => 'manage', 'subject' => 'cards'],
             ],
         ],
         'finance' => [
@@ -56,6 +59,8 @@ return [
                 ['action' => 'manage', 'subject' => 'content'],
                 ['action' => 'manage', 'subject' => 'events'],
                 ['action' => 'manage', 'subject' => 'magazine'],
+                ['action' => 'manage', 'subject' => 'landing'],
+                ['action' => 'manage', 'subject' => 'cards'],
                 ['action' => 'read', 'subject' => 'users'],
                 ['action' => 'manage', 'subject' => 'messages'],
                 ['action' => 'read', 'subject' => 'reports'],
@@ -77,6 +82,7 @@ return [
                 ['action' => 'read', 'subject' => 'content'],
                 ['action' => ['read', 'update'], 'subject' => 'users'],
                 ['action' => 'manage', 'subject' => 'messages'],
+                ['action' => 'read', 'subject' => 'cards'],
             ],
         ],
         'auditor' => [
@@ -84,7 +90,7 @@ return [
             'rules' => [
                 ['action' => 'read', 'subject' => [
                     'dashboard', 'tenants', 'billing', 'content', 'events', 'magazine',
-                    'users', 'messages', 'reports', 'permissions', 'audit', 'ai_agent',
+                    'users', 'messages', 'reports', 'permissions', 'audit', 'ai_agent', 'landing', 'cards',
                 ]],
                 ['action' => 'manage', 'subject' => 'audit'],
             ],

@@ -100,7 +100,7 @@ const JoinPage = () => {
           <Box sx={{ color: 'success.main', mb: 4 }}>
             <Icon icon='tabler:circle-check' fontSize='3.5rem' />
           </Box>
-          <Typography sx={{ color: 'text.secondary', mb: 8 }}>{t('site.join.sentText', { email: sentTo })}</Typography>
+          <Typography sx={{ color: 'text.secondary', mb: 8 }}>{t('site.join.sentText')}</Typography>
           <Button component={Link} href='/' variant='contained' sx={pillSx}>
             {t('site.backHome')}
           </Button>

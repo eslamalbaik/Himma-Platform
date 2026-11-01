@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\EnsureApiUser;
 use App\Http\Requests\Auth\RegisterFormRequest;
+use App\Http\Requests\Auth\SetPasswordFormRequest;
 use App\Models\PlatformSetting;
 use App\Models\User;
 use App\Support\Ability;
@@ -12,6 +13,7 @@ use App\Support\Audit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
@@ -121,6 +123,33 @@ class AuthController extends Controller
         ]);
 
         return response()->json(['user' => $user->toPublicArray()], 201);
+    }
+
+    // The contact of an approved join request chooses a password with the emailed link, and is signed in.
+    public function setPassword(SetPasswordFormRequest $request)
+    {
+        $user = null;
+        $status = Password::broker('invitations')->reset(
+            $request->only('email', 'token', 'password'),
+            function (User $found, string $password) use (&$user) {
+                $found->forceFill(['password' => $password, 'token_version' => $found->token_version + 1])->save();
+                $user = $found;
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET || ! $user || $user->status !== 'active') {
+            return $this->error('invalid_invitation', 422);
+        }
+
+        $this->startSession($request, $user->fresh(), false);
+        Audit::log($request, [
+            'action' => 'auth.password_set',
+            'actor' => $user,
+            'entity_type' => 'user',
+            'entity_id' => $user->cuid,
+        ]);
+
+        return response()->json(['user' => $user->fresh()->toPublicArray()]);
     }
 
     private function startSession(Request $request, User $user, bool $remember): void

@@ -24,6 +24,7 @@ const sources = [
   'src/pages/index.js',
   'src/pages/join.js',
   'src/pages/stories',
+  'src/pages/c',
   'src/pages/write',
   'src/pages/me',
   'src/pages/admin',

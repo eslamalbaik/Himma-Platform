@@ -115,8 +115,26 @@ const SiteHeader = ({ actions = null }) => {
           gap: 4
         }}
       >
-        <Box component={Link} href='/' aria-label={t('site.home')} sx={{ display: 'flex', flexShrink: 0 }}>
+        <Box
+          component={Link}
+          href='/'
+          aria-label={t('site.home')}
+          sx={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0, textDecoration: 'none' }}
+        >
           <Box component='img' src='/images/logos/hinnah-logo.png' alt='' sx={{ height: 44 }} />
+          <Typography
+            sx={{
+              display: { xs: 'none', sm: 'block' },
+              paddingInlineStart: 3,
+              borderInlineStart: theme => `1px solid ${theme.palette.divider}`,
+              color: 'text.secondary',
+              fontSize: '0.95rem',
+              fontWeight: 500,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {t('site.tagline')}
+          </Typography>
         </Box>
         {user ? <SearchBox /> : null}
 

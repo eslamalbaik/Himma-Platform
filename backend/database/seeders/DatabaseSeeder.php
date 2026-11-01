@@ -40,5 +40,7 @@ class DatabaseSeeder extends Seeder
         $this->call(MessagingSeeder::class);
         $this->call(ContentSeeder::class);
         $this->call(EventSeeder::class);
+        $this->call(LandingSeeder::class);
+        $this->call(SmartCardSeeder::class);
     }
 }
