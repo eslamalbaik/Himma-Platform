@@ -13,7 +13,7 @@ class Issue extends Model
 
     public const STATUSES = ['draft', 'published'];
 
-    protected $fillable = ['number', 'title_ar', 'title_en', 'theme_ar', 'theme_en', 'status', 'published_at'];
+    protected $fillable = ['number', 'title_ar', 'title_en', 'theme_ar', 'theme_en', 'cover_path', 'status', 'published_at'];
 
     protected function casts(): array
     {
@@ -23,6 +23,26 @@ class Issue extends Model
     public function articles(): HasMany
     {
         return $this->hasMany(Article::class);
+    }
+
+    public function coverUrl(): ?string
+    {
+        return $this->cover_path ? '/storage/'.$this->cover_path : null;
+    }
+
+    // What the public site shows about an issue.
+    public function toReaderArray(): array
+    {
+        return [
+            'number' => $this->number,
+            'titleAr' => $this->title_ar,
+            'titleEn' => $this->title_en,
+            'themeAr' => $this->theme_ar,
+            'themeEn' => $this->theme_en,
+            'coverUrl' => $this->coverUrl(),
+            'publishedAt' => optional($this->published_at)->toIso8601String(),
+            'articlesCount' => $this->articles_count ?? null,
+        ];
     }
 
     public function toPublicArray(): array

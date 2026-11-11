@@ -299,6 +299,13 @@ const WritePage = () => {
               autoFocus={!id}
               value={story.title}
               onChange={change('title')}
+              onKeyDown={e => {
+                // Enter moves on to the summary, as in Medium; Shift+Enter keeps a line break.
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault()
+                  e.currentTarget.closest('[dir]')?.querySelector('[data-story-summary] textarea')?.focus()
+                }
+              }}
               readOnly={!editable}
               placeholder={t('site.write.titlePlaceholder')}
               inputProps={{ 'aria-label': t('site.write.titlePlaceholder'), maxLength: 255 }}
@@ -316,6 +323,13 @@ const WritePage = () => {
               multiline
               value={story.summary}
               onChange={change('summary')}
+              data-story-summary
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault()
+                  e.currentTarget.closest('[dir]')?.querySelector('[data-story-body] textarea')?.focus()
+                }
+              }}
               readOnly={!editable}
               placeholder={t('site.write.summaryPlaceholder')}
               inputProps={{ 'aria-label': t('site.write.summaryPlaceholder'), maxLength: 2000 }}

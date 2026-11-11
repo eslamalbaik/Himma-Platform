@@ -77,34 +77,58 @@ const StoryListItem = ({ story, onSection }) => {
         component={Link}
         href={`/stories/${story.id}`}
         dir={storyDir(story.language)}
-        sx={{ display: 'block', textDecoration: 'none', color: ink, textAlign: 'start' }}
+        sx={{
+          display: 'flex',
+          gap: 5,
+          alignItems: 'flex-start',
+          textDecoration: 'none',
+          color: ink,
+          textAlign: 'start'
+        }}
       >
-        <Typography
-          component='h2'
-          sx={{
-            fontFamily: serifFont(story.language),
-            fontWeight: 700,
-            fontSize: { xs: '1.25rem', md: '1.5rem' },
-            lineHeight: 1.35,
-            mb: 1.5
-          }}
-        >
-          {story.title}
-        </Typography>
-        {story.summary ? (
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
+            component='h2'
             sx={{
-              color: 'text.secondary',
-              fontSize: '1rem',
-              lineHeight: 1.6,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden'
+              fontFamily: serifFont(story.language),
+              fontWeight: 700,
+              fontSize: { xs: '1.25rem', md: '1.5rem' },
+              lineHeight: 1.35,
+              mb: 1.5
             }}
           >
-            {story.summary}
+            {story.title}
           </Typography>
+          {story.summary ? (
+            <Typography
+              sx={{
+                color: 'text.secondary',
+                fontSize: '1rem',
+                lineHeight: 1.6,
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
+              }}
+            >
+              {story.summary}
+            </Typography>
+          ) : null}
+        </Box>
+        {story.coverUrl ? (
+          <Box
+            component='img'
+            src={story.coverUrl}
+            alt=''
+            loading='lazy'
+            sx={{
+              width: { xs: 96, sm: 160 },
+              height: { xs: 72, sm: 112 },
+              objectFit: 'cover',
+              borderRadius: 1,
+              flexShrink: 0
+            }}
+          />
         ) : null}
       </Box>
 

@@ -292,8 +292,19 @@ const StoryEditor = ({ value, onChange, language, disabled }) => {
       : { fontSize: { xs: '1.125rem', md: '1.25rem' }, lineHeight: language === 'en' ? 1.65 : 1.95 })
   })
 
+  // The same actions as the round "+", always in reach (on a phone, and for anyone who does not see the "+"):
+  // they add at the end of the story.
+  const lastKey = () => blocks[blocks.length - 1].key
+  const appendBlock = type => {
+    const fresh = withKey({ type, text: '' })
+    const last = blocks[blocks.length - 1]
+    const base = last.type === 'paragraph' && !last.text ? blocks.slice(0, -1) : blocks
+    pending.current = { key: fresh.key, start: 0 }
+    commit([...base, fresh])
+  }
+
   return (
-    <Box>
+    <Box data-story-body>
       <input
         ref={fileInput}
         type='file'
@@ -354,7 +365,8 @@ const StoryEditor = ({ value, onChange, language, disabled }) => {
         }
 
         const isEmpty = block.type === 'paragraph' && !block.text
-        const showPlus = !disabled && focused === block.key && isEmpty
+        // The round "+" shows on the empty line you are on, and on the first line of a new story before you click it.
+        const showPlus = !disabled && isEmpty && (focused === block.key || (focused === null && blocks.length === 1))
         const showBar = !disabled && selection?.key === block.key
 
         return (
@@ -565,6 +577,82 @@ const StoryEditor = ({ value, onChange, language, disabled }) => {
           </Box>
         )
       })}
+
+      {!disabled ? (
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 2,
+            mt: 8,
+            pt: 4,
+            borderTop: theme => `1px dashed ${theme.palette.divider}`
+          }}
+        >
+          <Box component='span' sx={{ color: 'text.disabled', fontSize: '0.9rem', marginInlineEnd: 1 }}>
+            {t('site.write.insertHere')}
+          </Box>
+          <Button
+            size='small'
+            color='secondary'
+            disabled={uploading}
+            startIcon={uploading ? <CircularProgress size={16} /> : <ImageIcon />}
+            onClick={() => {
+              insertAt.current = lastKey()
+              fileInput.current?.click()
+            }}
+            sx={{ borderRadius: 99 }}
+          >
+            {t('site.write.image')}
+          </Button>
+          <Button
+            size='small'
+            color='secondary'
+            startIcon={<VideoIcon />}
+            onClick={() => {
+              insertAt.current = lastKey()
+              setVideoUrl(videoUrl === null ? '' : null)
+            }}
+            sx={{ borderRadius: 99 }}
+          >
+            {t('site.write.video')}
+          </Button>
+          <Button size='small' color='secondary' onClick={() => appendBlock('heading')} sx={{ borderRadius: 99 }}>
+            T {t('site.write.heading')}
+          </Button>
+          <Button size='small' color='secondary' onClick={() => appendBlock('quote')} sx={{ borderRadius: 99 }}>
+            “ {t('site.write.quote')}
+          </Button>
+          {videoUrl !== null && !open ? (
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', width: '100%' }}>
+              <InputBase
+                autoFocus
+                value={videoUrl}
+                onChange={e => setVideoUrl(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    addVideo()
+                  }
+                }}
+                placeholder={t('site.write.videoUrl')}
+                inputProps={{ dir: 'ltr', 'aria-label': t('site.write.videoUrl') }}
+                sx={{
+                  flex: 1,
+                  px: 2,
+                  fontSize: '0.9rem',
+                  border: theme => `1px solid ${theme.palette.divider}`,
+                  borderRadius: 1
+                }}
+              />
+              <Button size='small' variant='contained' onClick={addVideo}>
+                {t('site.write.addVideo')}
+              </Button>
+            </Box>
+          ) : null}
+        </Box>
+      ) : null}
     </Box>
   )
 }

@@ -177,8 +177,31 @@ const StoryPage = () => {
               </Typography>
             ) : null}
 
+            {story.issueNumber ? (
+              <Box sx={{ mt: 4 }}>
+                <Chip
+                  component={Link}
+                  href={`/magazine/${story.issueNumber}`}
+                  clickable
+                  size='small'
+                  variant='outlined'
+                  label={t('magazine.inIssue', { number: story.issueNumber })}
+                />
+              </Box>
+            ) : null}
+            {story.coverUrl ? (
+              <Box
+                component='img'
+                src={story.coverUrl}
+                alt=''
+                sx={{ display: 'block', width: '100%', maxHeight: 460, objectFit: 'cover', borderRadius: 1, mt: 6 }}
+              />
+            ) : null}
+
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mt: 8, mb: 6 }}>
-              <Avatar sx={{ width: 44, height: 44, bgcolor: 'primary.main' }}>{initialOf(story.authorName)}</Avatar>
+              <Avatar src={story.authorAvatarUrl || undefined} sx={{ width: 44, height: 44, bgcolor: 'primary.main' }}>
+                {initialOf(story.authorName)}
+              </Avatar>
               <Box>
                 <Typography sx={{ fontWeight: 500 }}>
                   {story.authorHandle ? (

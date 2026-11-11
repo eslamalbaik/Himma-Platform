@@ -44,5 +44,6 @@ class DatabaseSeeder extends Seeder
         $this->call(SmartCardSeeder::class);
         $this->call(CommunitySeeder::class);
         $this->call(DemoImagesSeeder::class);
+        $this->call(MagazineSeeder::class);
     }
 }

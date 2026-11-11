@@ -38,6 +38,7 @@ use App\Http\Controllers\Api\Messages\MessageReportController;
 use App\Http\Controllers\Api\MyNotificationController;
 use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
+use App\Http\Controllers\Api\Site\MagazineReadController;
 use App\Http\Controllers\Api\Site\ReadController;
 use App\Http\Controllers\Api\Site\StoryController;
 use App\Http\Controllers\Api\Site\StoryImageController;
@@ -63,6 +64,8 @@ Route::prefix('public')->middleware('not_maintenance')->group(function () {
     Route::get('articles', [ReadController::class, 'articles'])->middleware('throttle:120,1');
     Route::get('articles/{cuid}', [ReadController::class, 'article'])->middleware('throttle:120,1');
     Route::get('sections', [ReadController::class, 'sections'])->middleware('throttle:120,1');
+    Route::get('issues', [MagazineReadController::class, 'index'])->middleware('throttle:120,1');
+    Route::get('issues/{number}', [MagazineReadController::class, 'show'])->whereNumber('number')->middleware('throttle:120,1');
 
     // Profiles of people (`/u/{handle}`) and organizations (`/org/{slug}`).
     Route::get('people/{handle}', [ProfileController::class, 'person'])->middleware('throttle:120,1');

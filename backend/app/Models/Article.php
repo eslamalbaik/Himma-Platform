@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 // A governed article (REQUIREMENTS.md §1-6). Nothing is published directly:
 // draft → in_review → approved → published, with rejected and withdrawn on the side.
@@ -45,7 +46,7 @@ class Article extends Model
     ];
 
     protected $fillable = [
-        'title', 'summary', 'body', 'language', 'section_id', 'issue_id', 'tenant_id', 'author_name', 'author_id',
+        'title', 'summary', 'cover_path', 'body', 'language', 'section_id', 'issue_id', 'tenant_id', 'author_name', 'author_id',
         'classification', 'audiences', 'is_sponsored', 'source', 'rights_note', 'status',
         'compliance_checks', 'compliance_result', 'compliance_checked_at', 'review_note', 'reviewed_by',
         'published_at', 'withdrawn_at', 'withdrawal_reason',
@@ -175,6 +176,19 @@ class Article extends Model
         });
     }
 
+    // The first lines of the text without headings, quotes, pictures and videos: what a magazine page shows.
+    public function excerpt(int $limit = 420): string
+    {
+        $lines = preg_split('/\n+/u', (string) $this->body, -1, PREG_SPLIT_NO_EMPTY);
+        $text = collect($lines)
+            ->map(fn ($line) => trim($line))
+            ->reject(fn ($line) => $line === '' || preg_match('/^(#|>|!\[|@\[video\])/u', $line))
+            ->implode("\n\n");
+        $text = preg_replace('/\*\*?|\[([^\]]*)\]\([^)]*\)/u', '$1', $text);
+
+        return Str::limit($text, $limit, '…');
+    }
+
     // What the public site shows: no review, compliance or reporting details.
     public function toReaderArray(bool $withBody = false): array
     {
@@ -191,6 +205,8 @@ class Article extends Model
             'authorName' => $this->author_name,
             'authorHandle' => $this->author?->handle,
             'authorVerified' => (bool) $this->author?->verified_at,
+            'coverUrl' => $this->cover_path ? '/storage/'.$this->cover_path : null,
+            'issueNumber' => $this->issue?->number,
             'authorAvatarUrl' => $this->author?->avatarUrl(),
             'tenantLogoUrl' => $this->tenant?->logoUrl(),
             'tenantSlug' => $this->tenant?->slug,

@@ -17,7 +17,7 @@ class ReadController extends Controller
         // following feed (`following=1`) also include what the signed-in reader may see because they follow.
         $viewer = $request->user();
         $personal = $request->filled('authorHandle') || $request->filled('tenantSlug') || ($viewer && $request->boolean('following'));
-        $query = ($personal ? Article::visibleTo($viewer) : Article::readable())->with(['section', 'tenant', 'tags', 'author']);
+        $query = ($personal ? Article::visibleTo($viewer) : Article::readable())->with(['section', 'tenant', 'tags', 'author', 'issue']);
 
         if ($handle = $request->query('authorHandle')) {
             $query->whereHas('author', fn ($q) => $q->where('handle', strtolower((string) $handle)));
@@ -54,7 +54,7 @@ class ReadController extends Controller
 
     public function article(Request $request, string $cuid)
     {
-        $article = Article::visibleTo($request->user())->with(['section', 'tenant', 'tags', 'author'])->where('cuid', $cuid)->first();
+        $article = Article::visibleTo($request->user())->with(['section', 'tenant', 'tags', 'author', 'issue'])->where('cuid', $cuid)->first();
 
         if (! $article) {
             return $this->gated($cuid);
