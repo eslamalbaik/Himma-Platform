@@ -42,5 +42,6 @@ class DatabaseSeeder extends Seeder
         $this->call(EventSeeder::class);
         $this->call(LandingSeeder::class);
         $this->call(SmartCardSeeder::class);
+        $this->call(CommunitySeeder::class);
     }
 }
