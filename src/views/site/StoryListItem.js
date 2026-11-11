@@ -12,6 +12,9 @@ import Typography from '@mui/material/Typography'
 // ** Third Party Imports
 import { useTranslation } from 'react-i18next'
 
+// ** Components
+import VerifiedBadge from 'src/views/site/VerifiedBadge'
+
 // ** Utils
 import { formatDate, initialOf, readingMinutes, serifFont, storyDir, ink } from 'src/views/site/storyText'
 
@@ -28,11 +31,40 @@ const StoryListItem = ({ story, onSection }) => {
           {initialOf(story.authorName)}
         </Avatar>
         <Typography variant='body2' sx={{ color: ink }}>
-          {story.authorName}
+          {story.authorHandle ? (
+            <Box
+              component={Link}
+              href={`/u/${story.authorHandle}`}
+              sx={{ color: 'inherit', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+            >
+              {story.authorName}
+            </Box>
+          ) : (
+            story.authorName
+          )}
+          <VerifiedBadge verified={story.authorVerified} size='0.95rem' />
           {org ? (
             <Box component='span' sx={{ color: 'text.secondary' }}>
               {' '}
-              {t('site.story.in')} {org}
+              {t('site.story.in')}{' '}
+              {story.tenantSlug ? (
+                <Box
+                  component={Link}
+                  href={`/org/${story.tenantSlug}`}
+                  sx={{ color: 'inherit', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                >
+                  {org}
+                </Box>
+              ) : (
+                org
+              )}
+              <VerifiedBadge verified={story.tenantVerified} size='0.95rem' />
+            </Box>
+          ) : null}
+          {story.classification && story.classification !== 'public' ? (
+            <Box component='span' sx={{ color: 'text.secondary' }}>
+              {' · '}
+              {t(`community.audience.${story.classification}`)}
             </Box>
           ) : null}
         </Typography>

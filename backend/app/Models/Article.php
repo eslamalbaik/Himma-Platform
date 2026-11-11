@@ -20,7 +20,7 @@ class Article extends Model
     public const STATUSES = ['draft', 'in_review', 'approved', 'published', 'rejected', 'withdrawn'];
 
     // Who can see the article (§2). Institutional and government content belongs to one client.
-    public const CLASSIFICATIONS = ['public', 'members', 'academic', 'institutional', 'government', 'confidential'];
+    public const CLASSIFICATIONS = ['public', 'followers', 'members', 'academic', 'institutional', 'government', 'confidential'];
 
     public const TENANT_CLASSIFICATIONS = ['institutional', 'government'];
 
@@ -102,6 +102,11 @@ class Article extends Model
         return $this->belongsTo(Tenant::class);
     }
 
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'author_id');
+    }
+
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
@@ -144,6 +149,32 @@ class Article extends Model
         return $query->where('status', 'published')->where('classification', 'public');
     }
 
+    // What `$viewer` (or a guest) may read: public stories, the followers-only stories of someone they follow
+    // (or of an organization they follow), and an organization's own members-only stories.
+    public function scopeVisibleTo($query, ?User $viewer)
+    {
+        $query->where('status', 'published');
+
+        if (! $viewer) {
+            return $query->where('classification', 'public');
+        }
+
+        return $query->where(function ($q) use ($viewer) {
+            $q->where('classification', 'public')
+                ->orWhere('author_id', $viewer->id)
+                ->orWhere(function ($q) use ($viewer) {
+                    $q->where('classification', 'followers')->where(function ($q) use ($viewer) {
+                        $q->whereIn('author_id', Follow::where('follower_id', $viewer->id)->where('followable_type', 'user')->select('followable_id'))
+                            ->orWhereIn('tenant_id', Follow::where('follower_id', $viewer->id)->where('followable_type', 'tenant')->select('followable_id'))
+                            ->orWhere(fn ($q) => $viewer->tenant_id ? $q->where('tenant_id', $viewer->tenant_id) : $q->whereRaw('1 = 0'));
+                    });
+                })
+                ->orWhere(fn ($q) => $viewer->tenant_id
+                    ? $q->where('classification', 'institutional')->where('tenant_id', $viewer->tenant_id)
+                    : $q->whereRaw('1 = 0'));
+        });
+    }
+
     // What the public site shows: no review, compliance or reporting details.
     public function toReaderArray(bool $withBody = false): array
     {
@@ -158,6 +189,11 @@ class Article extends Model
             'tenantNameAr' => $this->tenant?->name_ar,
             'tenantNameEn' => $this->tenant?->name_en,
             'authorName' => $this->author_name,
+            'authorHandle' => $this->author?->handle,
+            'authorVerified' => (bool) $this->author?->verified_at,
+            'tenantSlug' => $this->tenant?->slug,
+            'tenantVerified' => (bool) $this->tenant?->verified_at,
+            'classification' => $this->classification,
             'tags' => $this->tags->map(fn (Tag $tag) => $tag->toPublicArray())->values(),
             'wordCount' => count(preg_split('/\s+/u', trim(strip_tags((string) $this->body)), -1, PREG_SPLIT_NO_EMPTY)),
             'publishedAt' => optional($this->published_at)->toIso8601String(),
@@ -173,6 +209,7 @@ class Article extends Model
             'summary' => $this->summary,
             'language' => $this->language,
             'sectionId' => $this->section?->cuid,
+            'audience' => $this->classification,
             'status' => $this->status,
             'reviewNote' => $this->review_note,
             'publishedAt' => optional($this->published_at)->toIso8601String(),

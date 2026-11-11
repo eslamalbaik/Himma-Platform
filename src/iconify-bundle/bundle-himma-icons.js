@@ -25,6 +25,8 @@ const sources = [
   'src/pages/join.js',
   'src/pages/stories',
   'src/pages/c',
+  'src/pages/u',
+  'src/pages/org',
   'src/pages/write',
   'src/pages/me',
   'src/pages/admin',

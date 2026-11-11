@@ -30,6 +30,8 @@ import SiteShell from 'src/views/site/SiteShell'
 import StoryBody from 'src/views/site/StoryBody'
 import StoryListItem from 'src/views/site/StoryListItem'
 import { pillSx } from 'src/views/site/SiteHeader'
+import FollowButton from 'src/views/site/FollowButton'
+import VerifiedBadge from 'src/views/site/VerifiedBadge'
 
 // ** Utils
 import { formatDate, initialOf, readingMinutes, serifFont, storyDir, ink } from 'src/views/site/storyText'
@@ -43,6 +45,8 @@ const StoryPage = () => {
   const [story, setStory] = useState(null)
   const [status, setStatus] = useState('loading') // loading | ready | missing | failed
   const [more, setMore] = useState([])
+  const [following, setFollowing] = useState(false)
+  const [gate, setGate] = useState(null) // the 403 answer of a followers-only or organization-only story
 
   useEffect(() => {
     if (!id) return
@@ -52,8 +56,22 @@ const StoryPage = () => {
       .then(({ data }) => {
         setStory(data.data)
         setStatus('ready')
+        if (data.data.authorHandle) {
+          axios
+            .get(`/api/public/people/${data.data.authorHandle}`)
+            .then(({ data: person }) => setFollowing(person.data.isFollowing))
+            .catch(() => setFollowing(false))
+        }
       })
-      .catch(err => setStatus(err.response?.status === 404 ? 'missing' : 'failed'))
+      .catch(err => {
+        const code = err.response?.data?.error?.code
+        if (err.response?.status === 403 && ['followers_only', 'members_only'].includes(code)) {
+          setGate({ code, target: err.response.data.target })
+          setStatus('gated')
+        } else {
+          setStatus(err.response?.status === 404 ? 'missing' : 'failed')
+        }
+      })
 
     axios
       .get('/api/public/articles', { params: { perPage: 4 } })
@@ -66,6 +84,42 @@ const StoryPage = () => {
       ?.writeText(window.location.href)
       .then(() => toast.success(t('site.story.linkCopied')))
       .catch(() => null)
+  }
+
+  if (status === 'gated') {
+    return (
+      <SiteShell title={t(`community.gate.${gate.code}.title`)}>
+        <Box sx={{ maxWidth: 680, mx: 'auto', px: 4, py: 24, textAlign: 'center' }}>
+          <Typography sx={{ fontFamily: serifFont(lang), fontSize: '2rem', fontWeight: 600, mb: 3 }}>
+            {t(`community.gate.${gate.code}.title`)}
+          </Typography>
+          <Typography sx={{ color: 'text.secondary', mb: 6 }}>{t(`community.gate.${gate.code}.text`)}</Typography>
+          {gate.target ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3 }}>
+              <FollowButton
+                type={gate.target.type}
+                id={gate.target.key}
+                following={false}
+                onChange={() => window.location.reload()}
+              />
+              <Button
+                component={Link}
+                href={gate.target.type === 'organization' ? `/org/${gate.target.key}` : `/u/${gate.target.key}`}
+                variant='outlined'
+                color='secondary'
+                sx={{ borderRadius: 99 }}
+              >
+                {t('community.gate.seeProfile')}
+              </Button>
+            </Box>
+          ) : (
+            <Button component={Link} href='/' variant='contained' sx={pillSx}>
+              {t('site.backHome')}
+            </Button>
+          )}
+        </Box>
+      </SiteShell>
+    )
   }
 
   if (status === 'missing' || status === 'failed') {
@@ -127,11 +181,34 @@ const StoryPage = () => {
               <Avatar sx={{ width: 44, height: 44, bgcolor: 'primary.main' }}>{initialOf(story.authorName)}</Avatar>
               <Box>
                 <Typography sx={{ fontWeight: 500 }}>
-                  {story.authorName}
+                  {story.authorHandle ? (
+                    <Box
+                      component={Link}
+                      href={`/u/${story.authorHandle}`}
+                      sx={{ color: 'inherit', textDecoration: 'none' }}
+                    >
+                      {story.authorName}
+                    </Box>
+                  ) : (
+                    story.authorName
+                  )}
+                  <VerifiedBadge verified={story.authorVerified} />
                   {org ? (
                     <Box component='span' sx={{ color: 'text.secondary', fontWeight: 400 }}>
                       {' '}
-                      {t('site.story.in')} {org}
+                      {t('site.story.in')}{' '}
+                      {story.tenantSlug ? (
+                        <Box
+                          component={Link}
+                          href={`/org/${story.tenantSlug}`}
+                          sx={{ color: 'inherit', textDecoration: 'none' }}
+                        >
+                          {org}
+                        </Box>
+                      ) : (
+                        org
+                      )}
+                      <VerifiedBadge verified={story.tenantVerified} />
                     </Box>
                   ) : null}
                 </Typography>
@@ -140,6 +217,17 @@ const StoryPage = () => {
                   {formatDate(story.publishedAt, lang)}
                 </Typography>
               </Box>
+              {story.authorHandle ? (
+                <Box sx={{ marginInlineStart: 'auto' }}>
+                  <FollowButton
+                    size='small'
+                    type='person'
+                    id={story.authorHandle}
+                    following={Boolean(following)}
+                    onChange={result => setFollowing(result.isFollowing)}
+                  />
+                </Box>
+              ) : null}
             </Box>
 
             <Box

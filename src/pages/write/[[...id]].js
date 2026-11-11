@@ -31,16 +31,27 @@ import SiteShell from 'src/views/site/SiteShell'
 import SiteHeader, { pillSx } from 'src/views/site/SiteHeader'
 import StoryEditor from 'src/views/site/StoryEditor'
 
+// ** Hooks
+import { useAuth } from 'src/hooks/useAuth'
+
 // ** Utils
 import { countWords, serifFont, storyDir, ink } from 'src/views/site/storyText'
 
 const EDITABLE = ['draft', 'in_review', 'approved', 'rejected']
 
-const emptyStory = lang => ({ title: '', summary: '', body: '', language: lang === 'en' ? 'en' : 'ar', sectionId: '' })
+const emptyStory = lang => ({
+  title: '',
+  summary: '',
+  body: '',
+  language: lang === 'en' ? 'en' : 'ar',
+  sectionId: '',
+  audience: 'public'
+})
 
 const WritePage = () => {
   const { t, i18n } = useTranslation()
   const router = useRouter()
+  const { user } = useAuth()
   const id = router.query.id?.[0] || null
 
   const [story, setStory] = useState(() => emptyStory(i18n.language))
@@ -75,7 +86,8 @@ const WritePage = () => {
           summary: s.summary || '',
           body: s.body,
           language: s.language,
-          sectionId: s.sectionId || ''
+          sectionId: s.sectionId || '',
+          audience: s.audience || 'public'
         })
         setStatus(s.status)
         setReviewNote(s.reviewNote)
@@ -253,6 +265,19 @@ const WritePage = () => {
                 {i18n.language === 'en' ? section.nameEn : section.nameAr}
               </MenuItem>
             ))}
+          </TextField>
+          <TextField
+            select
+            size='small'
+            value={story.audience}
+            onChange={change('audience')}
+            disabled={!editable}
+            label={t('community.audience.label')}
+            sx={{ minWidth: 200 }}
+          >
+            <MenuItem value='public'>{t('community.audience.public')}</MenuItem>
+            <MenuItem value='followers'>{t('community.audience.followers')}</MenuItem>
+            {user?.tenantId ? <MenuItem value='institutional'>{t('community.audience.institutional')}</MenuItem> : null}
           </TextField>
           <Typography variant='body2' sx={{ color: 'text.disabled', marginInlineStart: 'auto' }}>
             {t('site.write.words', { count: countWords(story.body) })}

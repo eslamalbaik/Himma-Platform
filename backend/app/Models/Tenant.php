@@ -26,11 +26,15 @@ class Tenant extends Model
         'status',
         'billing_email',
         'billing_suspended_at',
+        'bio_ar',
+        'bio_en',
+        'website',
+        'verified_at',
     ];
 
     protected function casts(): array
     {
-        return ['billing_suspended_at' => 'datetime'];
+        return ['billing_suspended_at' => 'datetime', 'verified_at' => 'datetime'];
     }
 
     // Route-model binding and the public API use the cuid, never the numeric id.
@@ -87,6 +91,7 @@ class Tenant extends Model
             'type' => $this->type,
             'status' => $this->status,
             'billingEmail' => $this->billing_email,
+            'verified' => $this->verified_at !== null,
             'usersCount' => $this->users_count ?? null,
             'createdAt' => optional($this->created_at)->toIso8601String(),
         ];

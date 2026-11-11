@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Site;
 
 use App\Http\Controllers\Controller;
 use App\Models\Article;
+use App\Models\Follow;
 use App\Models\MagazineSection;
 use Illuminate\Http\Request;
 
@@ -12,7 +13,23 @@ class ReadController extends Controller
 {
     public function articles(Request $request)
     {
-        $query = Article::readable()->with(['section', 'tenant', 'tags']);
+        // The home feed shows public stories only. A profile page (`authorHandle`, `tenantSlug`) and the
+        // following feed (`following=1`) also include what the signed-in reader may see because they follow.
+        $viewer = $request->user();
+        $personal = $request->filled('authorHandle') || $request->filled('tenantSlug') || ($viewer && $request->boolean('following'));
+        $query = ($personal ? Article::visibleTo($viewer) : Article::readable())->with(['section', 'tenant', 'tags', 'author']);
+
+        if ($handle = $request->query('authorHandle')) {
+            $query->whereHas('author', fn ($q) => $q->where('handle', strtolower((string) $handle)));
+        }
+        if ($slug = $request->query('tenantSlug')) {
+            $query->whereHas('tenant', fn ($q) => $q->where('slug', $slug));
+        }
+        if ($viewer && $request->boolean('following')) {
+            $query->where(fn ($q) => $q
+                ->whereIn('author_id', Follow::where('follower_id', $viewer->id)->where('followable_type', 'user')->select('followable_id'))
+                ->orWhereIn('tenant_id', Follow::where('follower_id', $viewer->id)->where('followable_type', 'tenant')->select('followable_id')));
+        }
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(fn ($q) => $q->where('title', 'like', "%{$search}%")
@@ -35,12 +52,12 @@ class ReadController extends Controller
         );
     }
 
-    public function article(string $cuid)
+    public function article(Request $request, string $cuid)
     {
-        $article = Article::readable()->with(['section', 'tenant', 'tags'])->where('cuid', $cuid)->first();
+        $article = Article::visibleTo($request->user())->with(['section', 'tenant', 'tags', 'author'])->where('cuid', $cuid)->first();
 
         if (! $article) {
-            return $this->error('not_found', 404);
+            return $this->gated($cuid);
         }
 
         return $this->item($article->toReaderArray(true));
@@ -58,5 +75,26 @@ class ReadController extends Controller
         return response()->json([
             'data' => $sections->map(fn (MagazineSection $section) => $section->toPublicArray())->values(),
         ])->header('Cache-Control', 'no-store');
+    }
+
+    // A published story the reader may not open: followers-only and organization-only stories say who to follow
+    // or that the reader must belong to the organization (so the page can offer the right button); anything
+    // else answers 404 like a story that does not exist.
+    private function gated(string $cuid)
+    {
+        $article = Article::with(['author', 'tenant'])->where('cuid', $cuid)->where('status', 'published')->first();
+
+        if ($article && $article->classification === 'followers') {
+            $target = $article->author && $article->author->handle
+                ? ['type' => 'person', 'key' => $article->author->handle]
+                : ($article->tenant ? ['type' => 'organization', 'key' => $article->tenant->slug] : null);
+
+            return response()->json(['error' => ['code' => 'followers_only'], 'target' => $target], 403);
+        }
+        if ($article && $article->classification === 'institutional') {
+            return $this->error('members_only', 403);
+        }
+
+        return $this->error('not_found', 404);
     }
 }

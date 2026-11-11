@@ -15,6 +15,12 @@ use App\Http\Controllers\Api\BusinessStatsController;
 use App\Http\Controllers\Api\Cards\CardRequestController;
 use App\Http\Controllers\Api\Cards\PublicCardController;
 use App\Http\Controllers\Api\Cards\SmartCardController;
+use App\Http\Controllers\Api\Community\BroadcastController;
+use App\Http\Controllers\Api\Community\FollowController;
+use App\Http\Controllers\Api\Community\MemberController;
+use App\Http\Controllers\Api\Community\OrganizationController;
+use App\Http\Controllers\Api\Community\ProfileController;
+use App\Http\Controllers\Api\Community\VerificationController;
 use App\Http\Controllers\Api\Content\ArticleController;
 use App\Http\Controllers\Api\Content\CommentController;
 use App\Http\Controllers\Api\Content\ContentReportController;
@@ -56,6 +62,10 @@ Route::prefix('public')->middleware('not_maintenance')->group(function () {
     Route::get('articles', [ReadController::class, 'articles'])->middleware('throttle:120,1');
     Route::get('articles/{cuid}', [ReadController::class, 'article'])->middleware('throttle:120,1');
     Route::get('sections', [ReadController::class, 'sections'])->middleware('throttle:120,1');
+
+    // Profiles of people (`/u/{handle}`) and organizations (`/org/{slug}`).
+    Route::get('people/{handle}', [ProfileController::class, 'person'])->middleware('throttle:120,1');
+    Route::get('organizations/{slug}', [ProfileController::class, 'organization'])->middleware('throttle:120,1');
     Route::get('landing', [LandingController::class, 'publicShow'])->middleware('throttle:120,1');
     Route::post('join-requests', [TenantRequestController::class, 'store'])->middleware(['same_origin', 'throttle:5,60']);
 
@@ -78,6 +88,38 @@ Route::prefix('me/stories')->middleware(['auth.api', 'not_maintenance'])->group(
     });
 });
 
+// A signed-in member's own profile, who they follow, and their badge requests. An organization admin also
+// manages the organization's profile, people and broadcasts (`manage,team` / `manage,broadcasts`).
+Route::prefix('me')->middleware(['auth.api', 'not_maintenance'])->group(function () {
+    Route::get('profile', [ProfileController::class, 'show'])->middleware('ability:read,profile');
+    Route::get('following', [FollowController::class, 'index'])->middleware('ability:read,profile');
+    Route::get('verification', [VerificationController::class, 'mine'])->middleware('ability:read,profile');
+
+    Route::get('organization', [OrganizationController::class, 'show'])->middleware('ability:manage,team');
+    Route::get('organization/members', [MemberController::class, 'index'])->middleware('ability:manage,team');
+    Route::get('organization/broadcasts', [BroadcastController::class, 'index'])->middleware('ability:manage,broadcasts');
+
+    Route::middleware('same_origin')->group(function () {
+        Route::put('profile', [ProfileController::class, 'update'])->middleware('ability:update,profile');
+        Route::post('follows', [FollowController::class, 'store'])->middleware(['ability:create,profile', 'throttle:60,1']);
+        Route::delete('follows/{type}/{key}', [FollowController::class, 'destroy'])->middleware('ability:create,profile');
+        Route::post('verification', [VerificationController::class, 'store'])->middleware(['ability:create,profile', 'throttle:10,60']);
+
+        Route::put('organization', [OrganizationController::class, 'update'])->middleware('ability:manage,team');
+        Route::post('organization/members', [MemberController::class, 'store'])->middleware(['ability:manage,team', 'throttle:30,60']);
+        Route::put('organization/members/{cuid}', [MemberController::class, 'update'])->middleware('ability:manage,team');
+        Route::post('organization/members/{cuid}/resend-invitation', [MemberController::class, 'resendInvitation'])->middleware(['ability:manage,team', 'throttle:10,60']);
+
+        Route::post('organization/broadcasts', [BroadcastController::class, 'store'])->middleware('ability:manage,broadcasts');
+        Route::put('organization/broadcasts/{cuid}', [BroadcastController::class, 'update'])->middleware('ability:manage,broadcasts');
+        Route::delete('organization/broadcasts/{cuid}', [BroadcastController::class, 'destroy'])->middleware('ability:manage,broadcasts');
+        Route::post('organization/broadcasts/{cuid}/schedule', [BroadcastController::class, 'schedule'])->middleware('ability:manage,broadcasts');
+        Route::post('organization/broadcasts/{cuid}/start', [BroadcastController::class, 'start'])->middleware('ability:manage,broadcasts');
+        Route::post('organization/broadcasts/{cuid}/end', [BroadcastController::class, 'end'])->middleware('ability:manage,broadcasts');
+        Route::post('organization/broadcasts/{cuid}/cancel', [BroadcastController::class, 'cancel'])->middleware('ability:manage,broadcasts');
+    });
+});
+
 // Pictures inside a story. Whoever may write stories may add pictures to them.
 Route::post('me/media', [StoryImageController::class, 'store'])
     ->middleware(['auth.api', 'not_maintenance', 'same_origin:multipart', 'ability:create,stories', 'throttle:30,1']);
@@ -94,6 +136,7 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
     Route::get('tenants', [TenantController::class, 'index'])->middleware('ability:read,tenants');
     Route::get('tenants/{tenant}', [TenantController::class, 'show'])->middleware('ability:read,tenants');
     Route::get('tenant-requests', [TenantRequestController::class, 'index'])->middleware('ability:read,tenants');
+    Route::get('verifications', [VerificationController::class, 'index'])->middleware('ability:read,verification');
     Route::get('audit-logs', [AuditLogController::class, 'index'])->middleware('ability:read,audit');
     Route::get('users', [UserController::class, 'index'])->middleware('ability:read,users');
     Route::get('settings', [PlatformSettingController::class, 'show'])->middleware('ability:read,settings');
@@ -119,6 +162,9 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(funct
         Route::delete('users/{cuid}', [UserController::class, 'destroy'])->middleware('ability:delete,users');
 
         Route::put('settings', [PlatformSettingController::class, 'update'])->middleware('ability:update,settings');
+
+        Route::post('verifications/{verification}/approve', [VerificationController::class, 'approve'])->middleware('ability:update,verification');
+        Route::post('verifications/{verification}/reject', [VerificationController::class, 'reject'])->middleware('ability:update,verification');
     });
 
     Route::prefix('billing')->group(function () {

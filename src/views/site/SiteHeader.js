@@ -193,7 +193,28 @@ const SiteHeader = ({ actions = null }) => {
                       <MenuItem key='stories' component={Link} href='/me/stories' onClick={() => setMenuAnchor(null)}>
                         <Icon icon='tabler:notebook' fontSize='1.1rem' style={{ marginInlineEnd: 10 }} />
                         {t('site.myStories')}
-                      </MenuItem>
+                      </MenuItem>,
+                      <MenuItem key='profile' component={Link} href='/me/profile' onClick={() => setMenuAnchor(null)}>
+                        <Icon icon='tabler:user-circle' fontSize='1.1rem' style={{ marginInlineEnd: 10 }} />
+                        {t('community.profile.title')}
+                      </MenuItem>,
+                      ...(user.role === 'tenant_admin'
+                        ? [
+                            <MenuItem
+                              key='organization'
+                              component={Link}
+                              href='/me/organization'
+                              onClick={() => setMenuAnchor(null)}
+                            >
+                              <Icon
+                                icon='tabler:building-community'
+                                fontSize='1.1rem'
+                                style={{ marginInlineEnd: 10 }}
+                              />
+                              {t('community.org.title')}
+                            </MenuItem>
+                          ]
+                        : [])
                     ]
                   : [
                       <MenuItem key='dashboard' component={Link} href='/admin' onClick={() => setMenuAnchor(null)}>

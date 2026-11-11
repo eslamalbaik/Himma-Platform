@@ -20,7 +20,8 @@ export const SUBJECTS = [
   'audit',
   'ai_agent',
   'landing',
-  'cards'
+  'cards',
+  'verification'
 ]
 
 export const PLATFORM_ROLES = {
@@ -37,7 +38,8 @@ export const PLATFORM_ROLES = {
       { action: 'read', subject: 'users' },
       { action: 'manage', subject: 'messages' },
       { action: 'read', subject: 'reports' },
-      { action: 'manage', subject: 'cards' }
+      { action: 'manage', subject: 'cards' },
+      { action: 'manage', subject: 'verification' }
     ]
   },
   finance: {
@@ -59,6 +61,7 @@ export const PLATFORM_ROLES = {
       { action: 'manage', subject: 'magazine' },
       { action: 'manage', subject: 'landing' },
       { action: 'manage', subject: 'cards' },
+      { action: 'manage', subject: 'verification' },
       { action: 'read', subject: 'users' },
       { action: 'manage', subject: 'messages' },
       { action: 'read', subject: 'reports' }
@@ -80,7 +83,8 @@ export const PLATFORM_ROLES = {
       { action: 'read', subject: 'content' },
       { action: ['read', 'update'], subject: 'users' },
       { action: 'manage', subject: 'messages' },
-      { action: 'read', subject: 'cards' }
+      { action: 'read', subject: 'cards' },
+      { action: 'read', subject: 'verification' }
     ]
   },
   auditor: {
@@ -94,11 +98,17 @@ export const PLATFORM_ROLES = {
 
 // Readers and writers on the public site (they sign in at /login, never /admin/login). Mirrors
 // `member_roles` in backend/config/roles.php.
-const STORY_WRITER = [{ action: 'manage', subject: 'stories' }]
+const STORY_WRITER = [
+  { action: 'manage', subject: 'stories' },
+  { action: 'manage', subject: 'profile' }
+]
 
 export const MEMBER_ROLES = {
   member: { label: { ar: 'عضو فرد', en: 'Individual member' }, rules: STORY_WRITER },
-  tenant_admin: { label: { ar: 'مسؤول الجهة', en: 'Organization admin' }, rules: STORY_WRITER },
+  tenant_admin: {
+    label: { ar: 'مسؤول الجهة', en: 'Organization admin' },
+    rules: [...STORY_WRITER, { action: 'manage', subject: 'team' }, { action: 'manage', subject: 'broadcasts' }]
+  },
   tenant_member: { label: { ar: 'عضو جهة', en: 'Organization member' }, rules: STORY_WRITER }
 }
 

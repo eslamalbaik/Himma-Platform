@@ -21,6 +21,7 @@ return [
         'ai_agent',
         'landing',
         'cards',
+        'verification',
     ],
 
     'platform_roles' => [
@@ -40,6 +41,7 @@ return [
                 ['action' => 'manage', 'subject' => 'messages'],
                 ['action' => 'read', 'subject' => 'reports'],
                 ['action' => 'manage', 'subject' => 'cards'],
+                ['action' => 'manage', 'subject' => 'verification'],
             ],
         ],
         'finance' => [
@@ -61,6 +63,7 @@ return [
                 ['action' => 'manage', 'subject' => 'magazine'],
                 ['action' => 'manage', 'subject' => 'landing'],
                 ['action' => 'manage', 'subject' => 'cards'],
+                ['action' => 'manage', 'subject' => 'verification'],
                 ['action' => 'read', 'subject' => 'users'],
                 ['action' => 'manage', 'subject' => 'messages'],
                 ['action' => 'read', 'subject' => 'reports'],
@@ -83,6 +86,7 @@ return [
                 ['action' => ['read', 'update'], 'subject' => 'users'],
                 ['action' => 'manage', 'subject' => 'messages'],
                 ['action' => 'read', 'subject' => 'cards'],
+                ['action' => 'read', 'subject' => 'verification'],
             ],
         ],
         'auditor' => [
@@ -90,7 +94,7 @@ return [
             'rules' => [
                 ['action' => 'read', 'subject' => [
                     'dashboard', 'tenants', 'billing', 'content', 'events', 'magazine',
-                    'users', 'messages', 'reports', 'permissions', 'audit', 'ai_agent', 'landing', 'cards',
+                    'users', 'messages', 'reports', 'permissions', 'audit', 'ai_agent', 'landing', 'cards', 'verification',
                 ]],
                 ['action' => 'manage', 'subject' => 'audit'],
             ],
@@ -105,18 +109,23 @@ return [
             'label' => ['ar' => 'عضو فرد', 'en' => 'Individual member'],
             'rules' => [
                 ['action' => 'manage', 'subject' => 'stories'],
+                ['action' => 'manage', 'subject' => 'profile'],
             ],
         ],
         'tenant_admin' => [
             'label' => ['ar' => 'مسؤول الجهة', 'en' => 'Organization admin'],
             'rules' => [
                 ['action' => 'manage', 'subject' => 'stories'],
+                ['action' => 'manage', 'subject' => 'profile'],
+                ['action' => 'manage', 'subject' => 'team'],
+                ['action' => 'manage', 'subject' => 'broadcasts'],
             ],
         ],
         'tenant_member' => [
             'label' => ['ar' => 'عضو جهة', 'en' => 'Organization member'],
             'rules' => [
                 ['action' => 'manage', 'subject' => 'stories'],
+                ['action' => 'manage', 'subject' => 'profile'],
             ],
         ],
     ],

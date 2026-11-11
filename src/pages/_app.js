@@ -67,6 +67,8 @@ const HIMMA_ROUTES = [
   '/stories',
   '/write',
   '/me',
+  '/u',
+  '/org',
   '/401',
   '/404',
   '/500'

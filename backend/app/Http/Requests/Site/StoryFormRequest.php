@@ -10,6 +10,9 @@ use Illuminate\Validation\Rule;
 // A member's own story. Who wrote it, who can read it (public) and where it lives are set by the server.
 class StoryFormRequest extends ApiRequest
 {
+    // `institutional` is the article classification that means "members of the author's organization only".
+    public const AUDIENCES = ['public', 'followers', 'institutional'];
+
     public function rules(): array
     {
         return [
@@ -18,6 +21,8 @@ class StoryFormRequest extends ApiRequest
             'body' => ['required', 'string', 'max:200000'],
             'language' => ['required', Rule::in(Article::LANGUAGES)],
             'sectionId' => ['nullable', 'string', Rule::exists('magazine_sections', 'cuid')->where('is_active', true)],
+            // Who may read it once published: everyone, the writer's followers, or their organization's members.
+            'audience' => ['sometimes', Rule::in($this->user()->tenant_id ? self::AUDIENCES : ['public', 'followers'])],
         ];
     }
 
@@ -29,12 +34,13 @@ class StoryFormRequest extends ApiRequest
             'body' => 'invalid_article_body',
             'language' => 'invalid_language',
             'sectionId' => 'invalid_section',
+            'audience' => 'invalid_audience',
         ];
     }
 
     public function fields(): array
     {
-        return [
+        return ($this->filled('audience') ? ['classification' => $this->input('audience')] : []) + [
             'title' => trim($this->input('title')),
             'summary' => $this->input('summary'),
             'body' => $this->input('body'),
