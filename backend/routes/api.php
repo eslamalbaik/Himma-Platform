@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Community\BroadcastController;
 use App\Http\Controllers\Api\Community\FollowController;
 use App\Http\Controllers\Api\Community\MemberController;
 use App\Http\Controllers\Api\Community\OrganizationController;
+use App\Http\Controllers\Api\Community\PhotoController;
 use App\Http\Controllers\Api\Community\ProfileController;
 use App\Http\Controllers\Api\Community\VerificationController;
 use App\Http\Controllers\Api\Content\ArticleController;
@@ -99,7 +100,13 @@ Route::prefix('me')->middleware(['auth.api', 'not_maintenance'])->group(function
     Route::get('organization/members', [MemberController::class, 'index'])->middleware('ability:manage,team');
     Route::get('organization/broadcasts', [BroadcastController::class, 'index'])->middleware('ability:manage,broadcasts');
 
+    // Uploads are multipart, so they carry their own same-origin guard.
+    Route::post('profile/avatar', [PhotoController::class, 'storeAvatar'])->middleware(['same_origin:multipart', 'ability:update,profile', 'throttle:20,1']);
+    Route::post('organization/logo', [PhotoController::class, 'storeLogo'])->middleware(['same_origin:multipart', 'ability:manage,team', 'throttle:20,1']);
+
     Route::middleware('same_origin')->group(function () {
+        Route::delete('profile/avatar', [PhotoController::class, 'destroyAvatar'])->middleware('ability:update,profile');
+        Route::delete('organization/logo', [PhotoController::class, 'destroyLogo'])->middleware('ability:manage,team');
         Route::put('profile', [ProfileController::class, 'update'])->middleware('ability:update,profile');
         Route::post('follows', [FollowController::class, 'store'])->middleware(['ability:create,profile', 'throttle:60,1']);
         Route::delete('follows/{type}/{key}', [FollowController::class, 'destroy'])->middleware('ability:create,profile');

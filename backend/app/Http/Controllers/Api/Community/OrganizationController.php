@@ -47,6 +47,7 @@ class OrganizationController extends Controller
     {
         return [
             'slug' => $tenant->slug,
+            'logoUrl' => $tenant->logoUrl(),
             'nameAr' => $tenant->name_ar,
             'nameEn' => $tenant->name_en,
             'bioAr' => $tenant->bio_ar,

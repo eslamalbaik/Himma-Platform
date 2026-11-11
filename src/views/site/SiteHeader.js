@@ -167,7 +167,10 @@ const SiteHeader = ({ actions = null }) => {
                 onClick={e => setMenuAnchor(e.currentTarget)}
                 sx={{ p: 0.5 }}
               >
-                <Avatar sx={{ width: 34, height: 34, fontSize: '0.95rem', bgcolor: 'primary.main' }}>
+                <Avatar
+                  src={user.avatarUrl || undefined}
+                  sx={{ width: 34, height: 34, fontSize: '0.95rem', bgcolor: 'primary.main' }}
+                >
                   {initialOf(name)}
                 </Avatar>
               </IconButton>

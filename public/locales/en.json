@@ -1711,5 +1711,10 @@
   "community.broadcast.done.schedule": "The event was announced.",
   "community.broadcast.done.start": "You are live.",
   "community.broadcast.done.end": "The broadcast ended.",
-  "community.broadcast.done.cancel": "The event was cancelled."
+  "community.broadcast.done.cancel": "The event was cancelled.",
+  "community.photo.updated": "Picture updated.",
+  "community.photo.removed": "Picture removed.",
+  "community.photo.change": "Change picture",
+  "community.photo.remove": "Remove",
+  "community.photo.hint": "JPG, PNG or WebP, up to 2 MB."
 }

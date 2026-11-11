@@ -20,12 +20,14 @@ import { useTranslation } from 'react-i18next'
 
 // ** Components
 import { pillSx } from 'src/views/site/SiteHeader'
+import PhotoUpload from 'src/views/site/PhotoUpload'
 import VerifiedBadge from 'src/views/site/VerifiedBadge'
 
 const OrgProfileTab = () => {
   const { t } = useTranslation()
   const [form, setForm] = useState(null)
   const [slug, setSlug] = useState('')
+  const [logoUrl, setLogoUrl] = useState(null)
   const [verified, setVerified] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
@@ -36,6 +38,7 @@ const OrgProfileTab = () => {
       .then(({ data }) => {
         const o = data.data
         setSlug(o.slug)
+        setLogoUrl(o.logoUrl)
         setVerified(o.verified)
         setForm({
           nameAr: o.nameAr,
@@ -65,6 +68,13 @@ const OrgProfileTab = () => {
   return (
     <Box sx={{ display: 'grid', gap: 4, maxWidth: 620 }}>
       {error ? <Alert severity='error'>{t(`errors.${error}`)}</Alert> : null}
+      <PhotoUpload
+        url={logoUrl}
+        endpoint='/api/me/organization/logo'
+        variant='rounded'
+        initial={(form.nameAr || '?').trim().charAt(0)}
+        onChange={setLogoUrl}
+      />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
         <Button
           component={Link}

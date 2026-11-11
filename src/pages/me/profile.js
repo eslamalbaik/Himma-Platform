@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next'
 
 // ** Components
 import SiteShell from 'src/views/site/SiteShell'
+import PhotoUpload from 'src/views/site/PhotoUpload'
 import VerifiedBadge from 'src/views/site/VerifiedBadge'
 import { pillSx } from 'src/views/site/SiteHeader'
 
@@ -128,6 +129,7 @@ const MyProfilePage = () => {
         const p = data.data
         setForm({
           handle: p.handle,
+          avatarUrl: p.avatarUrl,
           nameAr: p.nameAr,
           nameEn: p.nameEn,
           bioAr: p.bioAr || '',
@@ -199,6 +201,15 @@ const MyProfilePage = () => {
         ) : (
           <Box sx={{ display: 'grid', gap: 4 }}>
             {error ? <Alert severity='error'>{t(`errors.${error}`)}</Alert> : null}
+            <PhotoUpload
+              url={form.avatarUrl}
+              endpoint='/api/me/profile/avatar'
+              initial={(i18n.language === 'en' ? form.nameEn : form.nameAr || '?').trim().charAt(0)}
+              onChange={avatarUrl => {
+                setForm(prev => ({ ...prev, avatarUrl }))
+                auth.setUser?.(prev => (prev ? { ...prev, avatarUrl } : prev))
+              }}
+            />
             <TextField
               label={t('community.profile.handle')}
               value={form.handle}

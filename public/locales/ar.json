@@ -1711,5 +1711,10 @@
   "community.broadcast.done.schedule": "تم إعلان الفعالية.",
   "community.broadcast.done.start": "بدأ البث المباشر.",
   "community.broadcast.done.end": "انتهى البث.",
-  "community.broadcast.done.cancel": "تم إلغاء الفعالية."
+  "community.broadcast.done.cancel": "تم إلغاء الفعالية.",
+  "community.photo.updated": "تم تحديث الصورة.",
+  "community.photo.removed": "تمت إزالة الصورة.",
+  "community.photo.change": "تغيير الصورة",
+  "community.photo.remove": "إزالة",
+  "community.photo.hint": "JPG أو PNG أو WebP، حتى 2 ميغابايت."
 }
