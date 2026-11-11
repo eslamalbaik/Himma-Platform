@@ -27,7 +27,10 @@ const StoryListItem = ({ story, onSection }) => {
   return (
     <Box component='article' sx={{ py: 6, borderBottom: theme => `1px solid ${theme.palette.divider}` }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2.5 }}>
-        <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: 'primary.main' }}>
+        <Avatar
+          src={story.authorAvatarUrl || undefined}
+          sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: 'primary.main' }}
+        >
           {initialOf(story.authorName)}
         </Avatar>
         <Typography variant='body2' sx={{ color: ink }}>

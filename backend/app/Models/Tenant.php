@@ -28,6 +28,7 @@ class Tenant extends Model
         'billing_suspended_at',
         'bio_ar',
         'bio_en',
+        'logo_path',
         'website',
         'verified_at',
     ];
@@ -81,6 +82,11 @@ class Tenant extends Model
     }
 
     // Only these fields ever leave the server (mirrors User::toPublicArray()).
+    public function logoUrl(): ?string
+    {
+        return $this->logo_path ? '/storage/'.$this->logo_path : null;
+    }
+
     public function toPublicArray(): array
     {
         return [
@@ -92,6 +98,7 @@ class Tenant extends Model
             'status' => $this->status,
             'billingEmail' => $this->billing_email,
             'verified' => $this->verified_at !== null,
+            'logoUrl' => $this->logoUrl(),
             'usersCount' => $this->users_count ?? null,
             'createdAt' => optional($this->created_at)->toIso8601String(),
         ];

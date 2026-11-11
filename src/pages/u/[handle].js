@@ -83,7 +83,10 @@ const PersonPage = () => {
         ) : (
           <>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-              <Avatar sx={{ width: 96, height: 96, fontSize: '2.4rem', bgcolor: 'primary.main' }}>
+              <Avatar
+                src={profile.avatarUrl || undefined}
+                sx={{ width: 96, height: 96, fontSize: '2.4rem', bgcolor: 'primary.main' }}
+              >
                 {initialOf(name)}
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 200 }}>

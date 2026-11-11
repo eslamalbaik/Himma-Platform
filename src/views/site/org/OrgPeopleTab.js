@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 // ** MUI Imports
+import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
 import Chip from '@mui/material/Chip'
 import Alert from '@mui/material/Alert'
@@ -119,6 +120,9 @@ const OrgPeopleTab = () => {
               opacity: member.status === 'disabled' ? 0.6 : 1
             }}
           >
+            <Avatar src={member.avatarUrl || undefined} sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
+              {(name || '?').trim().charAt(0)}
+            </Avatar>
             <Box sx={{ flex: 1, minWidth: 200 }}>
               <Typography sx={{ fontWeight: 500 }}>
                 {name}

@@ -91,7 +91,11 @@ const OrganizationPage = () => {
         ) : (
           <>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-              <Avatar variant='rounded' sx={{ width: 96, height: 96, fontSize: '2.4rem', bgcolor: 'primary.main' }}>
+              <Avatar
+                variant='rounded'
+                src={org.logoUrl || undefined}
+                sx={{ width: 96, height: 96, fontSize: '2.4rem', bgcolor: 'primary.main' }}
+              >
                 {initialOf(name)}
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 200 }}>
@@ -213,7 +217,7 @@ const OrganizationPage = () => {
                       borderBottom: theme => `1px solid ${theme.palette.divider}`
                     }}
                   >
-                    <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
+                    <Avatar src={member.avatarUrl || undefined} sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
                       {initialOf(lang === 'en' ? member.nameEn : member.nameAr)}
                     </Avatar>
                     <Typography sx={{ fontWeight: 500 }}>

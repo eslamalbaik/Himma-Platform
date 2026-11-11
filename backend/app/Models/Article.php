@@ -191,6 +191,8 @@ class Article extends Model
             'authorName' => $this->author_name,
             'authorHandle' => $this->author?->handle,
             'authorVerified' => (bool) $this->author?->verified_at,
+            'authorAvatarUrl' => $this->author?->avatarUrl(),
+            'tenantLogoUrl' => $this->tenant?->logoUrl(),
             'tenantSlug' => $this->tenant?->slug,
             'tenantVerified' => (bool) $this->tenant?->verified_at,
             'classification' => $this->classification,

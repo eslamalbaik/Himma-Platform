@@ -53,6 +53,7 @@ class ProfileController extends Controller
             'nameAr' => $tenant->name_ar,
             'nameEn' => $tenant->name_en,
             'type' => $tenant->type,
+            'logoUrl' => $tenant->logoUrl(),
             'bioAr' => $tenant->bio_ar,
             'bioEn' => $tenant->bio_en,
             'website' => $tenant->website,
@@ -64,6 +65,7 @@ class ProfileController extends Controller
             'isMember' => (bool) $isMember,
             'members' => $members->map(fn (User $member) => [
                 'handle' => $member->handle,
+                'avatarUrl' => $member->avatarUrl(),
                 'nameAr' => $member->name_ar,
                 'nameEn' => $member->name_en,
                 'verified' => $member->isVerified(),
@@ -104,6 +106,7 @@ class ProfileController extends Controller
 
         return [
             'handle' => $user->handle,
+            'avatarUrl' => $user->avatarUrl(),
             'nameAr' => $user->name_ar,
             'nameEn' => $user->name_en,
             'bioAr' => $user->bio_ar,
@@ -116,6 +119,7 @@ class ProfileController extends Controller
             'isSelf' => $viewer?->id === $user->id,
             'organization' => $tenant && in_array($tenant->status, ['trial', 'active'], true) ? [
                 'slug' => $tenant->slug,
+                'logoUrl' => $tenant->logoUrl(),
                 'nameAr' => $tenant->name_ar,
                 'nameEn' => $tenant->name_en,
                 'verified' => $tenant->verified_at !== null,

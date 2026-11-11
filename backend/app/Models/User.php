@@ -20,6 +20,7 @@ class User extends Authenticatable
         'handle',
         'bio_ar',
         'bio_en',
+        'avatar_path',
         'verified_at',
         'email',
         'password',
@@ -85,12 +86,18 @@ class User extends Authenticatable
     }
 
     // Only these fields ever leave the server (mirrors the old publicUser() helper).
+    public function avatarUrl(): ?string
+    {
+        return $this->avatar_path ? '/storage/'.$this->avatar_path : null;
+    }
+
     public function toPublicArray(): array
     {
         return [
             'id' => $this->cuid,
             'handle' => $this->handle,
             'verified' => $this->isVerified(),
+            'avatarUrl' => $this->avatarUrl(),
             'email' => $this->email,
             'nameAr' => $this->name_ar,
             'nameEn' => $this->name_en,

@@ -107,6 +107,7 @@ class MemberController extends Controller
         return [
             'id' => $member->cuid,
             'handle' => $member->handle,
+            'avatarUrl' => $member->avatarUrl(),
             'email' => $member->email,
             'nameAr' => $member->name_ar,
             'nameEn' => $member->name_en,
