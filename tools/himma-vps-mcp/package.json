@@ -1,0 +1,20 @@
+{
+  "name": "himma-vps-mcp",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Hinnah: MCP server for the production VPS (SSH, SFTP, MySQL tunnel)",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env index.js",
+    "check": "node --env-file-if-exists=.env check.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "mysql2": "^3.24.6",
+    "ssh2": "^1.17.0",
+    "zod": "^4.6.7"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

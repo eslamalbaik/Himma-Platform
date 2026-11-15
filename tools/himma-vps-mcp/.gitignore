@@ -1,0 +1,8 @@
+node_modules/
+package-lock.json
+
+# Records remote paths and query text
+audit.log
+
+# Host, user, key path, and any password
+.env
