@@ -37,6 +37,17 @@ class ContentSeeder extends Seeder
         ['المنتدى التربوي', 'Education forum', 'identity'],
         ['المسابقات والجوائز', 'Competitions and awards', 'identity'],
         ['الملحق الرقمي', 'Digital supplement', 'identity'],
+        // The ten main classes of knowledge (Dewey), without their numbers.
+        ['علوم الحاسوب والمعلومات والمعارف العامة', 'Computer science, information and general works', 'knowledge'],
+        ['الفلسفة وعلم النفس', 'Philosophy and psychology', 'knowledge'],
+        ['الدين', 'Religion', 'knowledge'],
+        ['العلوم الاجتماعية', 'Social sciences', 'knowledge'],
+        ['اللغة', 'Language', 'knowledge'],
+        ['العلوم البحتة', 'Pure science', 'knowledge'],
+        ['التكنولوجيا', 'Technology', 'knowledge'],
+        ['الفنون والترفيه', 'Arts and recreation', 'knowledge'],
+        ['الأدب', 'Literature', 'knowledge'],
+        ['التاريخ والجغرافيا', 'History and geography', 'knowledge'],
     ];
 
     public function run(): void
