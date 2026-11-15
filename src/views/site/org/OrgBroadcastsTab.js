@@ -25,6 +25,8 @@ import { useTranslation } from 'react-i18next'
 // ** Components
 import BroadcastCard from 'src/views/site/BroadcastCard'
 import { pillSx } from 'src/views/site/SiteHeader'
+import { useAuth } from 'src/hooks/useAuth'
+import { inLanguage, onlyLanguage } from 'src/configs/community'
 
 const TYPES = ['webinar', 'conference', 'workshop', 'course', 'meeting']
 const FORMATS = ['online', 'onsite', 'hybrid']
@@ -62,6 +64,10 @@ const blank = () => {
 
 const OrgBroadcastsTab = () => {
   const { t } = useTranslation()
+
+  // Title and description are asked in the organization's community language only.
+  const lang = useAuth().user?.community === 'en' ? 'en' : 'ar'
+  const dir = lang === 'en' ? 'ltr' : 'rtl'
   const [events, setEvents] = useState(null)
   const [failed, setFailed] = useState(false)
   const [editing, setEditing] = useState(null) // null | { id?, form }
@@ -118,7 +124,7 @@ const OrgBroadcastsTab = () => {
     setError(null)
     const form = editing.form
     const payload = {
-      ...form,
+      ...onlyLanguage(form, ['title', 'description'], lang),
       startsAt: form.startsAt ? new Date(form.startsAt).toISOString() : '',
       endsAt: form.endsAt ? new Date(form.endsAt).toISOString() : ''
     }
@@ -242,20 +248,17 @@ const OrgBroadcastsTab = () => {
           {error ? <Alert severity='error'>{t(`errors.${error}`)}</Alert> : null}
           {editing ? (
             <>
-              <TextField label={t('community.broadcast.titleAr')} {...field('titleAr')} />
-              <TextField label={t('community.broadcast.titleEn')} inputProps={{ dir: 'ltr' }} {...field('titleEn')} />
               <TextField
-                multiline
-                minRows={2}
-                label={t('community.broadcast.descriptionAr')}
-                {...field('descriptionAr')}
+                label={t('community.broadcast.title')}
+                inputProps={{ dir }}
+                {...field(inLanguage('title', lang))}
               />
               <TextField
                 multiline
                 minRows={2}
-                label={t('community.broadcast.descriptionEn')}
-                inputProps={{ dir: 'ltr' }}
-                {...field('descriptionEn')}
+                label={t('community.broadcast.description')}
+                inputProps={{ dir }}
+                {...field(inLanguage('description', lang))}
               />
               <Box sx={{ display: 'grid', gridTemplateColumns: { sm: '1fr 1fr 1fr' }, gap: 4 }}>
                 <TextField select label={t('community.broadcast.type')} {...field('type')}>

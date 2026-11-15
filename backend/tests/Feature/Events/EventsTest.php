@@ -67,7 +67,7 @@ class EventsTest extends TestCase
         $this->signIn();
         $url = '/api/admin/events';
 
-        $this->postJson($url, $this->payload(['titleAr' => '']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_event_title');
+        $this->postJson($url, $this->payload(['titleAr' => '', 'titleEn' => '']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_event_title');
         $this->postJson($url, $this->payload(['type' => 'party']))->assertJsonPath('error.code', 'invalid_event_type');
         $this->postJson($url, $this->payload(['format' => 'radio']))->assertJsonPath('error.code', 'invalid_event_format');
         $this->postJson($url, $this->payload(['endsAt' => now()->addDay()->toIso8601String()]))->assertJsonPath('error.code', 'invalid_event_dates');

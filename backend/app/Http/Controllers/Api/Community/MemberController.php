@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Community\MemberFormRequest;
 use App\Models\User;
 use App\Support\Audit;
+use App\Support\Community;
 use App\Support\Invitations;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -34,6 +35,7 @@ class MemberController extends Controller
             'name_en' => trim($request->input('nameEn')),
             'role' => $request->input('role'),
             'status' => 'active',
+            'community' => Community::ofMember($admin),
             'locale' => $admin->locale ?? 'ar',
             'tenant_id' => $admin->tenant_id,
         ]);

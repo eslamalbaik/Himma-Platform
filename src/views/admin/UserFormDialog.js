@@ -20,10 +20,20 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 
 // ** Configs
 import { PLATFORM_ROLES, roleLabel } from 'src/configs/roles'
+import { COMMUNITIES } from 'src/configs/community'
 
 const STATUSES = ['active', 'disabled']
 
-const emptyValues = { nameAr: '', nameEn: '', email: '', role: 'support', status: 'active', password: '' }
+// `community` '' means both language communities; 'ar' or 'en' limits the account to that one.
+const emptyValues = {
+  nameAr: '',
+  nameEn: '',
+  email: '',
+  role: 'support',
+  status: 'active',
+  community: '',
+  password: ''
+}
 
 // Add/edit form for a platform staff account. `editingUser` is null when adding.
 const UserFormDialog = ({ open, editingUser, submitting, errorCode, onSubmit, onClose }) => {
@@ -37,7 +47,9 @@ const UserFormDialog = ({ open, editingUser, submitting, errorCode, onSubmit, on
     formState: { errors }
   } = useForm({
     defaultValues: emptyValues,
-    values: editingUser ? { ...emptyValues, ...editingUser, password: '' } : emptyValues
+    values: editingUser
+      ? { ...emptyValues, ...editingUser, community: editingUser.community || '', password: '' }
+      : emptyValues
   })
 
   const handleClose = () => {
@@ -127,6 +139,29 @@ const UserFormDialog = ({ open, editingUser, submitting, errorCode, onSubmit, on
                     {STATUSES.map(status => (
                       <MenuItem key={status} value={status}>
                         {t(`admin.users.status.${status}`)}
+                      </MenuItem>
+                    ))}
+                  </CustomTextField>
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Controller
+                name='community'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    {...field}
+                    select
+                    fullWidth
+                    label={t('admin.users.form.community')}
+                    helperText={t('admin.users.form.communityHelp')}
+                    SelectProps={{ displayEmpty: true }}
+                  >
+                    <MenuItem value=''>{t('community.both')}</MenuItem>
+                    {COMMUNITIES.map(community => (
+                      <MenuItem key={community} value={community}>
+                        {t(`community.${community}`)}
                       </MenuItem>
                     ))}
                   </CustomTextField>

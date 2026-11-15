@@ -38,6 +38,7 @@ use App\Http\Controllers\Api\Messages\MessageReportController;
 use App\Http\Controllers\Api\MyNotificationController;
 use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
+use App\Http\Controllers\Api\Site\BroadcastReadController;
 use App\Http\Controllers\Api\Site\MagazineReadController;
 use App\Http\Controllers\Api\Site\ReadController;
 use App\Http\Controllers\Api\Site\StoryController;
@@ -64,6 +65,7 @@ Route::prefix('public')->middleware('not_maintenance')->group(function () {
     Route::get('articles', [ReadController::class, 'articles'])->middleware('throttle:120,1');
     Route::get('articles/{cuid}', [ReadController::class, 'article'])->middleware('throttle:120,1');
     Route::get('sections', [ReadController::class, 'sections'])->middleware('throttle:120,1');
+    Route::get('broadcasts', [BroadcastReadController::class, 'index'])->middleware('throttle:120,1');
     Route::get('issues', [MagazineReadController::class, 'index'])->middleware('throttle:120,1');
     Route::get('issues/{number}', [MagazineReadController::class, 'show'])->whereNumber('number')->middleware('throttle:120,1');
 
@@ -139,7 +141,7 @@ Route::prefix('billing')->group(function () {
     Route::get('payments/{cuid}/result', [PaymentResultController::class, 'show'])->middleware('throttle:30,1');
 });
 
-Route::prefix('admin')->middleware(['auth.api', 'not_maintenance'])->group(function () {
+Route::prefix('admin')->middleware(['auth.api', 'not_maintenance', 'community'])->group(function () {
     Route::get('stats', AdminStatsController::class)->middleware('ability:read,dashboard');
     Route::get('stats/business', BusinessStatsController::class)->middleware('ability:read,dashboard');
 

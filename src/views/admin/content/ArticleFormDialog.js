@@ -20,6 +20,7 @@ import { useForm, Controller } from 'react-hook-form'
 import CustomTextField from 'src/@core/components/mui/text-field'
 import TenantPicker from 'src/views/admin/billing/TenantPicker'
 import { localName, pickLang } from 'src/views/admin/billing/format'
+import { currentCommunity } from 'src/configs/community'
 
 // Same lists as App\Models\Article.
 export const CLASSIFICATIONS = ['public', 'members', 'academic', 'institutional', 'government', 'confidential']
@@ -73,7 +74,7 @@ const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, 
     handleSubmit,
     watch,
     formState: { errors }
-  } = useForm({ values: article ? toForm(article) : emptyArticle })
+  } = useForm({ values: article ? toForm(article) : { ...emptyArticle, language: currentCommunity() } })
 
   const classification = watch('classification')
   const needsTenant = TENANT_CLASSIFICATIONS.includes(classification)
@@ -125,7 +126,8 @@ const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, 
                 name='language'
                 control={control}
                 render={({ field }) => (
-                  <CustomTextField {...field} select fullWidth label={t('admin.content.field.language')}>
+                  // The language is the article's community: the one chosen in the switcher, fixed afterwards.
+                  <CustomTextField {...field} select fullWidth disabled label={t('admin.content.field.language')}>
                     {['ar', 'en'].map(value => (
                       <MenuItem key={value} value={value}>
                         {t(`language.${value}`)}

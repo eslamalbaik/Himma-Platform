@@ -8,6 +8,7 @@ use App\Http\Requests\Content\ReasonFormRequest;
 use App\Http\Requests\Events\EndBroadcastFormRequest;
 use App\Models\Event;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 
 // An organization admin's own events and live broadcasts (`/api/me/organization/broadcasts`). Same life cycle
@@ -32,7 +33,11 @@ class BroadcastController extends Controller
 
     public function store(BroadcastFormRequest $request)
     {
-        $event = Event::create($request->fields() + ['tenant_id' => $request->user()->tenant_id, 'status' => 'draft']);
+        $event = Event::create($request->fields() + [
+            'tenant_id' => $request->user()->tenant_id,
+            'community' => Community::ofMember($request->user()),
+            'status' => 'draft',
+        ]);
         $this->audit($request, 'created', $event);
 
         return $this->item($event->toPublicArray(), 201);

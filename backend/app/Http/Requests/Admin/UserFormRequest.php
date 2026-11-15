@@ -4,10 +4,12 @@ namespace App\Http\Requests\Admin;
 
 use App\Http\Requests\ApiRequest;
 use App\Models\User;
+use App\Support\Community;
 use Illuminate\Validation\Rule;
 
 // Create (POST) or edit (PUT) a platform staff account. The email is set once, on create;
-// on edit an empty password keeps the current one.
+// on edit an empty password keeps the current one. `community` limits the account to one language
+// community; empty means both.
 class UserFormRequest extends ApiRequest
 {
     private function creating(): bool
@@ -32,6 +34,7 @@ class UserFormRequest extends ApiRequest
             'nameEn' => ['required', 'string', 'max:255'],
             'role' => ['required', Rule::in(array_keys(config('roles.platform_roles')))],
             'status' => ['required', Rule::in(User::STATUSES)],
+            'community' => ['nullable', Rule::in(Community::ALL)],
             'password' => [$this->creating() ? 'required' : 'nullable', 'string', 'min:8', 'max:200'],
         ];
     }
@@ -45,6 +48,7 @@ class UserFormRequest extends ApiRequest
             'nameEn' => 'invalid_user_name',
             'role' => 'invalid_role',
             'status' => 'invalid_user_status',
+            'community' => 'invalid_community',
             'password' => 'invalid_password',
         ];
     }
@@ -57,6 +61,7 @@ class UserFormRequest extends ApiRequest
             'name_en' => $this->input('nameEn'),
             'role' => $this->input('role'),
             'status' => $this->input('status'),
+            'community' => $this->input('community') ?: null,
         ];
     }
 }

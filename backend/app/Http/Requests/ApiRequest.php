@@ -14,7 +14,25 @@ abstract class ApiRequest extends FormRequest
 {
     protected $stopOnFirstFailure = true;
 
+    // Fields a record keeps in both languages ('name' means nameAr and nameEn). A language community's forms
+    // ask for its own language only (CLAUDE.md, "Language communities"); the missing one copies the other.
+    protected const BILINGUAL = [];
+
     abstract protected function codes(): array;
+
+    protected function getValidatorInstance()
+    {
+        foreach (static::BILINGUAL as $field) {
+            [$ar, $en] = [$this->input("{$field}Ar"), $this->input("{$field}En")];
+            if (blank($ar) && ! blank($en)) {
+                $this->merge(["{$field}Ar" => $en]);
+            } elseif (blank($en) && ! blank($ar)) {
+                $this->merge(["{$field}En" => $ar]);
+            }
+        }
+
+        return parent::getValidatorInstance();
+    }
 
     public function authorize(): bool
     {

@@ -30,6 +30,7 @@ import { pillSx } from 'src/views/site/SiteHeader'
 
 // ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
+import { inLanguage, onlyLanguage } from 'src/configs/community'
 
 // ** Utils
 import { serifFont } from 'src/views/site/storyText'
@@ -146,11 +147,15 @@ const MyProfilePage = () => {
 
   const change = key => e => setForm(prev => ({ ...prev, [key]: e.target.value }))
 
+  // Name and bio are asked in the member's community language only.
+  const formLang = auth.user?.community === 'en' ? 'en' : 'ar'
+  const formDir = formLang === 'en' ? 'ltr' : 'rtl'
+
   const save = () => {
     setSaving(true)
     setError(null)
     axios
-      .put('/api/me/profile', form)
+      .put('/api/me/profile', onlyLanguage(form, ['name', 'bio'], formLang))
       .then(({ data }) => {
         setForm(prev => ({ ...prev, handle: data.data.handle }))
         toast.success(t('community.profile.saved'))
@@ -217,30 +222,19 @@ const MyProfilePage = () => {
               helperText={t('community.profile.handleHelp', { handle: form.handle || '...' })}
               inputProps={{ dir: 'ltr', maxLength: 30 }}
             />
-            <Box sx={{ display: 'grid', gridTemplateColumns: { sm: '1fr 1fr' }, gap: 4 }}>
-              <TextField label={t('community.profile.nameAr')} value={form.nameAr} onChange={change('nameAr')} />
-              <TextField
-                label={t('community.profile.nameEn')}
-                value={form.nameEn}
-                onChange={change('nameEn')}
-                inputProps={{ dir: 'ltr' }}
-              />
-            </Box>
             <TextField
-              multiline
-              minRows={3}
-              label={t('community.profile.bioAr')}
-              value={form.bioAr}
-              onChange={change('bioAr')}
-              inputProps={{ maxLength: 500 }}
+              label={t('community.profile.name')}
+              value={form[inLanguage('name', formLang)]}
+              onChange={change(inLanguage('name', formLang))}
+              inputProps={{ dir: formDir }}
             />
             <TextField
               multiline
               minRows={3}
-              label={t('community.profile.bioEn')}
-              value={form.bioEn}
-              onChange={change('bioEn')}
-              inputProps={{ maxLength: 500, dir: 'ltr' }}
+              label={t('community.profile.bio')}
+              value={form[inLanguage('bio', formLang)]}
+              onChange={change(inLanguage('bio', formLang))}
+              inputProps={{ maxLength: 500, dir: formDir }}
             />
             <Box>
               <Button variant='contained' disabled={saving} onClick={save} sx={pillSx}>

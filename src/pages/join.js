@@ -1,6 +1,7 @@
 // An organization (school, association, institution, government body) asks to join Hinnah
 // (`POST /api/public/join-requests`). Staff review it in the dashboard (Clients → Join requests); once it
-// is approved, the organization's users sign in at /login.
+// is approved, the organization's users sign in at /login. The request belongs to the language community of
+// the page (`/join` Arabic, `/en/join` English), and asks for the organization's name in that language only.
 
 // ** React Imports
 import { useState } from 'react'
@@ -28,13 +29,13 @@ import Icon from 'src/@core/components/icon'
 import CustomTextField from 'src/@core/components/mui/text-field'
 import AuthShell, { AuthSwitch } from 'src/views/site/AuthShell'
 import { pillSx } from 'src/views/site/SiteHeader'
+import { currentCommunity, inLanguage } from 'src/configs/community'
 
 const TYPES = ['school', 'association', 'institution', 'government']
 
 // Messages are translation keys, shown with t().
 const schema = yup.object().shape({
-  nameAr: yup.string().trim().required('validation.required'),
-  nameEn: yup.string().trim().required('validation.required'),
+  name: yup.string().trim().required('validation.required'),
   type: yup.string().oneOf(TYPES, 'validation.required').required('validation.required'),
   contactName: yup.string().trim().required('validation.required'),
   contactEmail: yup.string().email('validation.email').required('validation.required'),
@@ -43,8 +44,7 @@ const schema = yup.object().shape({
 })
 
 const defaultValues = {
-  nameAr: '',
-  nameEn: '',
+  name: '',
   type: '',
   contactName: '',
   contactEmail: '',
@@ -68,7 +68,10 @@ const JoinPage = () => {
     setError(null)
     setSubmitting(true)
     axios
-      .post('/api/public/join-requests', data)
+      .post(
+        '/api/public/join-requests',
+        (({ name, ...rest }) => ({ ...rest, [inLanguage('name', currentCommunity())]: name }))(data)
+      )
       .then(() => setSentTo(data.contactEmail))
       .catch(err => setError(err.response?.data?.error?.code || 'network_error'))
       .finally(() => setSubmitting(false))
@@ -118,11 +121,8 @@ const JoinPage = () => {
       ) : null}
       <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
         <Grid container spacing={4}>
-          <Grid item xs={12} sm={6}>
-            {field('nameAr', { autoFocus: true, inputProps: { dir: 'rtl' } })}
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            {field('nameEn', { inputProps: { dir: 'ltr' } })}
+          <Grid item xs={12}>
+            {field('name', { autoFocus: true })}
           </Grid>
           <Grid item xs={12}>
             {field('type', {

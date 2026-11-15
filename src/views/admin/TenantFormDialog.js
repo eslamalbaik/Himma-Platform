@@ -14,6 +14,7 @@ import { useForm, Controller } from 'react-hook-form'
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
+import { formLanguage, inLanguage, onlyLanguage } from 'src/configs/community'
 
 const TYPES = ['association', 'school', 'institution', 'government']
 const STATUSES = ['trial', 'active', 'suspended', 'cancelled']
@@ -23,6 +24,9 @@ const emptyValues = { nameAr: '', nameEn: '', type: 'association', status: 'tria
 // Add/edit form for a tenant. `tenant` is null when adding, or the record being edited.
 const TenantFormDialog = ({ open, tenant, submitting, errorCode, onSubmit, onClose }) => {
   const { t } = useTranslation()
+
+  // The name is asked in the client's community language only (the switcher's community when adding).
+  const lang = formLanguage(tenant)
 
   const {
     control,
@@ -42,7 +46,7 @@ const TenantFormDialog = ({ open, tenant, submitting, errorCode, onSubmit, onClo
   return (
     <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth>
       <DialogTitle>{t(tenant ? 'admin.tenants.form.editTitle' : 'admin.tenants.form.addTitle')}</DialogTitle>
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form onSubmit={handleSubmit(data => onSubmit(onlyLanguage(data, ['name'], lang)))} noValidate>
         <DialogContent>
           {errorCode ? (
             <Alert severity='error' sx={{ mb: 4 }}>
@@ -50,32 +54,17 @@ const TenantFormDialog = ({ open, tenant, submitting, errorCode, onSubmit, onClo
             </Alert>
           ) : null}
           <Grid container spacing={4}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <Controller
-                name='nameAr'
+                name={inLanguage('name', lang)}
                 control={control}
                 rules={{ required: true }}
                 render={({ field }) => (
                   <CustomTextField
                     {...field}
                     fullWidth
-                    label={t('admin.tenants.form.nameAr')}
-                    error={Boolean(errors.nameAr)}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name='nameEn'
-                control={control}
-                rules={{ required: true }}
-                render={({ field }) => (
-                  <CustomTextField
-                    {...field}
-                    fullWidth
-                    label={t('admin.tenants.form.nameEn')}
-                    error={Boolean(errors.nameEn)}
+                    label={t('admin.tenants.form.name')}
+                    error={Boolean(errors[inLanguage('name', lang)])}
                   />
                 )}
               />

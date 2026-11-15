@@ -10,6 +10,8 @@ use Illuminate\Validation\Rule;
 // An organization's own event or live broadcast. The organization is always the signed-in admin's own.
 class BroadcastFormRequest extends ApiRequest
 {
+    protected const BILINGUAL = ['title', 'description'];
+
     public function rules(): array
     {
         return [

@@ -11,10 +11,12 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Ability;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 
 // Public profiles, like a Medium reader's page: `/u/{handle}` for a person, `/org/{slug}` for an organization.
-// Staff accounts have no public profile. Emails and billing details never leave the server here.
+// Staff accounts have no public profile. Emails and billing details never leave the server here. A profile
+// says which language `community` it belongs to.
 class ProfileController extends Controller
 {
     public function person(Request $request, string $handle)
@@ -50,6 +52,7 @@ class ProfileController extends Controller
 
         return $this->item([
             'slug' => $tenant->slug,
+            'community' => $tenant->community,
             'nameAr' => $tenant->name_ar,
             'nameEn' => $tenant->name_en,
             'type' => $tenant->type,
@@ -106,6 +109,7 @@ class ProfileController extends Controller
 
         return [
             'handle' => $user->handle,
+            'community' => Community::ofMember($user),
             'avatarUrl' => $user->avatarUrl(),
             'nameAr' => $user->name_ar,
             'nameEn' => $user->name_en,

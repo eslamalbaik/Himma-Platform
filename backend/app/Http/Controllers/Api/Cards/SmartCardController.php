@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Cards\SmartCardFormRequest;
 use App\Models\SmartCard;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 
 // Staff manage the smart cards (`/admin/cards`): profile, books, events, links and whether the page is live.
@@ -15,6 +16,7 @@ class SmartCardController extends Controller
     {
         $query = SmartCard::query()
             ->withCount(['requests as new_requests_count' => fn ($q) => $q->where('status', 'new'), 'subscribers']);
+        Community::scope($query, $request);
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(function ($q) use ($search) {
@@ -45,7 +47,7 @@ class SmartCardController extends Controller
 
     public function store(SmartCardFormRequest $request)
     {
-        $card = SmartCard::create($request->fields() + ['created_by' => $request->user()->id]);
+        $card = SmartCard::create($request->fields() + ['created_by' => $request->user()->id, 'community' => Community::current($request)]);
         $this->audit($request, 'created', $card);
 
         return $this->item($card->fresh()->toAdminArray(), 201);

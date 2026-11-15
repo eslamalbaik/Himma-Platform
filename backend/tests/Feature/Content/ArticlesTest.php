@@ -63,7 +63,6 @@ class ArticlesTest extends TestCase
 
         $this->postJson($url, $this->payload(['title' => '']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_article_title');
         $this->postJson($url, $this->payload(['body' => '']))->assertJsonPath('error.code', 'invalid_article_body');
-        $this->postJson($url, $this->payload(['language' => 'fr']))->assertJsonPath('error.code', 'invalid_language');
         $this->postJson($url, $this->payload(['classification' => 'secret']))->assertJsonPath('error.code', 'invalid_classification');
         $this->postJson($url, $this->payload(['audiences' => ['teachers', 'robots']]))->assertJsonPath('error.code', 'invalid_audience');
         $this->postJson($url, $this->payload(['sectionId' => 'nope']))->assertJsonPath('error.code', 'invalid_section');

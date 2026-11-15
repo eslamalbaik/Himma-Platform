@@ -3,9 +3,11 @@
 namespace App\Http\Requests\Auth;
 
 use App\Http\Requests\ApiRequest;
+use App\Support\Community;
 use Illuminate\Validation\Rule;
 
-// An individual signing up on the public site (role `member`).
+// An individual signing up on the public site (role `member`), in the language community of the page they
+// signed up from (`/en/register` is the English community). One account belongs to one community.
 class RegisterFormRequest extends ApiRequest
 {
     protected function prepareForValidation(): void
@@ -44,7 +46,8 @@ class RegisterFormRequest extends ApiRequest
             'password' => $this->input('password'),
             'name_ar' => $name,
             'name_en' => $name,
-            'locale' => $this->input('locale') ?? 'ar',
+            'community' => Community::current($this),
+            'locale' => $this->input('locale') ?? Community::current($this),
         ];
     }
 }

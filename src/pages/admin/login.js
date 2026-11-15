@@ -29,7 +29,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 
 // ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
-import { useSettings } from 'src/@core/hooks/useSettings'
+import { useSwitchLanguage } from 'src/views/site/useLanguageToggle'
 
 // ** Layout Import
 import BlankLayout from 'src/@core/layouts/BlankLayout'
@@ -61,7 +61,7 @@ const AdminLoginPage = () => {
 
   // ** Hooks
   const auth = useAuth()
-  const { settings, saveSettings } = useSettings()
+  const switchLanguage = useSwitchLanguage()
 
   const {
     control,
@@ -83,11 +83,7 @@ const AdminLoginPage = () => {
     })
   }
 
-  const toggleLanguage = () => {
-    const lang = i18n.language === 'en' ? 'ar' : 'en'
-    i18n.changeLanguage(lang)
-    saveSettings({ ...settings, direction: lang === 'en' ? 'ltr' : 'rtl' })
-  }
+  const toggleLanguage = () => switchLanguage(i18n.language === 'en' ? 'ar' : 'en')
 
   return (
     <Box sx={{ backgroundColor: 'background.paper' }}>

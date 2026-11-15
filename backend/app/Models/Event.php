@@ -30,7 +30,7 @@ class Event extends Model
     ];
 
     protected $fillable = [
-        'title_ar', 'title_en', 'description_ar', 'description_en', 'type', 'format', 'visibility', 'tenant_id',
+        'community', 'title_ar', 'title_en', 'description_ar', 'description_en', 'type', 'format', 'visibility', 'tenant_id',
         'location', 'starts_at', 'ends_at', 'capacity', 'registration_required', 'is_sponsored',
         'stream_url', 'recording_url', 'status', 'live_started_at', 'live_ended_at', 'cancel_reason',
     ];
@@ -83,6 +83,7 @@ class Event extends Model
     {
         return [
             'id' => $this->cuid,
+            'community' => $this->community,
             'titleAr' => $this->title_ar,
             'titleEn' => $this->title_en,
             'descriptionAr' => $this->description_ar,

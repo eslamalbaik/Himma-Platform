@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\VerificationRequest;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 
 // Asking for the verified badge (members, for themselves or for their organization) and deciding on the
@@ -75,7 +76,8 @@ class VerificationController extends Controller
 
     public function index(Request $request)
     {
-        $query = VerificationRequest::with('requester');
+        $inCommunity = fn ($q) => $q->whereHas('requester', fn ($u) => $u->where('community', Community::current($request)));
+        $query = $inCommunity(VerificationRequest::with('requester'));
 
         if (in_array($status = $request->query('status'), VerificationRequest::STATUSES, true)) {
             $query->where('status', $status);
@@ -84,7 +86,7 @@ class VerificationController extends Controller
         return $this->paginated(
             $query->orderByRaw("status = 'pending' desc")->orderByDesc('id')->paginate($this->perPage($request)),
             fn (VerificationRequest $verification) => $verification->toPublicArray(),
-            ['pendingCount' => VerificationRequest::where('status', 'pending')->count()]
+            ['pendingCount' => $inCommunity(VerificationRequest::query())->where('status', 'pending')->count()]
         );
     }
 

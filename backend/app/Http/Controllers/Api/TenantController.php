@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\TenantFormRequest;
 use App\Models\Tenant;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 
 class TenantController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Tenant::withCount('users');
+        $query = Community::scope(Tenant::withCount('users'), $request);
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(function ($q) use ($search) {
@@ -43,7 +44,7 @@ class TenantController extends Controller
 
     public function store(TenantFormRequest $request)
     {
-        $tenant = Tenant::create($request->fields());
+        $tenant = Tenant::create($request->fields() + ['community' => Community::current($request)]);
 
         Audit::log($request, [
             'action' => 'tenant.created',

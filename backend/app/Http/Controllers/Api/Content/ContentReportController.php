@@ -7,6 +7,7 @@ use App\Http\Requests\Content\ContentReportFormRequest;
 use App\Http\Requests\Content\ReportDecisionFormRequest;
 use App\Models\ContentReport;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 
 // Complaints about content (GOV-03): received, then resolved or dismissed with a recorded decision.
@@ -14,7 +15,8 @@ class ContentReportController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ContentReport::with(['article', 'resolver']);
+        $inCommunity = fn ($q) => $q->whereHas('article', fn ($a) => $a->where('language', Community::current($request)));
+        $query = $inCommunity(ContentReport::with(['article', 'resolver']));
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(fn ($q) => $q->where('reporter_name', 'like', "%{$search}%")
@@ -31,7 +33,7 @@ class ContentReportController extends Controller
         return $this->paginated(
             $query->orderByRaw("status = 'open' desc")->orderByDesc('created_at')->paginate($this->perPage($request)),
             fn (ContentReport $report) => $report->toPublicArray(),
-            ['openCount' => ContentReport::where('status', 'open')->count()]
+            ['openCount' => $inCommunity(ContentReport::query())->where('status', 'open')->count()]
         );
     }
 

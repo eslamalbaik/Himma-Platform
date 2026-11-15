@@ -31,12 +31,15 @@ import DataTable from 'src/views/admin/billing/DataTable'
 import ConfirmDialog from 'src/views/admin/billing/ConfirmDialog'
 import { formatDate, localName, pickLang } from 'src/views/admin/billing/format'
 import { KeyedStatusChip } from 'src/views/admin/content/chips'
+import { formLanguage, inLanguage, onlyLanguage } from 'src/configs/community'
 
-const FIELDS = ['titleAr', 'titleEn', 'themeAr', 'themeEn']
+// Asked in the issue's community language only.
+const FIELDS = ['title', 'theme']
 const emptyIssue = { number: '', titleAr: '', titleEn: '', themeAr: '', themeEn: '' }
 
 const IssueFormDialog = ({ open, issue, nextNumber, submitting, errorCode, onSubmit, onClose }) => {
   const { t } = useTranslation()
+  const lang = formLanguage(issue)
   const {
     control,
     handleSubmit,
@@ -50,7 +53,10 @@ const IssueFormDialog = ({ open, issue, nextNumber, submitting, errorCode, onSub
   return (
     <Dialog open={open} onClose={submitting ? undefined : onClose} maxWidth='sm' fullWidth>
       <DialogTitle>{t(issue ? 'admin.magazine.issues.editTitle' : 'admin.magazine.issues.addTitle')}</DialogTitle>
-      <form onSubmit={handleSubmit(data => onSubmit({ ...data, number: Number(data.number) }))} noValidate>
+      <form
+        onSubmit={handleSubmit(data => onSubmit({ ...onlyLanguage(data, FIELDS, lang), number: Number(data.number) }))}
+        noValidate
+      >
         <DialogContent>
           {errorCode ? (
             <Alert severity='error' sx={{ mb: 4 }}>
@@ -75,18 +81,18 @@ const IssueFormDialog = ({ open, issue, nextNumber, submitting, errorCode, onSub
               />
             </Grid>
             <Grid item xs={12} sm={8} />
-            {FIELDS.map(name => (
-              <Grid item xs={12} sm={6} key={name}>
+            {FIELDS.map(base => (
+              <Grid item xs={12} key={base}>
                 <Controller
-                  name={name}
+                  name={inLanguage(base, lang)}
                   control={control}
-                  rules={name.startsWith('title') ? { required: true } : undefined}
+                  rules={base === 'title' ? { required: true } : undefined}
                   render={({ field }) => (
                     <CustomTextField
                       {...field}
                       fullWidth
-                      label={t(`admin.magazine.issues.field.${name}`)}
-                      error={Boolean(errors[name])}
+                      label={t(`admin.magazine.issues.field.${base}`)}
+                      error={Boolean(errors[inLanguage(base, lang)])}
                     />
                   )}
                 />

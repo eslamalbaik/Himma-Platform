@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\Follow;
 use App\Models\MagazineSection;
+use App\Support\Community;
 use Illuminate\Http\Request;
 
 // The public reading site (`/`, `/stories/{id}`): published public articles only, no sign-in needed.
+// Feeds show the request's language community only (`/` Arabic, `/en` English). A profile's stories, and
+// one story, open from either path: they belong to one community already.
 class ReadController extends Controller
 {
     public function articles(Request $request)
@@ -18,6 +21,9 @@ class ReadController extends Controller
         $viewer = $request->user();
         $personal = $request->filled('authorHandle') || $request->filled('tenantSlug') || ($viewer && $request->boolean('following'));
         $query = ($personal ? Article::visibleTo($viewer) : Article::readable())->with(['section', 'tenant', 'tags', 'author', 'issue']);
+        if (! $request->filled('authorHandle') && ! $request->filled('tenantSlug')) {
+            Community::scope($query, $request, 'language');
+        }
 
         if ($handle = $request->query('authorHandle')) {
             $query->whereHas('author', fn ($q) => $q->where('handle', strtolower((string) $handle)));
@@ -35,9 +41,6 @@ class ReadController extends Controller
             $query->where(fn ($q) => $q->where('title', 'like', "%{$search}%")
                 ->orWhere('summary', 'like', "%{$search}%")
                 ->orWhere('author_name', 'like', "%{$search}%"));
-        }
-        if (in_array($language = $request->query('language'), Article::LANGUAGES, true)) {
-            $query->where('language', $language);
         }
         if ($sectionId = $request->query('sectionId')) {
             $query->whereHas('section', fn ($q) => $q->where('cuid', $sectionId));
@@ -65,10 +68,11 @@ class ReadController extends Controller
 
     // Active sections with how many readable articles each has: the home page shows those with articles
     // as topics, the story editor offers all of them.
-    public function sections()
+    public function sections(Request $request)
     {
+        $community = Community::current($request);
         $sections = MagazineSection::where('is_active', true)
-            ->withCount(['articles' => fn ($q) => $q->readable()])
+            ->withCount(['articles' => fn ($q) => $q->readable()->where('language', $community)])
             ->orderBy('sort_order')
             ->get();
 

@@ -17,6 +17,7 @@ import { useForm, Controller } from 'react-hook-form'
 // ** Custom Components
 import CustomTextField from 'src/@core/components/mui/text-field'
 import TenantPicker from 'src/views/admin/billing/TenantPicker'
+import { formLanguage, inLanguage, onlyLanguage } from 'src/configs/community'
 
 // ** Helpers
 import { FORMATS, TYPES, VISIBILITIES, fromLocalInput, toLocalInput } from './helpers'
@@ -51,6 +52,9 @@ const toForm = event => ({
 
 const EventFormDialog = ({ open, event, submitting, errorCode, onSubmit, onClose }) => {
   const { t } = useTranslation()
+
+  // Title and description are asked in the event's community language only.
+  const lang = formLanguage(event)
   const {
     control,
     handleSubmit,
@@ -63,7 +67,7 @@ const EventFormDialog = ({ open, event, submitting, errorCode, onSubmit, onClose
 
   const submit = ({ tenant, ...data }) =>
     onSubmit({
-      ...data,
+      ...onlyLanguage(data, ['title', 'description'], lang),
       startsAt: fromLocalInput(data.startsAt),
       endsAt: fromLocalInput(data.endsAt),
       capacity: data.capacity === '' ? null : Number(data.capacity),
@@ -73,7 +77,8 @@ const EventFormDialog = ({ open, event, submitting, errorCode, onSubmit, onClose
       recordingUrl: data.recordingUrl || null
     })
 
-  const text = (name, props = {}, rules) => (
+  // `label` names the field when it differs from `name` (a field asked in the community's language).
+  const text = (name, props = {}, rules, label = name) => (
     <Controller
       name={name}
       control={control}
@@ -82,7 +87,7 @@ const EventFormDialog = ({ open, event, submitting, errorCode, onSubmit, onClose
         <CustomTextField
           {...field}
           fullWidth
-          label={t(`admin.events.field.${name}`)}
+          label={t(`admin.events.field.${label}`)}
           error={Boolean(errors[name])}
           {...props}
         />
@@ -130,11 +135,8 @@ const EventFormDialog = ({ open, event, submitting, errorCode, onSubmit, onClose
             </Alert>
           ) : null}
           <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              {text('titleAr', {}, { required: true })}
-            </Grid>
-            <Grid item xs={12} md={6}>
-              {text('titleEn', {}, { required: true })}
+            <Grid item xs={12}>
+              {text(inLanguage('title', lang), {}, { required: true }, 'title')}
             </Grid>
             <Grid item xs={12} md={4}>
               {select('type', TYPES)}
@@ -183,11 +185,8 @@ const EventFormDialog = ({ open, event, submitting, errorCode, onSubmit, onClose
                 </Grid>
               </>
             ) : null}
-            <Grid item xs={12} md={6}>
-              {text('descriptionAr', { multiline: true, minRows: 3 })}
-            </Grid>
-            <Grid item xs={12} md={6}>
-              {text('descriptionEn', { multiline: true, minRows: 3 })}
+            <Grid item xs={12}>
+              {text(inLanguage('description', lang), { multiline: true, minRows: 3 }, undefined, 'description')}
             </Grid>
             <Grid item xs={12} md={4}>
               {text('capacity', { type: 'number', inputProps: { min: 1 } })}

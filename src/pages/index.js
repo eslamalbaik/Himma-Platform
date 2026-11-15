@@ -1,5 +1,6 @@
 // Public home page, in the style of medium.com. Guests see a hero and the latest stories; signed-in members
 // go straight to the feed. Stories are published articles anyone may read (`GET /api/public/articles`).
+// Live and upcoming broadcasts of the page's community sit above the feed (HomeBroadcasts).
 // Frame: src/views/site, texts: `site.*` in public/locales.
 
 // ** React Imports
@@ -24,6 +25,7 @@ import { useTranslation } from 'react-i18next'
 import Icon from 'src/@core/components/icon'
 import SiteShell from 'src/views/site/SiteShell'
 import StoryListItem from 'src/views/site/StoryListItem'
+import HomeBroadcasts from 'src/views/site/HomeBroadcasts'
 import PricingSection from 'src/views/site/landing/PricingSection'
 import TestimonialsSection from 'src/views/site/landing/TestimonialsSection'
 import { pillSx } from 'src/views/site/SiteHeader'
@@ -257,6 +259,7 @@ const Home = () => {
   return (
     <SiteShell>
       {!auth.user && !search ? <Hero /> : null}
+      {!search ? <HomeBroadcasts /> : null}
       {!auth.user && !search && landing?.pricing ? <PricingSection data={landing.pricing} /> : null}
       {!auth.user && !search && landing?.testimonials ? <TestimonialsSection data={landing.testimonials} /> : null}
 

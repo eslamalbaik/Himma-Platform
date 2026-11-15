@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Content\CommentModerationFormRequest;
 use App\Models\Comment;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 
 // The comment moderation queue (Moderation Queue, §6).
@@ -13,7 +14,8 @@ class CommentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Comment::with('article');
+        $inCommunity = fn ($q) => $q->whereHas('article', fn ($a) => $a->where('language', Community::current($request)));
+        $query = $inCommunity(Comment::with('article'));
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(fn ($q) => $q->where('body', 'like', "%{$search}%")
@@ -27,7 +29,7 @@ class CommentController extends Controller
         return $this->paginated(
             $query->orderByRaw("status = 'pending' desc")->orderByDesc('created_at')->paginate($this->perPage($request)),
             fn (Comment $comment) => $comment->toPublicArray(),
-            ['pendingCount' => Comment::where('status', 'pending')->count()]
+            ['pendingCount' => $inCommunity(Comment::query())->where('status', 'pending')->count()]
         );
     }
 

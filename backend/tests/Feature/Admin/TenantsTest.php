@@ -72,7 +72,7 @@ class TenantsTest extends TestCase
     {
         $this->signIn();
 
-        $this->postJson('/api/admin/tenants', $this->payload(['nameAr' => '  ']))->assertStatus(422)->assertExactJson(['error' => ['code' => 'invalid_tenant_name']]);
+        $this->postJson('/api/admin/tenants', $this->payload(['nameAr' => '  ', 'nameEn' => '']))->assertStatus(422)->assertExactJson(['error' => ['code' => 'invalid_tenant_name']]);
         $this->postJson('/api/admin/tenants', $this->payload(['type' => 'club']))->assertJsonPath('error.code', 'invalid_tenant_type');
         $this->postJson('/api/admin/tenants', $this->payload(['status' => 'x']))->assertJsonPath('error.code', 'invalid_tenant_status');
     }

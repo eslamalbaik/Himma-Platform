@@ -8,6 +8,14 @@ const config = {
   trailingSlash: true,
   reactStrictMode: false,
 
+  // Hinnah's two language communities (CLAUDE.md, "Language communities"): Arabic at `/`, English at `/en/...`.
+  // The path decides both the interface language and which community's content the API returns.
+  i18n: {
+    locales: ['ar', 'en'],
+    defaultLocale: 'ar',
+    localeDetection: false
+  },
+
   // Development only: keep compiled pages in memory for an hour instead of ~1 minute,
   // so going back to a dashboard section does not compile it again.
   onDemandEntries: {

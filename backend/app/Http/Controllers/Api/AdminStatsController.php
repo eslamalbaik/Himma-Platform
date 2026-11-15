@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Community;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -35,8 +36,10 @@ class AdminStatsController extends Controller
             return empty($map) ? (object) [] : $map;
         };
 
-        $tenantsByStatus = Tenant::selectRaw('status, count(*) as count')->groupBy('status')->get();
-        $tenantsByType = Tenant::selectRaw('type, count(*) as count')->groupBy('type')->get();
+        // Clients are counted in the community chosen in the dashboard's switcher.
+        $tenants = fn () => Community::scope(Tenant::query(), $request);
+        $tenantsByStatus = $tenants()->selectRaw('status, count(*) as count')->groupBy('status')->get();
+        $tenantsByType = $tenants()->selectRaw('type, count(*) as count')->groupBy('type')->get();
         $usersByStatus = User::selectRaw('status, count(*) as count')->groupBy('status')->get();
 
         $auditDaily7d = AuditLog::where('created_at', '>=', $last7d)
@@ -46,10 +49,10 @@ class AdminStatsController extends Controller
 
         return response()->json([
             'tenants' => [
-                'total' => Tenant::count(),
+                'total' => $tenants()->count(),
                 'byStatus' => $toMap($tenantsByStatus, 'status'),
                 'byType' => $toMap($tenantsByType, 'type'),
-                'newThisMonth' => Tenant::where('created_at', '>=', $startOfMonth)->count(),
+                'newThisMonth' => $tenants()->where('created_at', '>=', $startOfMonth)->count(),
             ],
             'users' => [
                 'total' => User::count(),

@@ -10,6 +10,7 @@ use App\Models\Article;
 use App\Models\ArticleVersion;
 use App\Models\MagazineSection;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -28,6 +29,7 @@ class ArticleController extends Controller
     {
         $query = Article::with(['section', 'issue', 'tenant', 'tags', 'reviewer'])
             ->withCount(['reports as open_reports_count' => fn ($q) => $q->where('status', 'open')]);
+        Community::scope($query, $request, 'language');
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(fn ($q) => $q->where('title', 'like', "%{$search}%")->orWhere('author_name', 'like', "%{$search}%"));
@@ -39,9 +41,6 @@ class ArticleController extends Controller
         }
         if (in_array($classification = $request->query('classification'), Article::CLASSIFICATIONS, true)) {
             $query->where('classification', $classification);
-        }
-        if (in_array($language = $request->query('language'), Article::LANGUAGES, true)) {
-            $query->where('language', $language);
         }
         if ($sectionId = $request->query('sectionId')) {
             $query->whereHas('section', fn ($q) => $q->where('cuid', $sectionId));

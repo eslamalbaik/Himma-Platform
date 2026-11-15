@@ -3,6 +3,9 @@ import Head from 'next/head'
 import dynamic from 'next/dynamic'
 import { Router } from 'next/router'
 
+// ** React Imports
+import { useEffect } from 'react'
+
 // ** Loader Import
 import NProgress from 'nprogress'
 
@@ -10,7 +13,8 @@ import NProgress from 'nprogress'
 import { CacheProvider } from '@emotion/react'
 
 // ** Config Imports
-import 'src/configs/i18n'
+import i18n from 'src/configs/i18n'
+import { setRoute } from 'src/configs/community'
 import { defaultACLObj } from 'src/configs/acl'
 import themeConfig from 'src/configs/themeConfig'
 
@@ -103,9 +107,25 @@ const Guard = ({ children, authGuard, guestGuard }) => {
   }
 }
 
+// The path's language (`/` Arabic, `/en` English) is the interface language and the layout direction.
+const LocaleSync = ({ locale, settings, saveSettings }) => {
+  useEffect(() => {
+    if (i18n.language !== locale) i18n.changeLanguage(locale)
+    document.documentElement.setAttribute('lang', locale)
+    const direction = locale === 'en' ? 'ltr' : 'rtl'
+    if (settings.direction !== direction) saveSettings({ ...settings, direction })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale])
+
+  return null
+}
+
 // ** Configure JSS & ClassName
 const App = props => {
   const { Component, emotionCache = clientSideEmotionCache, pageProps, router } = props
+
+  // Which language community API requests are about (src/configs/community.js).
+  setRoute(router.locale)
 
   // Variables
   const contentHeightFixed = Component.contentHeightFixed ?? false
@@ -134,9 +154,10 @@ const App = props => {
       <AuthProvider>
         <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
           <SettingsConsumer>
-            {({ settings }) => {
+            {({ settings, saveSettings }) => {
               return (
                 <ThemeComponent settings={settings}>
+                  <LocaleSync locale={router.locale} settings={settings} saveSettings={saveSettings} />
                   <Guard authGuard={authGuard} guestGuard={guestGuard}>
                     <AclGuard aclAbilities={aclAbilities} guestGuard={guestGuard} authGuard={authGuard}>
                       {isDemoRoute(router.pathname) ? <DemoProvider>{page}</DemoProvider> : page}

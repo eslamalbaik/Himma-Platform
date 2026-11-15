@@ -10,16 +10,19 @@ use App\Models\User;
 use App\Notifications\JoinRequestAlert;
 use App\Support\Ability;
 use App\Support\Audit;
+use App\Support\Community;
 use App\Support\Invitations;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
+// Join requests belong to the language community they were sent from (the `/en` path files them in the
+// English community); the dashboard lists the community chosen in its switcher.
 class TenantRequestController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TenantRequest::query();
+        $query = Community::scope(TenantRequest::query(), $request);
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(function ($q) use ($search) {
@@ -36,13 +39,13 @@ class TenantRequestController extends Controller
         return $this->paginated(
             $query->orderByRaw("status = 'pending' desc")->orderByDesc('created_at')->paginate($this->perPage($request)),
             fn (TenantRequest $r) => $r->toPublicArray(),
-            ['pendingCount' => TenantRequest::where('status', 'pending')->count()]
+            ['pendingCount' => Community::scope(TenantRequest::query(), $request)->where('status', 'pending')->count()]
         );
     }
 
     public function store(JoinRequestFormRequest $request)
     {
-        $tenantRequest = TenantRequest::create($request->fields() + ['status' => 'pending']);
+        $tenantRequest = TenantRequest::create($request->fields() + ['status' => 'pending', 'community' => Community::current($request)]);
 
         Audit::log($request, [
             'action' => 'tenant_request.created',
@@ -51,10 +54,10 @@ class TenantRequestController extends Controller
             'entity_id' => $tenantRequest->cuid,
         ]);
 
-        // Bell alert for the staff who review join requests.
+        // Bell alert for the staff who review join requests in this community.
         $alert = new JoinRequestAlert(['clientAr' => $tenantRequest->name_ar, 'clientEn' => $tenantRequest->name_en, 'requestId' => $tenantRequest->cuid]);
         User::whereNull('tenant_id')->where('status', 'active')->get()
-            ->filter(fn (User $user) => Ability::can($user->role, 'update', 'tenants'))
+            ->filter(fn (User $user) => Ability::can($user->role, 'update', 'tenants') && in_array($user->community, [null, $tenantRequest->community], true))
             ->each(fn (User $user) => $user->notify($alert));
 
         return $this->item($tenantRequest->toPublicArray(), 201);
@@ -82,8 +85,15 @@ class TenantRequestController extends Controller
 
                 return null;
             }
+            // An account belongs to one language community; a member of the other one signs up again.
+            if ($user && Community::ofMember($user) !== $tenantRequest->community) {
+                $error = 'contact_email_other_community';
+
+                return null;
+            }
 
             $tenant = Tenant::create([
+                'community' => $tenantRequest->community,
                 'name_ar' => $tenantRequest->name_ar,
                 'name_en' => $tenantRequest->name_en,
                 'type' => $tenantRequest->type,
@@ -101,7 +111,8 @@ class TenantRequestController extends Controller
                     'name_en' => $tenantRequest->contact_name,
                     'role' => 'tenant_admin',
                     'status' => 'active',
-                    'locale' => 'ar',
+                    'community' => $tenantRequest->community,
+                    'locale' => $tenantRequest->community,
                     'tenant_id' => $tenant->id,
                 ]);
                 $created = true;
@@ -165,7 +176,8 @@ class TenantRequestController extends Controller
                 'name_en' => $tenantRequest->contact_name,
                 'role' => 'tenant_admin',
                 'status' => 'active',
-                'locale' => 'ar',
+                'community' => $tenantRequest->community,
+                'locale' => $tenantRequest->community,
                 'tenant_id' => $tenantRequest->tenant_id,
             ]);
             Audit::log($request, [

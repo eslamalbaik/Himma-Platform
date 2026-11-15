@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Magazine\IssueFormRequest;
 use App\Models\Issue;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 
 class IssueController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Issue::withCount('articles');
+        $query = Community::scope(Issue::withCount('articles'), $request);
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(fn ($q) => $q->where('title_ar', 'like', "%{$search}%")
@@ -31,7 +32,7 @@ class IssueController extends Controller
 
     public function store(IssueFormRequest $request)
     {
-        $issue = Issue::create($request->fields() + ['status' => 'draft']);
+        $issue = Issue::create($request->fields() + ['status' => 'draft', 'community' => Community::current($request)]);
         $this->audit($request, 'created', $issue);
 
         return $this->item($issue->toPublicArray(), 201);

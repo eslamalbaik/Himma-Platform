@@ -9,6 +9,8 @@ use Illuminate\Validation\Rule;
 // A request from an organisation to join the platform (TenantRequest).
 class JoinRequestFormRequest extends ApiRequest
 {
+    protected const BILINGUAL = ['name'];
+
     public function rules(): array
     {
         return [

@@ -16,6 +16,7 @@ class TenantRequest extends Model
 
     protected $fillable = [
         'cuid',
+        'community',
         'name_ar',
         'name_en',
         'type',
@@ -65,6 +66,7 @@ class TenantRequest extends Model
     {
         return [
             'id' => $this->cuid,
+            'community' => $this->community,
             'nameAr' => $this->name_ar,
             'nameEn' => $this->name_en,
             'type' => $this->type,

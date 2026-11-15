@@ -26,7 +26,7 @@ class SmartCard extends Model
     public const SOURCES = ['nfc' => 'nfc_opens', 'qr' => 'qr_opens'];
 
     protected $fillable = [
-        'slug', 'kind', 'status', 'name_ar', 'name_en', 'headline_ar', 'headline_en', 'bio_ar', 'bio_en',
+        'community', 'slug', 'kind', 'status', 'name_ar', 'name_en', 'headline_ar', 'headline_en', 'bio_ar', 'bio_en',
         'photo_url', 'color', 'email', 'phone', 'publisher_ar', 'publisher_en', 'rights_ar', 'rights_en',
         'links', 'books', 'events', 'accepts_requests', 'newsletter_enabled', 'created_by',
     ];
@@ -85,7 +85,7 @@ class SmartCard extends Model
 
     public function toAdminArray(): array
     {
-        return ['id' => $this->cuid, 'status' => $this->status] + $this->toPublicArray() + [
+        return ['id' => $this->cuid, 'community' => $this->community, 'status' => $this->status] + $this->toPublicArray() + [
             'opens' => ['nfc' => $this->nfc_opens, 'qr' => $this->qr_opens, 'link' => $this->link_opens],
             'newRequests' => (int) ($this->new_requests_count ?? $this->requests()->where('status', 'new')->count()),
             'subscribers' => (int) ($this->subscribers_count ?? $this->subscribers()->count()),

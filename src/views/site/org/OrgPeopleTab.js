@@ -30,6 +30,7 @@ import VerifiedBadge from 'src/views/site/VerifiedBadge'
 
 // ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
+import { inLanguage, onlyLanguage } from 'src/configs/community'
 
 const ROLES = ['tenant_member', 'tenant_admin']
 const empty = { email: '', nameAr: '', nameEn: '', role: 'tenant_member' }
@@ -37,6 +38,9 @@ const empty = { email: '', nameAr: '', nameEn: '', role: 'tenant_member' }
 const OrgPeopleTab = () => {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
+
+  // A new member's name is asked in the organization's community language only.
+  const lang = user?.community === 'en' ? 'en' : 'ar'
   const [members, setMembers] = useState(null)
   const [failed, setFailed] = useState(false)
   const [adding, setAdding] = useState(false)
@@ -60,7 +64,7 @@ const OrgPeopleTab = () => {
     setBusy(true)
     setError(null)
     axios
-      .post('/api/me/organization/members', form)
+      .post('/api/me/organization/members', onlyLanguage(form, ['name'], lang))
       .then(({ data }) => {
         setMembers(prev => [...prev, data.data])
         setAdding(false)
@@ -177,15 +181,10 @@ const OrgPeopleTab = () => {
             inputProps={{ dir: 'ltr' }}
           />
           <TextField
-            label={t('community.team.nameAr')}
-            value={form.nameAr}
-            onChange={e => setForm({ ...form, nameAr: e.target.value })}
-          />
-          <TextField
-            label={t('community.team.nameEn')}
-            value={form.nameEn}
-            onChange={e => setForm({ ...form, nameEn: e.target.value })}
-            inputProps={{ dir: 'ltr' }}
+            label={t('community.team.name')}
+            value={form[inLanguage('name', lang)]}
+            onChange={e => setForm({ ...form, [inLanguage('name', lang)]: e.target.value })}
+            inputProps={{ dir: lang === 'en' ? 'ltr' : 'rtl' }}
           />
           <TextField
             select

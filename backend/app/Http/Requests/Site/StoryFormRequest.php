@@ -5,11 +5,18 @@ namespace App\Http\Requests\Site;
 use App\Http\Requests\ApiRequest;
 use App\Models\Article;
 use App\Models\MagazineSection;
+use App\Support\Community;
 use Illuminate\Validation\Rule;
 
 // A member's own story. Who wrote it, who can read it (public) and where it lives are set by the server.
+// Its language is the writer's language community.
 class StoryFormRequest extends ApiRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['language' => Community::ofMember($this->user())]);
+    }
+
     // `institutional` is the article classification that means "members of the author's organization only".
     public const AUDIENCES = ['public', 'followers', 'institutional'];
 

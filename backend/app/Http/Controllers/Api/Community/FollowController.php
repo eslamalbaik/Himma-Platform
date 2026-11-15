@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Ability;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 
 // Following people and organizations (`type`: person | organization, `key`: the handle or the slug).
@@ -48,6 +49,10 @@ class FollowController extends Controller
 
         if ($type === 'user' && $model->id === $user->id) {
             return $this->error('cannot_follow_self', 422);
+        }
+        // People and organizations are followed inside one language community.
+        if (! Community::canMeet($user, Community::of($model))) {
+            return $this->error('other_community', 422);
         }
 
         $follow = Follow::firstOrCreate(['follower_id' => $user->id, 'followable_type' => $type, 'followable_id' => $model->id]);

@@ -22,9 +22,15 @@ import { useTranslation } from 'react-i18next'
 import { pillSx } from 'src/views/site/SiteHeader'
 import PhotoUpload from 'src/views/site/PhotoUpload'
 import VerifiedBadge from 'src/views/site/VerifiedBadge'
+import { useAuth } from 'src/hooks/useAuth'
+import { inLanguage, onlyLanguage } from 'src/configs/community'
 
 const OrgProfileTab = () => {
   const { t } = useTranslation()
+
+  // Name and bio are asked in the organization's community language only.
+  const lang = useAuth().user?.community === 'en' ? 'en' : 'ar'
+  const dir = lang === 'en' ? 'ltr' : 'rtl'
   const [form, setForm] = useState(null)
   const [slug, setSlug] = useState('')
   const [logoUrl, setLogoUrl] = useState(null)
@@ -57,7 +63,7 @@ const OrgProfileTab = () => {
     setBusy(true)
     setError(null)
     axios
-      .put('/api/me/organization', form)
+      .put('/api/me/organization', onlyLanguage(form, ['name', 'bio'], lang))
       .then(() => toast.success(t('community.org.saved')))
       .catch(err => setError(err.response?.data?.error?.code || 'network_error'))
       .finally(() => setBusy(false))
@@ -96,30 +102,19 @@ const OrgProfileTab = () => {
           </Button>
         )}
       </Box>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { sm: '1fr 1fr' }, gap: 4 }}>
-        <TextField label={t('community.org.nameAr')} value={form.nameAr} onChange={change('nameAr')} />
-        <TextField
-          label={t('community.org.nameEn')}
-          value={form.nameEn}
-          onChange={change('nameEn')}
-          inputProps={{ dir: 'ltr' }}
-        />
-      </Box>
       <TextField
-        multiline
-        minRows={3}
-        label={t('community.org.bioAr')}
-        value={form.bioAr}
-        onChange={change('bioAr')}
-        inputProps={{ maxLength: 1000 }}
+        label={t('community.org.name')}
+        value={form[inLanguage('name', lang)]}
+        onChange={change(inLanguage('name', lang))}
+        inputProps={{ dir }}
       />
       <TextField
         multiline
         minRows={3}
-        label={t('community.org.bioEn')}
-        value={form.bioEn}
-        onChange={change('bioEn')}
-        inputProps={{ maxLength: 1000, dir: 'ltr' }}
+        label={t('community.org.bio')}
+        value={form[inLanguage('bio', lang)]}
+        onChange={change(inLanguage('bio', lang))}
+        inputProps={{ maxLength: 1000, dir }}
       />
       <TextField
         label={t('community.org.website')}

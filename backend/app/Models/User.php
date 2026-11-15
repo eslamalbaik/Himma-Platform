@@ -17,6 +17,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'cuid',
+        'community',
         'handle',
         'bio_ar',
         'bio_en',
@@ -53,6 +54,10 @@ class User extends Authenticatable
         static::creating(function (self $user) {
             $user->cuid ??= (string) Str::ulid();
             $user->handle ??= static::uniqueHandleFrom($user->name_en ?: strstr((string) $user->email, '@', true));
+            // Members always belong to a language community: their organization's, else Arabic.
+            if ($user->community === null && array_key_exists($user->role, config('roles.member_roles'))) {
+                $user->community = $user->tenant_id ? (Tenant::whereKey($user->tenant_id)->value('community') ?? 'ar') : 'ar';
+            }
         });
     }
 
@@ -95,6 +100,7 @@ class User extends Authenticatable
     {
         return [
             'id' => $this->cuid,
+            'community' => $this->community,
             'handle' => $this->handle,
             'verified' => $this->isVerified(),
             'avatarUrl' => $this->avatarUrl(),

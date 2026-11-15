@@ -10,6 +10,8 @@ use Illuminate\Validation\Rule;
 
 class EventFormRequest extends ApiRequest
 {
+    protected const BILINGUAL = ['title', 'description'];
+
     public function rules(): array
     {
         return [

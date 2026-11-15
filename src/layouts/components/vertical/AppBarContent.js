@@ -11,6 +11,10 @@ import ModeToggler from 'src/@core/layouts/components/shared-components/ModeTogg
 import UserDropdown from 'src/@core/layouts/components/shared-components/UserDropdown'
 import LanguageDropdown from 'src/@core/layouts/components/shared-components/LanguageDropdown'
 import NotificationsDropdown from 'src/layouts/components/NotificationsDropdown'
+import CommunitySwitcher, { showsCommunitySwitcher } from 'src/layouts/components/CommunitySwitcher'
+
+// ** Next Import
+import { useRouter } from 'next/router'
 import ShortcutsDropdown from 'src/@core/layouts/components/shared-components/ShortcutsDropdown'
 
 // ** Hook Import
@@ -118,6 +122,7 @@ const AppBarContent = props => {
 
   // ** Hook
   const auth = useAuth()
+  const { pathname } = useRouter()
 
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -130,7 +135,12 @@ const AppBarContent = props => {
         {auth.user && <Autocomplete hidden={hidden} settings={settings} />}
       </Box>
       <Box className='actions-right' sx={{ display: 'flex', alignItems: 'center' }}>
-        <LanguageDropdown settings={settings} saveSettings={saveSettings} />
+        {/* In the dashboard the community switcher also sets the language (the English community is in English). */}
+        {showsCommunitySwitcher(auth.user, pathname) ? (
+          <CommunitySwitcher />
+        ) : (
+          <LanguageDropdown settings={settings} saveSettings={saveSettings} />
+        )}
         <ModeToggler settings={settings} saveSettings={saveSettings} />
         {auth.user && (
           <>

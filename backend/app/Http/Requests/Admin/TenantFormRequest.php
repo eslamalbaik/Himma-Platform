@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 
 class TenantFormRequest extends ApiRequest
 {
+    protected const BILINGUAL = ['name'];
+
     public function rules(): array
     {
         return [

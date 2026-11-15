@@ -54,7 +54,9 @@ const AuthProvider = ({ children }) => {
       typeof returnUrl === 'string' && returnUrl !== '/' && returnUrl.startsWith('/') && !returnUrl.startsWith('//')
         ? returnUrl
         : getHomeRoute(user.role)
-    router.replace(redirectURL)
+
+    // Members live in their language community (`/` Arabic, `/en` English); staff keep the current language.
+    router.replace(redirectURL, undefined, isMemberRole(user.role) && user.community ? { locale: user.community } : {})
   }
 
   // errorCallback receives the error code from the API (see public/locales `errors.*`).
@@ -97,7 +99,7 @@ const AuthProvider = ({ children }) => {
       await axios.post(authConfig.logoutEndpoint, {})
     } finally {
       setUser(null)
-      router.push(member ? '/' : '/admin/login')
+      router.push(member ? '/' : '/admin/login', undefined, { locale: router.locale })
     }
   }
 

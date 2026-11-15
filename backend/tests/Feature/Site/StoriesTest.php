@@ -67,7 +67,6 @@ class StoriesTest extends TestCase
 
         $this->postJson('/api/me/stories', $this->payload(['title' => '']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_article_title');
         $this->postJson('/api/me/stories', $this->payload(['body' => '']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_article_body');
-        $this->postJson('/api/me/stories', $this->payload(['language' => 'fr']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_language');
         $this->postJson('/api/me/stories', $this->payload(['sectionId' => 'nope']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_section');
     }
 

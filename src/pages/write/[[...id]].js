@@ -18,8 +18,6 @@ import InputBase from '@mui/material/InputBase'
 import Skeleton from '@mui/material/Skeleton'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
-import ToggleButton from '@mui/material/ToggleButton'
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 
 // ** Third Party Imports
 import axios from 'axios'
@@ -54,7 +52,8 @@ const WritePage = () => {
   const { user } = useAuth()
   const id = router.query.id?.[0] || null
 
-  const [story, setStory] = useState(() => emptyStory(i18n.language))
+  // A story is written in the writer's language community (the server sets it too).
+  const [story, setStory] = useState(() => emptyStory(user?.community || i18n.language))
   const [status, setStatus] = useState('draft')
   const [reviewNote, setReviewNote] = useState(null)
   const [loading, setLoading] = useState(Boolean(id))
@@ -235,21 +234,6 @@ const WritePage = () => {
         ) : null}
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 3, mb: 8 }}>
-          <ToggleButtonGroup
-            exclusive
-            size='small'
-            value={story.language}
-            disabled={!editable}
-            onChange={(e, value) => {
-              if (!value) return
-              setStory(prev => ({ ...prev, language: value }))
-              setDirty(true)
-            }}
-            aria-label={t('site.write.language')}
-          >
-            <ToggleButton value='ar'>{t('language.ar')}</ToggleButton>
-            <ToggleButton value='en'>{t('language.en')}</ToggleButton>
-          </ToggleButtonGroup>
           <TextField
             select
             size='small'

@@ -10,6 +10,7 @@ use App\Models\Message;
 use App\Models\User;
 use App\Models\UserBlock;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -38,7 +39,8 @@ class ConversationController extends Controller
         ])->header('Cache-Control', 'no-store');
     }
 
-    // Active people the user can write to: staff and client users, not blocked either way.
+    // Active people the user can write to: staff and client users of the same language community, not blocked
+    // either way.
     public function recipients(Request $request)
     {
         $user = $request->user();
@@ -48,6 +50,7 @@ class ConversationController extends Controller
             ->merge(UserBlock::where('blocked_id', $user->id)->pluck('blocker_id'));
 
         $people = User::with('tenant')->where('status', 'active')->whereKeyNot($user->id)->whereNotIn('id', $blocked)
+            ->when($user->community, fn ($q) => $q->where(fn ($c) => $c->whereNull('community')->orWhere('community', $user->community)))
             ->when($search, fn ($q) => $q->where(fn ($p) => $p->where('name_ar', 'like', "%{$search}%")
                 ->orWhere('name_en', 'like', "%{$search}%")
                 ->orWhereHas('tenant', fn ($t) => $t->where('name_ar', 'like', "%{$search}%")->orWhere('name_en', 'like', "%{$search}%"))))
@@ -62,7 +65,7 @@ class ConversationController extends Controller
         $user = $request->user();
         $other = User::where('cuid', $request->input('userId'))->first();
 
-        if ($other->id === $user->id || $other->status !== 'active') {
+        if ($other->id === $user->id || $other->status !== 'active' || ! Community::canMeet($user, $other->community)) {
             return $this->error('invalid_recipient', 422);
         }
         if (UserBlock::between($user, $other)) {

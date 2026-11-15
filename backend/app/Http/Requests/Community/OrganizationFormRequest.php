@@ -7,6 +7,8 @@ use App\Http\Requests\ApiRequest;
 // An organization's public profile, edited by its admin.
 class OrganizationFormRequest extends ApiRequest
 {
+    protected const BILINGUAL = ['name', 'bio'];
+
     public function rules(): array
     {
         return [

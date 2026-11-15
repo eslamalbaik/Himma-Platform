@@ -56,6 +56,26 @@ Hinnah ships in two languages. Any code you add or change must work in both:
   signed copy (`smart_card_requests`, bell alert `card_request` to staff who `update,cards`) and subscribe to news
   (`smart_card_subscribers`). Drafts answer 404 publicly. QR images are drawn in the browser (`qrcode` package).
   Audit rows for readers' requests never hold their name or address.
+- **Language communities (قرار المالك، 2026-11-15):** Hinnah is two communities, like Quora's language sites:
+  Arabic at `/`, English at `/en/...` (Next.js `i18n` routing in `next.config.js`; the path is both the interface
+  language and the community, in the dashboard too: the English community's dashboard is `/en/admin`, in English).
+  Every API call sends the path's language as `X-Community` (`src/configs/community.js`); in `/admin` the top-bar
+  `CommunitySwitcher` replaces the language menu and reloads the page on the other path. The server reads it with
+  `App\Support\Community::current()`. `community` (`ar|en`) is on tenants, users, tenant requests,
+  events, issues (numbers count per community) and smart cards; an article's `language` is its community.
+  Billing, plans, sections, tags, landing, settings and the audit log are shared. A member account belongs to one
+  community (signing up or a join request from `/en` makes an English one; the other community needs a new
+  account); members follow and message only inside it, and their stories take its language. Staff have
+  `community` null (both) or are limited to one in Users; limited staff always get theirs, and `EnsureCommunity`
+  (`community` middleware on `/api/admin`) answers 404 for a record of the other one. A new dashboard list must
+  call `Community::scope()` and a new record must take `Community::current()`. Forms ask for names and texts in
+  the community's language only (no "name in English" field on the Arabic side): show `inLanguage('name', lang)`
+  with `formLanguage(record)` and send `onlyLanguage(...)` (`src/configs/community.js`); the FormRequest lists
+  the field in `BILINGUAL` and `ApiRequest` copies it into the other language.
+- **Production MCP server:** `tools/himma-vps-mcp` (`himma-vps` in `.mcp.json`, README there): SSH, SFTP and the
+  database of hinnah.ae, plus `hinnah_status` (services, `/` and `/en`, public API, log errors), `hinnah_artisan`
+  (risky commands need `confirm: true`) and `hinnah_overview` (figures per community and the live broadcasts). When a
+  new table gets `community`, or the broadcast rules in `BroadcastReadController` change, update `hinnah.js` too.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
 - **Public landing page** at `/` (`src/pages/index.js`, sections in `src/views/landing`, texts `landing.*`), ported
@@ -66,6 +86,11 @@ Hinnah ships in two languages. Any code you add or change must work in both:
   never back to `/`. "Request to join" is a mailto to `contactEmail` in `src/configs/landing.js` until a public
   join form exists. Numbers in the hero's dashboard preview are illustrative; the facts strip comes from
   `REQUIREMENTS.md`.
+- **Live broadcasts on the home page:** `src/views/site/HomeBroadcasts.js`, above the feed for everyone (hidden
+  while searching or when empty), from `GET /api/public/broadcasts` (`Site\BroadcastReadController`): public
+  online/hybrid events of the request's community, `{live, upcoming, recordings}`, each with its organization (null
+  = the platform). Stream link only while live, recording only after it ended (`ProfileController::broadcastArray`).
+  Texts `site.broadcasts.*`.
 - Icons used by Hinnah code are bundled into `src/iconify-bundle/icons-himma.js`; run `npm run build:icons:himma`
   after adding an icon (the source folders are listed in `bundle-himma-icons.js`).
 - Sidebar: `src/navigation/vertical/index.js`. Each item has a translation key and the CASL subject that
@@ -88,7 +113,8 @@ Backend (`backend/`, needs MySQL and Redis running):
 - `composer dev` — API on http://127.0.0.1:8000 + queue worker + scheduler
 - `php artisan migrate` — apply schema changes; `php artisan make:migration <name>` to add one
 - `php artisan db:seed` — create the first super admin from `SEED_ADMIN_*` in `backend/.env`, plus local test
-  data for every section (safe to rerun): clients, join requests, one staff account per role
+  data for every section (safe to rerun; `EnglishCommunitySeeder` adds the English community's `en-*@hinnah.test`
+  accounts and content): clients, join requests, one staff account per role
   (`sales|finance|editor|broadcast|support|auditor@himma.local`, password `SEED_DEMO_PASSWORD` or else
   `SEED_ADMIN_PASSWORD`), client users, plans, subscriptions in every state, invoices, payments, bell alerts,
   content and events. Billing rows are created directly, so seeding sends no emails.

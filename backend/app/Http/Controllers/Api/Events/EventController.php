@@ -8,6 +8,7 @@ use App\Http\Requests\Events\EndBroadcastFormRequest;
 use App\Http\Requests\Events\EventFormRequest;
 use App\Models\Event;
 use App\Support\Audit;
+use App\Support\Community;
 use Illuminate\Http\Request;
 
 // Announcing and cancelling events need `manage,events`; running the broadcast (start, end) needs
@@ -18,6 +19,7 @@ class EventController extends Controller
     {
         $query = Event::with('tenant')
             ->withCount(['registrations' => fn ($q) => $q->where('status', '!=', 'cancelled')]);
+        Community::scope($query, $request);
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(fn ($q) => $q->where('title_ar', 'like', "%{$search}%")
@@ -46,7 +48,7 @@ class EventController extends Controller
         return $this->paginated(
             $query->orderBy('starts_at', $order)->paginate($this->perPage($request)),
             fn (Event $event) => $event->toPublicArray(),
-            ['liveCount' => Event::where('status', 'live')->count()]
+            ['liveCount' => Community::scope(Event::query(), $request)->where('status', 'live')->count()]
         );
     }
 
@@ -57,7 +59,7 @@ class EventController extends Controller
 
     public function store(EventFormRequest $request)
     {
-        $event = Event::create($request->fields() + ['status' => 'draft']);
+        $event = Event::create($request->fields() + ['status' => 'draft', 'community' => Community::current($request)]);
         $this->audit($request, 'created', $event, ['startsAt' => $event->starts_at->toIso8601String()]);
 
         return $this->item($event->load('tenant')->toPublicArray(), 201);

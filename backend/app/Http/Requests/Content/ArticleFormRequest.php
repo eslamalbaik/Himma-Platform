@@ -8,12 +8,22 @@ use App\Models\Issue;
 use App\Models\MagazineSection;
 use App\Models\Tag;
 use App\Models\Tenant;
+use App\Support\Community;
 use Illuminate\Validation\Rule;
 
+// An article's `language` is its language community: a new one is written into the community chosen in the
+// dashboard's switcher and keeps it; its client and issue must belong to the same community.
 class ArticleFormRequest extends ApiRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['language' => $this->route('article')?->language ?? Community::current($this)]);
+    }
+
     public function rules(): array
     {
+        $community = $this->input('language');
+
         return [
             'title' => ['required', 'string', 'max:255'],
             'summary' => ['nullable', 'string', 'max:2000'],
@@ -23,10 +33,10 @@ class ArticleFormRequest extends ApiRequest
             // Institutional and government content must name the client it belongs to (CLS-03).
             'tenantId' => [
                 Rule::requiredIf(in_array($this->input('classification'), Article::TENANT_CLASSIFICATIONS, true)),
-                'nullable', 'string', Rule::exists('tenants', 'cuid'),
+                'nullable', 'string', Rule::exists('tenants', 'cuid')->where('community', $community),
             ],
             'sectionId' => ['nullable', 'string', Rule::exists('magazine_sections', 'cuid')],
-            'issueId' => ['nullable', 'string', Rule::exists('issues', 'cuid')],
+            'issueId' => ['nullable', 'string', Rule::exists('issues', 'cuid')->where('community', $community)],
             'authorName' => ['required', 'string', 'max:255'],
             'audiences' => ['nullable', 'array'],
             'audiences.*' => [Rule::in(Article::AUDIENCES)],

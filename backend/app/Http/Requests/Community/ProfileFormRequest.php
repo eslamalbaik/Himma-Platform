@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 // The signed-in user's own public profile.
 class ProfileFormRequest extends ApiRequest
 {
+    protected const BILINGUAL = ['name', 'bio'];
+
     protected function prepareForValidation(): void
     {
         $this->merge(['handle' => strtolower(trim((string) $this->input('handle', '')))]);

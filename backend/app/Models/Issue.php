@@ -13,7 +13,7 @@ class Issue extends Model
 
     public const STATUSES = ['draft', 'published'];
 
-    protected $fillable = ['number', 'title_ar', 'title_en', 'theme_ar', 'theme_en', 'cover_path', 'status', 'published_at'];
+    protected $fillable = ['community', 'number', 'title_ar', 'title_en', 'theme_ar', 'theme_en', 'cover_path', 'status', 'published_at'];
 
     protected function casts(): array
     {
@@ -49,6 +49,7 @@ class Issue extends Model
     {
         return [
             'id' => $this->cuid,
+            'community' => $this->community,
             'number' => $this->number,
             'titleAr' => $this->title_ar,
             'titleEn' => $this->title_en,

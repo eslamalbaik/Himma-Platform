@@ -19,6 +19,7 @@ class Tenant extends Model
 
     protected $fillable = [
         'cuid',
+        'community',
         'slug',
         'name_ar',
         'name_en',
@@ -91,6 +92,7 @@ class Tenant extends Model
     {
         return [
             'id' => $this->cuid,
+            'community' => $this->community,
             'slug' => $this->slug,
             'nameAr' => $this->name_ar,
             'nameEn' => $this->name_en,

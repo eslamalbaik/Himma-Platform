@@ -101,7 +101,7 @@ class CommunityTest extends TestCase
         $body = ['handle' => 'My-New-Handle', 'nameAr' => 'اسم', 'nameEn' => 'Name', 'bioAr' => 'نبذة', 'bioEn' => 'Bio'];
         $this->putJson('/api/me/profile', ['handle' => 'taken-one'] + $body)->assertStatus(422)->assertJsonPath('error.code', 'handle_taken');
         $this->putJson('/api/me/profile', ['handle' => 'a b'] + $body)->assertStatus(422)->assertJsonPath('error.code', 'invalid_handle');
-        $this->putJson('/api/me/profile', ['nameAr' => ''] + $body)->assertStatus(422)->assertJsonPath('error.code', 'invalid_name');
+        $this->putJson('/api/me/profile', ['nameAr' => '', 'nameEn' => ''] + $body)->assertStatus(422)->assertJsonPath('error.code', 'invalid_name');
 
         $this->putJson('/api/me/profile', $body)->assertOk()->assertJsonPath('data.handle', 'my-new-handle');
         $this->assertSame('my-new-handle', $me->fresh()->handle);
@@ -390,7 +390,7 @@ class CommunityTest extends TestCase
     {
         $this->orgAdmin();
 
-        $this->postJson('/api/me/organization/broadcasts', $this->broadcastPayload(['titleAr' => '']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_event_title');
+        $this->postJson('/api/me/organization/broadcasts', $this->broadcastPayload(['titleAr' => '', 'titleEn' => '']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_event_title');
         $this->postJson('/api/me/organization/broadcasts', $this->broadcastPayload(['visibility' => 'members']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_visibility');
         $this->postJson('/api/me/organization/broadcasts', $this->broadcastPayload(['endsAt' => now()->subDay()->toIso8601String()]))->assertStatus(422)->assertJsonPath('error.code', 'invalid_event_dates');
         $this->postJson('/api/me/organization/broadcasts', $this->broadcastPayload(['streamUrl' => 'http://insecure.example']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_stream_url');

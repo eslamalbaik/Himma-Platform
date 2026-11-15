@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureAbility;
 use App\Http\Middleware\EnsureApiUser;
+use App\Http\Middleware\EnsureCommunity;
 use App\Http\Middleware\EnsureNotInMaintenance;
 use App\Http\Middleware\EnsureSameOriginJson;
 use App\Http\Middleware\SetLocale;
@@ -43,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.api' => EnsureApiUser::class,
             'ability' => EnsureAbility::class,
             'not_maintenance' => EnsureNotInMaintenance::class,
+            'community' => EnsureCommunity::class,
         ]);
         // Check the session before resolving {tenant} etc., so a signed-out caller gets 401, not 404.
         $middleware->prependToPriorityList(SubstituteBindings::class, EnsureApiUser::class);

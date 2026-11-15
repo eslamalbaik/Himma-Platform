@@ -1,6 +1,3 @@
-// ** React Import
-import { useEffect } from 'react'
-
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
@@ -10,26 +7,15 @@ import { useTranslation } from 'react-i18next'
 // ** Custom Components Imports
 import OptionsMenu from 'src/@core/components/option-menu'
 
-// Himma supports Arabic (RTL) and English (LTR); the layout direction always follows the language.
-const directionFor = lang => (lang === 'en' ? 'ltr' : 'rtl')
+// ** Hooks
+import { useSwitchLanguage } from 'src/views/site/useLanguageToggle'
 
-const LanguageDropdown = ({ settings, saveSettings }) => {
+// Hinnah supports Arabic (RTL, `/`) and English (LTR, `/en`). Choosing a language opens the same page on that
+// language's path; _app then sets the language and the layout direction.
+const LanguageDropdown = () => {
   // ** Hook
   const { i18n, t } = useTranslation()
-
-  const handleLangItemClick = lang => {
-    i18n.changeLanguage(lang)
-  }
-
-  // ** Keep the html `lang` attribute and the layout direction in line with the language
-  useEffect(() => {
-    document.documentElement.setAttribute('lang', i18n.language)
-    const direction = directionFor(i18n.language)
-    if (settings.direction !== direction) {
-      saveSettings({ ...settings, direction })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [i18n.language])
+  const handleLangItemClick = useSwitchLanguage()
 
   return (
     <OptionsMenu

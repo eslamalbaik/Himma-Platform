@@ -1,20 +1,23 @@
-// Switches the interface between Arabic (right-to-left) and English (left-to-right).
+// Switches between Arabic (right-to-left, `/`) and English (left-to-right, `/en`): the same page on the other
+// language path, which is also the other language community. _app updates the language and direction.
+
+// ** Next Import
+import { useRouter } from 'next/router'
 
 // ** Third Party Imports
 import { useTranslation } from 'react-i18next'
 
-// ** Hooks
-import { useSettings } from 'src/@core/hooks/useSettings'
+export const useSwitchLanguage = () => {
+  const router = useRouter()
+
+  return lang => router.push(router.asPath, router.asPath, { locale: lang })
+}
 
 const useLanguageToggle = () => {
   const { t, i18n } = useTranslation()
-  const { settings, saveSettings } = useSettings()
+  const switchLanguage = useSwitchLanguage()
 
-  const toggle = () => {
-    const lang = i18n.language === 'en' ? 'ar' : 'en'
-    i18n.changeLanguage(lang)
-    saveSettings({ ...settings, direction: lang === 'en' ? 'ltr' : 'rtl' })
-  }
+  const toggle = () => switchLanguage(i18n.language === 'en' ? 'ar' : 'en')
 
   return { toggle, label: t(i18n.language === 'en' ? 'language.ar' : 'language.en'), lang: i18n.language }
 }

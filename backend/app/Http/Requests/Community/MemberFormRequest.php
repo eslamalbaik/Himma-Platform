@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 // Adding a person to the organization (they get an email to choose a password) or changing a member.
 class MemberFormRequest extends ApiRequest
 {
+    protected const BILINGUAL = ['name'];
+
     public const ROLES = ['tenant_admin', 'tenant_member'];
 
     protected function prepareForValidation(): void
