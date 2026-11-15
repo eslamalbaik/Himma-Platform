@@ -124,7 +124,7 @@ class LandingSeeder extends Seeder
             $plan = Plan::firstOrNew(['name_en' => $row['name_en']]);
             // The price and the plan itself belong to billing: set them only when the plan is new.
             if (! $plan->exists) {
-                $plan->fill(['name_ar' => $row['name_ar'], 'price' => $row['price'], 'currency' => 'SAR', 'interval' => 'yearly', 'is_active' => true]);
+                $plan->fill(['name_ar' => $row['name_ar'], 'price' => $row['price'], 'currency' => 'AED', 'interval' => 'yearly', 'is_active' => true]);
             }
             $plan->fill([
                 'show_on_site' => true, 'site_order' => $row['order'], 'theme' => $row['theme'], 'is_featured' => $row['featured'],
