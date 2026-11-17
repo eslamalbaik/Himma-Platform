@@ -43,6 +43,7 @@ const toPayload = plan => ({
   showOnSite: plan.showOnSite,
   isFeatured: plan.isFeatured,
   theme: plan.theme,
+  yearlyPrice: plan.yearlyPrice ?? '',
   badgeAr: plan.badgeAr || '',
   badgeEn: plan.badgeEn || '',
   descriptionAr: plan.descriptionAr || '',
@@ -124,6 +125,14 @@ const PlanDisplayDialog = ({ plan, submitting, errorCode, onSubmit, onClose }) =
               helperText: t('admin.landing.plans.ctaUrlHelp')
             })}
           </Grid>
+          <Grid item xs={12} sm={6}>
+            {text('yearlyPrice', {
+              type: 'number',
+              inputProps: { dir: 'ltr', min: 0 },
+              helperText: t('admin.landing.plans.yearlyPriceHelp')
+            })}
+          </Grid>
+          <Grid item xs={12} sm={6} />
           {['badgeAr', 'badgeEn', 'ctaLabelAr', 'ctaLabelEn'].map(name => (
             <Grid item xs={12} sm={6} key={name}>
               {text(name)}

@@ -131,6 +131,11 @@ const PlanCard = ({ plan, lang }) => {
             <Typography sx={{ fontSize: '0.85rem', color: style.muted }}>
               {t(plan.interval === 'monthly' ? 'landing.pricing.perMonth' : 'landing.pricing.perYear')}
             </Typography>
+            {plan.yearlyPrice ? (
+              <Typography sx={{ flexBasis: '100%', fontSize: '0.95rem', fontWeight: 600, color: style.muted }}>
+                {t('landing.pricing.orYearly', { price: formatNumber(plan.yearlyPrice), currency })}
+              </Typography>
+            ) : null}
           </>
         )}
       </Box>

@@ -7,7 +7,7 @@ use App\Models\Testimonial;
 use App\Support\LandingSections;
 use Illuminate\Database\Seeder;
 
-// The public pricing section (three plans) and the moving student testimonials, as in the design reference.
+// The public pricing section (the free plan and the owner's three paid plans) and the moving student testimonials, as in the design reference.
 // Safe to rerun: plans are matched by English name, testimonials by author and quote.
 class LandingSeeder extends Seeder
 {
@@ -31,102 +31,100 @@ class LandingSeeder extends Seeder
         ];
     }
 
-    private function plans(): void
+    // The owner's three plans (2026-11-17), priced in UAE dirhams. Prices and the billing feature list belong to
+    // billing, so a rerun sets them only on a new plan, unless `withPrices` (the migration that brought these plans).
+    public function plans(bool $withPrices = false): void
     {
         $rows = [
             [
-                'name_en' => 'Free Plan', 'name_ar' => 'الباقة المجانية', 'price' => 0, 'order' => 1,
-                'badge' => ['البداية السريعة', 'Quick start'], 'theme' => 'light', 'featured' => false,
+                'name_en' => 'Basic Plan', 'name_ar' => 'الباقة الأساسية', 'price' => 100, 'yearly' => 1200, 'order' => 1,
+                'badge' => ['للأفراد والكتّاب', 'For individuals and writers'], 'theme' => 'light', 'featured' => false,
                 'description' => [
-                    'مثالية لصناع المحتوى والمدربين الجدد للبدء بدون أي تكاليف.',
-                    'Ideal for creators and new trainers who want to start at no cost.',
+                    'لكل من يكتب وينشر: مقالاتك وفيديوهاتك وأخبارك في مكان واحد.',
+                    'For everyone who writes and publishes: your articles, videos and news in one place.',
                 ],
-                'cta' => ['ابدأ مجاناً', 'Start for free', '/register'],
+                'cta' => ['اشترك الآن', 'Subscribe now', '/join'],
                 'groups' => [
-                    $this->group('الكورسات والمدة', 'Courses and duration', [
-                        ['حتى 3 كورسات نشطة بالمنصة', 'Up to 3 active courses', true],
-                        ['مدة الاشتراك: تجربة مجانية دائمة', 'Subscription: permanent free trial', true],
-                        ['عدد الطلاب: حتى 50 طالب نشط', 'Students: up to 50 active students', true],
-                    ]),
-                    $this->group('الاختبارات والكويزات', 'Tests and quizzes', [
-                        ['كويزات واختبارات دورية مبسطة لكل درس', 'Simple periodic quizzes for every lesson', true],
-                        ['بنك الأسئلة ومحاكاة الامتحانات الشاملة', 'Question bank and full exam simulation', false],
-                    ]),
-                    $this->group('الملفات والمرفقات', 'Files and attachments', [
-                        ['رفع ملفات ومرفقات (حتى 50 ميجابايت)', 'Upload files and attachments (up to 50 MB)', true],
-                        ['حماية متقدمة للفيديو ضد التسريب والتحميل', 'Advanced video protection against leaks and downloads', false],
-                    ]),
-                    $this->group('الدعم والإضافات', 'Support and extras', [
-                        ['دعم فني أساسي عبر البريد الإلكتروني', 'Basic email support', true],
-                        ['ربط نطاق مخصص (Custom Domain)', 'Custom domain', false],
+                    $this->group('الخدمات المشمولة', 'Included services', [
+                        ['كتابة وتحرير المقالات.', 'Writing and editing articles.', true],
+                        ['نشر المقالات رقمياً.', 'Publishing articles digitally.', true],
+                        ['نشر الفيديوهات.', 'Publishing videos.', true],
+                        ['تصميم المنشورات.', 'Designing posts.', true],
+                        ['نشر الأخبار والإعلانات.', 'Publishing news and announcements.', true],
                     ]),
                 ],
             ],
             [
-                'name_en' => 'Basic Plan', 'name_ar' => 'الباقة الأساسية', 'price' => 5400, 'order' => 2,
-                'badge' => ['الأكثر شيوعاً', 'Most popular'], 'theme' => 'primary', 'featured' => true,
+                'name_en' => 'Professional Plan', 'name_ar' => 'الباقة الاحترافية', 'price' => 199, 'yearly' => 1990, 'order' => 2,
+                'badge' => ['للمؤلفين والباحثين وصنّاع المحتوى', 'For authors, researchers and content creators'],
+                'theme' => 'primary', 'featured' => true,
                 'description' => [
-                    'مخصصة للمؤسسات المتوسطة والأكاديميات المتنامية والدورات التعليمية.',
-                    'For mid-size organizations, growing academies and training courses.',
+                    'محتوى متخصص وإنتاج مرئي وبث مباشر، مع تقارير تُظهر أثر ما تنشره.',
+                    'Specialised content, video production and live broadcasts, with reports that show the reach of what you publish.',
                 ],
                 'cta' => ['اشترك الآن', 'Subscribe now', '/join'],
                 'groups' => [
-                    $this->group('الكورسات والمدة', 'Courses and duration', [
-                        ['حتى 30 كورس نشط بالمنصة', 'Up to 30 active courses', true],
-                        ['مدة الاشتراك: صلاحية سنوية كاملة', 'Subscription: a full year', true],
-                        ['عدد الطلاب: حتى 1,000 طالب نشط', 'Students: up to 1,000 active students', true],
-                    ]),
-                    $this->group('الاختبارات والكويزات', 'Tests and quizzes', [
-                        ['كويزات واختبارات دورية غير محدودة', 'Unlimited periodic quizzes and tests', true],
-                        ['بنك الأسئلة ومحاكاة الامتحانات الشاملة', 'Question bank and full exam simulation', true],
-                    ]),
-                    $this->group('الملفات والمرفقات', 'Files and attachments', [
-                        ['رفع ملفات ومرفقات (حتى 10 جيجابايت)', 'Upload files and attachments (up to 10 GB)', true],
-                        ['حماية متقدمة للفيديو ضد التسريب والتحميل', 'Advanced video protection against leaks and downloads', true],
-                    ]),
-                    $this->group('الدعم والإضافات', 'Support and extras', [
-                        ['دعم فني سريع على مدار الساعة', 'Fast 24/7 support', true],
-                        ['ربط نطاق مخصص (Custom Domain)', 'Custom domain', true],
+                    $this->group('الخدمات المشمولة', 'Included services', [
+                        ['كتابة وتحرير المقالات المتخصصة.', 'Writing and editing specialised articles.', true],
+                        ['النشر الرقمي والإعلامي.', 'Digital and media publishing.', true],
+                        ['إنتاج ونشر الفيديوهات.', 'Producing and publishing videos.', true],
+                        ['تصميم المحتوى الإعلامي.', 'Designing media content.', true],
+                        ['إعداد وتصميم الحلقات.', 'Preparing and designing episodes.', true],
+                        ['تنظيم البث المباشر.', 'Organising live broadcasts.', true],
+                        ['تقارير المشاهدات والتفاعل.', 'Views and engagement reports.', true],
                     ]),
                 ],
             ],
             [
-                'name_en' => 'Professional Plan', 'name_ar' => 'الباقة الاحترافية', 'price' => 9000, 'order' => 3,
-                'badge' => ['المؤسسات الكبرى', 'Large organizations'], 'theme' => 'dark', 'featured' => true,
+                'name_en' => 'Institutions Plan', 'name_ar' => 'باقة المؤسسات', 'price' => 1500, 'yearly' => null, 'order' => 3,
+                'badge' => ['للجهات والمؤسسات', 'For organisations'], 'theme' => 'dark', 'featured' => true,
                 'description' => [
-                    'الحل الشامل للمنصات الكبيرة والشركات مع حماية قصوى وتطبيق هاتف.',
-                    'The complete solution for large platforms and companies, with top protection and a mobile app.',
+                    'مجلتك الرقمية كاملة: من التحرير والتصميم إلى النشر والبث والأرشفة.',
+                    'Your complete digital magazine: from editing and design to publishing, broadcasting and archiving.',
                 ],
                 'cta' => ['اشترك الآن', 'Subscribe now', '/join'],
                 'groups' => [
-                    $this->group('الكورسات والمدة', 'Courses and duration', [
-                        ['كورسات تدريبية غير محدودة', 'Unlimited training courses', true],
-                        ['مدة الاشتراك: صلاحية سنوية مرنة', 'Subscription: a flexible year', true],
-                        ['عدد الطلاب: غير محدود', 'Students: unlimited', true],
+                    $this->group('الخدمات المشمولة', 'Included services', [
+                        ['إعداد وتحرير المجلات الرقمية.', 'Preparing and editing digital magazines.', true],
+                        ['كتابة المقالات والموضوعات الصحفية.', 'Writing articles and press features.', true],
+                        ['إجراء المقابلات والتحقيقات الإعلامية.', 'Conducting interviews and media investigations.', true],
+                        ['تصميم الأغلفة والصفحات الداخلية.', 'Designing covers and inside pages.', true],
+                        ['الإخراج الفني والتنسيق الاحترافي.', 'Art direction and professional layout.', true],
+                        ['نشر الفيديوهات والتقارير المرئية.', 'Publishing videos and video reports.', true],
+                        ['إعداد الحلقات والبرامج الإعلامية.', 'Preparing episodes and media programmes.', true],
+                        ['تنظيم البث المباشر والتغطيات.', 'Organising live broadcasts and coverage.', true],
+                        ['نشر المجلة إلكترونياً.', 'Publishing the magazine online.', true],
+                        ['أرشفة الأعداد والإصدارات السابقة.', 'Archiving past issues and publications.', true],
+                        ['تصميم الإعلانات والمواد الترويجية.', 'Designing advertisements and promotional material.', true],
+                        ['إعداد تقارير المشاهدات والتفاعل.', 'Preparing views and engagement reports.', true],
                     ]),
-                    $this->group('الاختبارات والكويزات', 'Tests and quizzes', [
-                        ['كويزات واختبارات دورية غير محدودة', 'Unlimited periodic quizzes and tests', true],
-                        ['بنك الأسئلة ومحاكاة الامتحانات الشاملة', 'Question bank and full exam simulation', true],
-                    ]),
-                    $this->group('الملفات والمرفقات', 'Files and attachments', [
-                        ['رفع ملفات ومذكرات (مساحة غير محدودة)', 'Upload files and notes (unlimited space)', true],
-                        ['حماية قصوى وتشفير للفيديو ضد التسريب والسرقة', 'Maximum protection and encryption for video', true],
-                    ]),
-                    $this->group('الدعم والإضافات', 'Support and extras', [
-                        ['دعم فني مباشر ومسؤول حساب مخصص', 'Direct support and a dedicated account manager', true],
-                        ['ربط نطاق مخصص وتخصيص الهوية بالكامل', 'Custom domain and full branding', true],
+                    $this->group('الفئات المستهدفة', 'Who it is for', [
+                        ['الجهات الحكومية والخاصة.', 'Government and private organisations.', true],
+                        ['المؤسسات التعليمية والأكاديميات.', 'Educational institutions and academies.', true],
+                        ['الجامعات والمراكز البحثية.', 'Universities and research centres.', true],
+                        ['الجمعيات والاتحادات المهنية.', 'Associations and professional unions.', true],
+                        ['المؤسسات الثقافية والإعلامية.', 'Cultural and media institutions.', true],
                     ]),
                 ],
             ],
         ];
 
+        // The free plan stays on the site, first (owner, 2026-11-17); its content is edited in the dashboard.
+        Plan::where('name_en', 'Free Plan')->update(['show_on_site' => true, 'site_order' => 0]);
+
         foreach ($rows as $row) {
             $plan = Plan::firstOrNew(['name_en' => $row['name_en']]);
-            // The price and the plan itself belong to billing: set them only when the plan is new.
-            if (! $plan->exists) {
-                $plan->fill(['name_ar' => $row['name_ar'], 'price' => $row['price'], 'currency' => 'AED', 'interval' => 'yearly', 'is_active' => true]);
+            if ($withPrices || ! $plan->exists) {
+                $services = $row['groups'][0]['items'];
+                $plan->fill([
+                    'name_ar' => $row['name_ar'], 'price' => $row['price'], 'currency' => 'AED', 'interval' => 'monthly',
+                    'is_active' => true,
+                    'features_ar' => implode("\n", array_column($services, 'textAr')),
+                    'features_en' => implode("\n", array_column($services, 'textEn')),
+                ]);
             }
             $plan->fill([
+                'yearly_price' => $row['yearly'],
                 'show_on_site' => true, 'site_order' => $row['order'], 'theme' => $row['theme'], 'is_featured' => $row['featured'],
                 'badge_ar' => $row['badge'][0], 'badge_en' => $row['badge'][1],
                 'description_ar' => $row['description'][0], 'description_en' => $row['description'][1],

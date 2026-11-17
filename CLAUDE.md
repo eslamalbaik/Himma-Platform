@@ -86,6 +86,12 @@ Hinnah ships in two languages. Any code you add or change must work in both:
   never back to `/`. "Request to join" is a mailto to `contactEmail` in `src/configs/landing.js` until a public
   join form exists. Numbers in the hero's dashboard preview are illustrative; the facts strip comes from
   `REQUIREMENTS.md`.
+- **Plans on the home page (قرار المالك، 2026-11-17):** priced in UAE dirhams (AED), monthly: the free plan, the
+  basic plan (individuals and writers, 100 / 1,200 a year), the professional plan (authors, researchers and content
+  creators, 199 / 1,990 a year) and the institutions plan (1,500, monthly only, services and target audiences).
+  Content in both languages is in `LandingSeeder::plans()`, applied once with prices by the migration
+  `2026_11_17_000000_add_yearly_price_to_plans`. `plans.yearly_price` is display only (the "or … a year" line,
+  edited in Landing page → Plans); billing still charges `price` per `interval`.
 - **Live broadcasts on the home page:** `src/views/site/HomeBroadcasts.js`, above the feed for everyone (hidden
   while searching or when empty), from `GET /api/public/broadcasts` (`Site\BroadcastReadController`): public
   online/hybrid events of the request's community, `{live, upcoming, recordings}`, each with its organization (null
