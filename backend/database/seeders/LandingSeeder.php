@@ -38,6 +38,8 @@ class LandingSeeder extends Seeder
         $rows = [
             [
                 'name_en' => 'Basic Plan', 'name_ar' => 'الباقة الأساسية', 'price' => 100, 'yearly' => 1200, 'order' => 1,
+                // Hidden from the site (owner, 2026-11-17); kept so it can be shown again from the dashboard.
+                'show' => false,
                 'badge' => ['للأفراد والكتّاب', 'For individuals and writers'], 'theme' => 'light', 'featured' => false,
                 'description' => [
                     'لكل من يكتب وينشر: مقالاتك وفيديوهاتك وأخبارك في مكان واحد.',
@@ -125,7 +127,7 @@ class LandingSeeder extends Seeder
             }
             $plan->fill([
                 'yearly_price' => $row['yearly'],
-                'show_on_site' => true, 'site_order' => $row['order'], 'theme' => $row['theme'], 'is_featured' => $row['featured'],
+                'show_on_site' => $row['show'] ?? true, 'site_order' => $row['order'], 'theme' => $row['theme'], 'is_featured' => $row['featured'],
                 'badge_ar' => $row['badge'][0], 'badge_en' => $row['badge'][1],
                 'description_ar' => $row['description'][0], 'description_en' => $row['description'][1],
                 'cta_label_ar' => $row['cta'][0], 'cta_label_en' => $row['cta'][1], 'cta_url' => $row['cta'][2],

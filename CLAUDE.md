@@ -87,7 +87,8 @@ Hinnah ships in two languages. Any code you add or change must work in both:
   join form exists. Numbers in the hero's dashboard preview are illustrative; the facts strip comes from
   `REQUIREMENTS.md`.
 - **Plans on the home page (قرار المالك، 2026-11-17):** priced in UAE dirhams (AED), monthly: the free plan, the
-  basic plan (individuals and writers, 100 / 1,200 a year), the professional plan (authors, researchers and content
+  basic plan (individuals and writers, 100 / 1,200 a year; hidden from the site on the owner's request, 2026-11-17),
+  the professional plan (authors, researchers and content
   creators, 199 / 1,990 a year) and the institutions plan (1,500, monthly only, services and target audiences).
   Content in both languages is in `LandingSeeder::plans()`, applied once with prices by the migration
   `2026_11_17_000000_add_yearly_price_to_plans`. `plans.yearly_price` is display only (the "or … a year" line,
