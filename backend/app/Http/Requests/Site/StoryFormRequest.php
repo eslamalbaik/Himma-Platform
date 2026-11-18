@@ -27,6 +27,7 @@ class StoryFormRequest extends ApiRequest
             'summary' => ['nullable', 'string', 'max:2000'],
             'body' => ['required', 'string', 'max:200000'],
             'language' => ['required', Rule::in(Article::LANGUAGES)],
+            'kind' => ['sometimes', Rule::in(Article::KINDS)],
             'sectionId' => ['nullable', 'string', Rule::exists('magazine_sections', 'cuid')->where('is_active', true)],
             // Who may read it once published: everyone, the writer's followers, or their organization's members.
             'audience' => ['sometimes', Rule::in($this->user()->tenant_id ? self::AUDIENCES : ['public', 'followers'])],
@@ -40,6 +41,7 @@ class StoryFormRequest extends ApiRequest
             'summary' => 'invalid_article_summary',
             'body' => 'invalid_article_body',
             'language' => 'invalid_language',
+            'kind' => 'invalid_article_kind',
             'sectionId' => 'invalid_section',
             'audience' => 'invalid_audience',
         ];
@@ -47,12 +49,13 @@ class StoryFormRequest extends ApiRequest
 
     public function fields(): array
     {
-        return ($this->filled('audience') ? ['classification' => $this->input('audience')] : []) + [
-            'title' => trim($this->input('title')),
-            'summary' => $this->input('summary'),
-            'body' => $this->input('body'),
-            'language' => $this->input('language'),
-            'section_id' => $this->filled('sectionId') ? MagazineSection::where('cuid', $this->input('sectionId'))->value('id') : null,
-        ];
+        return ($this->filled('audience') ? ['classification' => $this->input('audience')] : [])
+            + ($this->filled('kind') ? ['kind' => $this->input('kind')] : []) + [
+                'title' => trim($this->input('title')),
+                'summary' => $this->input('summary'),
+                'body' => $this->input('body'),
+                'language' => $this->input('language'),
+                'section_id' => $this->filled('sectionId') ? MagazineSection::where('cuid', $this->input('sectionId'))->value('id') : null,
+            ];
     }
 }

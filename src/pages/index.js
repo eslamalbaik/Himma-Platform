@@ -1,6 +1,6 @@
-// Public home page, in the style of medium.com. Guests see a hero and the latest stories; signed-in members
-// go straight to the feed. Stories are published articles anyone may read (`GET /api/public/articles`).
-// Live and upcoming broadcasts of the page's community sit above the feed (HomeBroadcasts).
+// Public home page. Guests see the landing sections (src/views/site/landing/GuestSections: hero, tagline strip,
+// about, figures, cards into the site, call to organizations) above the latest stories; signed-in members go
+// straight to the feed. Stories are published articles anyone may read (`GET /api/public/articles`).
 // Frame: src/views/site, texts: `site.*` in public/locales.
 
 // ** React Imports
@@ -25,10 +25,10 @@ import { useTranslation } from 'react-i18next'
 import Icon from 'src/@core/components/icon'
 import SiteShell from 'src/views/site/SiteShell'
 import StoryListItem from 'src/views/site/StoryListItem'
-import HomeBroadcasts from 'src/views/site/HomeBroadcasts'
 import PricingSection from 'src/views/site/landing/PricingSection'
 import TestimonialsSection from 'src/views/site/landing/TestimonialsSection'
 import { pillSx } from 'src/views/site/SiteHeader'
+import { Hero, Marquee, AboutSection, StatsSection, FocusSection, CtaBand } from 'src/views/site/landing/GuestSections'
 
 // ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
@@ -37,95 +37,6 @@ import { useAuth } from 'src/hooks/useAuth'
 import { serifFont, ink } from 'src/views/site/storyText'
 
 const PER_PAGE = 10
-
-const Hero = () => {
-  const { t, i18n } = useTranslation()
-
-  return (
-    <Box sx={{ borderBottom: theme => `1px solid ${ink(theme)}`, overflow: 'hidden' }}>
-      <Box
-        sx={{
-          mx: 'auto',
-          maxWidth: 1336,
-          px: { xs: 4, md: 6 },
-          minHeight: { xs: 460, md: 'calc(78vh - 64px)' },
-          display: 'flex',
-          alignItems: 'center',
-          position: 'relative'
-        }}
-      >
-        <Box sx={{ maxWidth: 640, py: { xs: 14, md: 20 }, position: 'relative', zIndex: 1 }}>
-          <Typography
-            component='h1'
-            sx={{
-              fontFamily: serifFont(i18n.language),
-              fontWeight: 500,
-              fontSize: { xs: '3.25rem', sm: '4.5rem', md: '5.75rem' },
-              lineHeight: 1.05,
-              letterSpacing: i18n.language === 'en' ? '-0.03em' : 0,
-              color: ink,
-              mb: 6
-            }}
-          >
-            {t('site.hero.title')}
-          </Typography>
-          <Typography sx={{ fontSize: { xs: '1.15rem', md: '1.4rem' }, color: ink, mb: 10, maxWidth: 520 }}>
-            {t('site.hero.subtitle')}
-          </Typography>
-          <Button href='#stories' variant='contained' size='large' sx={{ ...pillSx, px: 8, fontSize: '1.1rem' }}>
-            {t('site.hero.cta')}
-          </Button>
-        </Box>
-        <HeroArt />
-      </Box>
-    </Box>
-  )
-}
-
-// The hero drawing (a hand writing, and a flower): the PNGs only supply the shape, a mask paints them in
-// the brand colour, so they follow the theme. Desktop only.
-const MaskedArt = ({ src, color, sx }) => (
-  <Box
-    aria-hidden
-    sx={{
-      position: 'absolute',
-      backgroundColor: color,
-      WebkitMaskImage: `url(${src})`,
-      maskImage: `url(${src})`,
-      WebkitMaskSize: '100% 100%',
-      maskSize: '100% 100%',
-      WebkitMaskRepeat: 'no-repeat',
-      maskRepeat: 'no-repeat',
-      ...sx
-    }}
-  />
-)
-
-const HeroArt = () => (
-  <Box
-    aria-hidden
-    sx={{
-      display: { xs: 'none', md: 'block' },
-      position: 'absolute',
-      insetInlineEnd: { md: 0, lg: 24 },
-      top: '50%',
-      transform: 'translateY(-50%)',
-      width: { md: 400, lg: 520 },
-      height: { md: 440, lg: 560 }
-    }}
-  >
-    <MaskedArt
-      src='/images/pages/hero-write.png'
-      color='primary.main'
-      sx={{ insetInlineEnd: 0, bottom: 0, width: '88%', aspectRatio: '808 / 660' }}
-    />
-    <MaskedArt
-      src='/images/pages/hero-flower.png'
-      color='#E0B25B'
-      sx={{ insetInlineStart: 0, top: 0, width: '42%', aspectRatio: '588 / 590', transform: 'rotate(-8deg)' }}
-    />
-  </Box>
-)
 
 const SidebarBlock = ({ title, children }) => (
   <Box sx={{ mb: 10 }}>
@@ -211,6 +122,7 @@ const Home = () => {
   const [sections, setSections] = useState([])
   const [activeSection, setActiveSection] = useState(null)
   const [landing, setLanding] = useState(null)
+  const [stats, setStats] = useState({})
 
   const load = useCallback(
     (page, append) => {
@@ -223,6 +135,7 @@ const Home = () => {
         .then(({ data }) => {
           setStories(prev => (append ? [...prev, ...data.data] : data.data))
           setMeta(data.meta)
+          if (page === 1 && !search && !activeSection) setStats(prev => ({ ...prev, stories: data.meta.total }))
         })
         .catch(() => setFailed(true))
         .finally(() => setLoading(false))
@@ -237,8 +150,18 @@ const Home = () => {
   useEffect(() => {
     axios
       .get('/api/public/sections')
-      .then(({ data }) => setSections(data.data.filter(section => section.articlesCount > 0)))
+      .then(({ data }) => {
+        setSections(data.data.filter(section => section.articlesCount > 0))
+        setStats(prev => ({ ...prev, sections: data.data.length }))
+      })
       .catch(() => setSections([]))
+  }, [])
+
+  useEffect(() => {
+    axios
+      .get('/api/public/issues')
+      .then(({ data }) => setStats(prev => ({ ...prev, issues: data.data.length })))
+      .catch(() => null)
   }, [])
 
   // Pricing and testimonials for guests; a section that is off or empty comes back as null and is not drawn.
@@ -259,9 +182,13 @@ const Home = () => {
   return (
     <SiteShell>
       {!auth.user && !search ? <Hero /> : null}
-      {!search ? <HomeBroadcasts /> : null}
+      {!auth.user && !search ? <Marquee /> : null}
+      {!auth.user && !search ? <AboutSection /> : null}
+      {!auth.user && !search ? <StatsSection stats={stats} /> : null}
+      {!auth.user && !search ? <FocusSection /> : null}
       {!auth.user && !search && landing?.pricing ? <PricingSection data={landing.pricing} /> : null}
       {!auth.user && !search && landing?.testimonials ? <TestimonialsSection data={landing.testimonials} /> : null}
+      {!auth.user && !search ? <CtaBand /> : null}
 
       <Box
         id='stories'

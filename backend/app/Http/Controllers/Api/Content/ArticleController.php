@@ -39,6 +39,9 @@ class ArticleController extends Controller
         if ($statuses) {
             $query->whereIn('status', $statuses);
         }
+        if (in_array($kind = $request->query('kind'), Article::KINDS, true)) {
+            $query->where('kind', $kind);
+        }
         if (in_array($classification = $request->query('classification'), Article::CLASSIFICATIONS, true)) {
             $query->where('classification', $classification);
         }

@@ -162,6 +162,7 @@ export function registerHinnahTools(server) {
         ['events', 'community', 'status'],
         ['issues', 'community', 'status'],
         ['smart_cards', 'community', 'status'],
+        ['library_items', 'community', 'status'],
       ]
 
       try {

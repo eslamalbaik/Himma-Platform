@@ -18,6 +18,9 @@ class Article extends Model
 
     public const LANGUAGES = ['ar', 'en'];
 
+    // An article, or a literary story (القصص), which the magazine lists on its own tab.
+    public const KINDS = ['article', 'story'];
+
     public const STATUSES = ['draft', 'in_review', 'approved', 'published', 'rejected', 'withdrawn'];
 
     // Who can see the article (§2). Institutional and government content belongs to one client.
@@ -46,7 +49,7 @@ class Article extends Model
     ];
 
     protected $fillable = [
-        'title', 'summary', 'cover_path', 'body', 'language', 'section_id', 'issue_id', 'tenant_id', 'author_name', 'author_id',
+        'title', 'summary', 'cover_path', 'body', 'language', 'kind', 'section_id', 'issue_id', 'tenant_id', 'author_name', 'author_id',
         'classification', 'audiences', 'is_sponsored', 'source', 'rights_note', 'status',
         'compliance_checks', 'compliance_result', 'compliance_checked_at', 'review_note', 'reviewed_by',
         'published_at', 'withdrawn_at', 'withdrawal_reason',
@@ -197,6 +200,7 @@ class Article extends Model
             'title' => $this->title,
             'summary' => $this->summary,
             'language' => $this->language,
+            'kind' => $this->kind ?? 'article',
             'sectionId' => $this->section?->cuid,
             'sectionNameAr' => $this->section?->name_ar,
             'sectionNameEn' => $this->section?->name_en,
@@ -226,6 +230,7 @@ class Article extends Model
             'title' => $this->title,
             'summary' => $this->summary,
             'language' => $this->language,
+            'kind' => $this->kind ?? 'article',
             'sectionId' => $this->section?->cuid,
             'audience' => $this->classification,
             'status' => $this->status,
@@ -243,6 +248,7 @@ class Article extends Model
             'title' => $this->title,
             'summary' => $this->summary,
             'language' => $this->language,
+            'kind' => $this->kind ?? 'article',
             'sectionId' => $this->section?->cuid,
             'sectionNameAr' => $this->section?->name_ar,
             'sectionNameEn' => $this->section?->name_en,

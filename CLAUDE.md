@@ -56,6 +56,15 @@ Hinnah ships in two languages. Any code you add or change must work in both:
   signed copy (`smart_card_requests`, bell alert `card_request` to staff who `update,cards`) and subscribe to news
   (`smart_card_subscribers`). Drafts answer 404 publicly. QR images are drawn in the browser (`qrcode` package).
   Audit rows for readers' requests never hold their name or address.
+- **Library and stories (2026-11-17):** the **library** (المكتبة, under Articles) is `library_items`: books, research,
+  guides and reports, one community each, with a cover, a PDF/EPUB file (`POST .../library/{id}/cover|file`, multipart)
+  and/or an external link, and an optional magazine section. Dashboard: Content → Library (`/admin/content/library`,
+  subject `content`; publishing needs `manage,content` and a file or link). Public: `/library` and `/library/{id}`
+  (`GET /api/public/library`, opening an item counts a view). **Stories** (القصص, in the magazine) are articles with
+  `kind = story` (`articles.kind`: `article|story`), chosen in the article form and the member's editor; they keep the
+  normal review workflow. Dashboard: Magazine → Stories (`/admin/magazine/stories`); public: the Stories tab of
+  `/magazine` (`?tab=stories`, `GET /api/public/articles?kind=story`). Texts `library.*`, `admin.library.*`,
+  `magazine.tabs.*`, `magazine.stories.*`.
 - **Language communities (قرار المالك، 2026-11-15):** Hinnah is two communities, like Quora's language sites:
   Arabic at `/`, English at `/en/...` (Next.js `i18n` routing in `next.config.js`; the path is both the interface
   language and the community, in the dashboard too: the English community's dashboard is `/en/admin`, in English).
@@ -78,16 +87,25 @@ Hinnah ships in two languages. Any code you add or change must work in both:
   new table gets `community`, or the broadcast rules in `BroadcastReadController` change, update `hinnah.js` too.
 - **Tests:** every route gets Feature tests in `backend/tests/Feature` (401, 403, 422 code, success, audit row).
   They run against the separate `himma_test` database.
-- **Public landing page** at `/` (`src/pages/index.js`, sections in `src/views/landing`, texts `landing.*`), ported
-  from the `hemma-ideas-hub` prototype and rebuilt with MUI so it uses the dashboard's theme, fonts and RTL/LTR.
-  It is the only page with `authGuard = false` besides the auth pages: guests see **دخول الجهات** (organization
-  sign-in, `/login?portal=entity`, which only changes the login subtitle), signed-in users see a link to their
-  dashboard. After sign-in (and when a signed-in user opens a guest page) users go to `getHomeRoute()` (`/admin`),
-  never back to `/`. "Request to join" is a mailto to `contactEmail` in `src/configs/landing.js` until a public
-  join form exists. Numbers in the hero's dashboard preview are illustrative; the facts strip comes from
-  `REQUIREMENTS.md`.
-- **Live broadcasts on the home page:** `src/views/site/HomeBroadcasts.js`, above the feed for everyone (hidden
-  while searching or when empty), from `GET /api/public/broadcasts` (`Site\BroadcastReadController`): public
+- **Public home page** at `/` (`src/pages/index.js`, frame `src/views/site`, contact email in `src/configs/site.js`).
+  Signed-in members see the stories feed only. Guests also see the landing sections, laid out after the bold
+  editorial style of dubai-it.ae (owner's choice, 2026-11-17: its structure and look, **not** its texts; Hinnah's own
+  texts as a digital platform for writers): hero with one highlighted phrase, black scrolling tagline strip, about +
+  three features, real figures of the community (published stories, magazine issues, sections),
+  four cards into the site, plans (`PricingSection`, managed in Landing page → Plans), testimonials, and a closing
+  call to organizations with **اطلب انضمام جهتك** (`/join`) and **دخول الجهات** (`/login?type=organization`).
+  Sections: `src/views/site/landing/GuestSections.js`; texts `site.hero.*` and `site.home.*`. Photos (Dubai,
+  reading, writing) are Unsplash-licensed files in `public/images/landing`, credited in `CREDITS.md` there. Sign-in sends users
+  to `getHomeRoute()`, never back to `/`.
+- **Plans on the home page (قرار المالك، 2026-11-17):** priced in UAE dirhams (AED), monthly: the free plan, the
+  basic plan (individuals and writers, 100 / 1,200 a year; hidden from the site on the owner's request, 2026-11-17),
+  the professional plan (authors, researchers and content
+  creators, 199 / 1,990 a year) and the institutions plan (1,500, monthly only, services and target audiences).
+  Content in both languages is in `LandingSeeder::plans()`, applied once with prices by the migration
+  `2026_11_17_000000_add_yearly_price_to_plans`. `plans.yearly_price` is display only (the "or … a year" line,
+  edited in Landing page → Plans); billing still charges `price` per `interval`.
+- **Live broadcasts:** `src/views/site/HomeBroadcasts.js` is no longer shown on the home page (owner's request,
+  2026-11-17); the component and its API stay. Data from `GET /api/public/broadcasts` (`Site\BroadcastReadController`): public
   online/hybrid events of the request's community, `{live, upcoming, recordings}`, each with its organization (null
   = the platform). Stream link only while live, recording only after it ended (`ProfileController::broadcastArray`).
   Texts `site.broadcasts.*`.

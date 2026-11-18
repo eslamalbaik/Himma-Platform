@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\Community\VerificationController;
 use App\Http\Controllers\Api\Content\ArticleController;
 use App\Http\Controllers\Api\Content\CommentController;
 use App\Http\Controllers\Api\Content\ContentReportController;
+use App\Http\Controllers\Api\Content\LibraryController;
 use App\Http\Controllers\Api\Events\EventController;
 use App\Http\Controllers\Api\Events\RegistrationController;
 use App\Http\Controllers\Api\Landing\LandingController;
@@ -39,6 +40,7 @@ use App\Http\Controllers\Api\MyNotificationController;
 use App\Http\Controllers\Api\NotificationSettingsController;
 use App\Http\Controllers\Api\PlatformSettingController;
 use App\Http\Controllers\Api\Site\BroadcastReadController;
+use App\Http\Controllers\Api\Site\LibraryReadController;
 use App\Http\Controllers\Api\Site\MagazineReadController;
 use App\Http\Controllers\Api\Site\ReadController;
 use App\Http\Controllers\Api\Site\StoryController;
@@ -65,6 +67,8 @@ Route::prefix('public')->middleware('not_maintenance')->group(function () {
     Route::get('articles', [ReadController::class, 'articles'])->middleware('throttle:120,1');
     Route::get('articles/{cuid}', [ReadController::class, 'article'])->middleware('throttle:120,1');
     Route::get('sections', [ReadController::class, 'sections'])->middleware('throttle:120,1');
+    Route::get('library', [LibraryReadController::class, 'index'])->middleware('throttle:120,1');
+    Route::get('library/{cuid}', [LibraryReadController::class, 'show'])->middleware('throttle:120,1');
     Route::get('broadcasts', [BroadcastReadController::class, 'index'])->middleware('throttle:120,1');
     Route::get('issues', [MagazineReadController::class, 'index'])->middleware('throttle:120,1');
     Route::get('issues/{number}', [MagazineReadController::class, 'show'])->whereNumber('number')->middleware('throttle:120,1');
@@ -225,6 +229,8 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance', 'community'])
         Route::get('articles/{article}', [ArticleController::class, 'show'])->middleware('ability:read,content');
         Route::get('reports', [ContentReportController::class, 'index'])->middleware('ability:read,content');
         Route::get('comments', [CommentController::class, 'index'])->middleware('ability:read,content');
+        Route::get('library', [LibraryController::class, 'index'])->middleware('ability:read,content');
+        Route::get('library/{item}', [LibraryController::class, 'show'])->middleware('ability:read,content');
 
         Route::middleware('same_origin')->group(function () {
             Route::post('articles', [ArticleController::class, 'store'])->middleware('ability:create,content');
@@ -243,7 +249,17 @@ Route::prefix('admin')->middleware(['auth.api', 'not_maintenance', 'community'])
 
             Route::post('comments/{comment}/moderate', [CommentController::class, 'moderate'])->middleware('ability:update,content');
             Route::delete('comments/{comment}', [CommentController::class, 'destroy'])->middleware('ability:delete,content');
+
+            // The library (under Articles): editing needs `update,content`, publishing `manage,content`.
+            Route::post('library', [LibraryController::class, 'store'])->middleware('ability:create,content');
+            Route::put('library/{item}', [LibraryController::class, 'update'])->middleware('ability:update,content');
+            Route::delete('library/{item}', [LibraryController::class, 'destroy'])->middleware('ability:delete,content');
+            Route::post('library/{item}/publish', [LibraryController::class, 'publish'])->middleware('ability:manage,content');
+            Route::post('library/{item}/unpublish', [LibraryController::class, 'unpublish'])->middleware('ability:manage,content');
         });
+        // Uploads are multipart, so they carry their own same-origin guard.
+        Route::post('library/{item}/{what}', [LibraryController::class, 'upload'])->whereIn('what', ['cover', 'file'])
+            ->middleware(['same_origin:multipart', 'ability:update,content', 'throttle:30,1']);
     });
 
     // Announcing (schedule) and cancelling need `manage,events`; running the broadcast (start, end) and

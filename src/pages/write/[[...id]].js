@@ -43,7 +43,8 @@ const emptyStory = lang => ({
   body: '',
   language: lang === 'en' ? 'en' : 'ar',
   sectionId: '',
-  audience: 'public'
+  audience: 'public',
+  kind: 'article'
 })
 
 const WritePage = () => {
@@ -86,7 +87,8 @@ const WritePage = () => {
           body: s.body,
           language: s.language,
           sectionId: s.sectionId || '',
-          audience: s.audience || 'public'
+          audience: s.audience || 'public',
+          kind: s.kind || 'article'
         })
         setStatus(s.status)
         setReviewNote(s.reviewNote)
@@ -234,6 +236,19 @@ const WritePage = () => {
         ) : null}
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 3, mb: 8 }}>
+          {/* A literary story is listed on the magazine's Stories tab once published. */}
+          <TextField
+            select
+            size='small'
+            value={story.kind}
+            onChange={change('kind')}
+            disabled={!editable}
+            label={t('site.write.kind')}
+            sx={{ minWidth: 150 }}
+          >
+            <MenuItem value='article'>{t('admin.content.kind.article')}</MenuItem>
+            <MenuItem value='story'>{t('admin.content.kind.story')}</MenuItem>
+          </TextField>
           <TextField
             select
             size='small'

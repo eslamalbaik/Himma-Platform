@@ -15,7 +15,7 @@ class Plan extends Model
     public const THEMES = ['light', 'primary', 'dark'];
 
     protected $fillable = [
-        'name_ar', 'name_en', 'price', 'currency', 'interval', 'features_ar', 'features_en', 'is_active',
+        'name_ar', 'name_en', 'price', 'yearly_price', 'currency', 'interval', 'features_ar', 'features_en', 'is_active',
         'show_on_site', 'site_order', 'badge_ar', 'badge_en', 'description_ar', 'description_en', 'theme',
         'is_featured', 'cta_label_ar', 'cta_label_en', 'cta_url', 'feature_groups',
     ];
@@ -23,7 +23,7 @@ class Plan extends Model
     protected function casts(): array
     {
         return [
-            'price' => 'decimal:2', 'is_active' => 'boolean', 'show_on_site' => 'boolean', 'is_featured' => 'boolean',
+            'price' => 'decimal:2', 'yearly_price' => 'decimal:2', 'is_active' => 'boolean', 'show_on_site' => 'boolean', 'is_featured' => 'boolean',
             'feature_groups' => 'array',
         ];
     }
@@ -59,6 +59,8 @@ class Plan extends Model
             'price' => (float) $this->price,
             'currency' => $this->currency,
             'interval' => $this->interval,
+            // Shown under the price as the yearly option; display only, billing charges `price` per `interval`.
+            'yearlyPrice' => $this->yearly_price === null ? null : (float) $this->yearly_price,
             'isActive' => $this->is_active,
             'showOnSite' => $this->show_on_site,
             'siteOrder' => $this->site_order,

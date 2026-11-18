@@ -1,16 +1,20 @@
-// The magazine's issues (`/magazine`): a shelf of covers; each one opens the issue as a page-turning book.
+// The magazine (`/magazine`): a shelf of issue covers, each opening the issue as a page-turning book, and the
+// Stories tab (`/magazine?tab=stories`): the literary stories (articles of kind `story`) of the community.
 
 // ** React Imports
 import { useEffect, useState } from 'react'
 
 // ** Next Import
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
 import Alert from '@mui/material/Alert'
 import Skeleton from '@mui/material/Skeleton'
 import Typography from '@mui/material/Typography'
+import Tab from '@mui/material/Tab'
+import Tabs from '@mui/material/Tabs'
 
 // ** Third Party Imports
 import axios from 'axios'
@@ -18,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 
 // ** Components
 import SiteShell from 'src/views/site/SiteShell'
+import StoryList from 'src/views/site/StoryList'
 
 // ** Utils
 import { formatDate, serifFont } from 'src/views/site/storyText'
@@ -117,6 +122,13 @@ const MagazinePage = () => {
   const lang = i18n.language
   const [issues, setIssues] = useState(null)
   const [failed, setFailed] = useState(false)
+  const router = useRouter()
+  const tab = router.query.tab === 'stories' ? 'stories' : 'issues'
+
+  const setTab = value =>
+    router.replace({ pathname: '/magazine', query: value === 'stories' ? { tab: value } : {} }, undefined, {
+      shallow: true
+    })
 
   useEffect(() => {
     axios
@@ -134,21 +146,33 @@ const MagazinePage = () => {
         >
           {t('magazine.title')}
         </Typography>
-        <Typography sx={{ color: 'text.secondary', mt: 2, mb: { xs: 8, md: 12 }, maxWidth: 620 }}>
-          {t('magazine.intro')}
-        </Typography>
-        {failed ? <Alert severity='error'>{t('magazine.failed')}</Alert> : null}
-        {!issues && !failed ? (
+        <Typography sx={{ color: 'text.secondary', mt: 2, mb: 6, maxWidth: 620 }}>{t('magazine.intro')}</Typography>
+        <Tabs
+          value={tab}
+          onChange={(_, value) => setTab(value)}
+          sx={{ mb: { xs: 8, md: 10 }, borderBottom: theme => `1px solid ${theme.palette.divider}` }}
+        >
+          <Tab value='issues' label={t('magazine.tabs.issues')} />
+          <Tab value='stories' label={t('magazine.tabs.stories')} />
+        </Tabs>
+        {tab === 'stories' ? (
+          <Box sx={{ maxWidth: 728 }}>
+            <Typography sx={{ color: 'text.secondary', mb: 4 }}>{t('magazine.stories.intro')}</Typography>
+            <StoryList params={{ kind: 'story' }} emptyKey='magazine.stories.empty' />
+          </Box>
+        ) : null}
+        {tab === 'issues' && failed ? <Alert severity='error'>{t('magazine.failed')}</Alert> : null}
+        {tab === 'issues' && !issues && !failed ? (
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 6 }}>
             {[0, 1, 2, 3].map(i => (
               <Skeleton key={i} variant='rectangular' sx={{ aspectRatio: '560 / 784', height: 'auto' }} />
             ))}
           </Box>
         ) : null}
-        {issues && !issues.length ? (
+        {tab === 'issues' && issues && !issues.length ? (
           <Typography sx={{ color: 'text.secondary' }}>{t('magazine.empty')}</Typography>
         ) : null}
-        {issues?.length ? (
+        {tab === 'issues' && issues?.length ? (
           <Box
             sx={{
               display: 'grid',

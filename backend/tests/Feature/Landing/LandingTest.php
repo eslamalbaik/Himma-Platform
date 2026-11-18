@@ -109,6 +109,11 @@ class LandingTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'landing.plan_updated', 'entity_id' => $plan->cuid]);
         $this->assertTrue($plan->fresh()->show_on_site);
         $this->assertSame(100.0, (float) $plan->fresh()->price);
+
+        $this->putJson("/api/admin/landing/plans/{$plan->cuid}", $this->display(['yearlyPrice' => 1200]))
+            ->assertOk()->assertJsonPath('data.yearlyPrice', 1200);
+        $this->putJson("/api/admin/landing/plans/{$plan->cuid}", $this->display(['yearlyPrice' => '']))
+            ->assertOk()->assertJsonPath('data.yearlyPrice', null);
     }
 
     public function test_plan_display_validation_codes(): void
@@ -118,6 +123,7 @@ class LandingTest extends TestCase
         $url = "/api/admin/landing/plans/{$plan->cuid}";
 
         $this->putJson($url, $this->display(['theme' => 'red']))->assertStatus(422)->assertJsonPath('error.code', 'invalid_theme');
+        $this->putJson($url, $this->display(['yearlyPrice' => -5]))->assertJsonPath('error.code', 'invalid_yearly_price');
         $this->putJson($url, $this->display(['ctaUrl' => 'javascript:alert(1)']))->assertJsonPath('error.code', 'invalid_cta_url');
         $this->putJson($url, $this->display(['ctaUrl' => '//evil.example']))->assertJsonPath('error.code', 'invalid_cta_url');
         $this->putJson($url, $this->display(['featureGroups' => [['titleAr' => '', 'titleEn' => 'x', 'items' => []]]]))

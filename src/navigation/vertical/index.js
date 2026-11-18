@@ -32,6 +32,7 @@ export const adminNavigation = [
     subject: 'content',
     children: [
       { title: 'nav.content.all', path: '/admin/content', action: 'read', subject: 'content' },
+      { title: 'nav.content.library', path: '/admin/content/library', action: 'read', subject: 'content' },
       { title: 'nav.content.review', path: '/admin/content/review', action: 'read', subject: 'content' },
       { title: 'nav.content.reports', path: '/admin/content/reports', action: 'read', subject: 'content' },
       { title: 'nav.content.comments', path: '/admin/content/comments', action: 'read', subject: 'content' },
@@ -55,6 +56,8 @@ export const adminNavigation = [
     subject: 'magazine',
     children: [
       { title: 'nav.magazine.issues', path: '/admin/magazine/issues', action: 'read', subject: 'magazine' },
+      // The magazine's stories are articles of kind `story`, so they need `content` like any article.
+      { title: 'nav.magazine.stories', path: '/admin/magazine/stories', action: 'read', subject: 'content' },
       { title: 'nav.magazine.taxonomy', path: '/admin/magazine/taxonomy', action: 'read', subject: 'magazine' }
     ]
   },

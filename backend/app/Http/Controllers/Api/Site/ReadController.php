@@ -45,6 +45,10 @@ class ReadController extends Controller
         if ($sectionId = $request->query('sectionId')) {
             $query->whereHas('section', fn ($q) => $q->where('cuid', $sectionId));
         }
+        // `kind=story` lists the magazine's stories (القصص).
+        if (in_array($kind = $request->query('kind'), Article::KINDS, true)) {
+            $query->where('kind', $kind);
+        }
         if ($tagId = $request->query('tagId')) {
             $query->whereHas('tags', fn ($q) => $q->where('cuid', $tagId));
         }

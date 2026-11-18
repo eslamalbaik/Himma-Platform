@@ -81,8 +81,7 @@ const PlanCard = ({ plan, lang }) => {
         color: style.color,
         border: style.border,
         px: 7,
-        pt: plan.isFeatured ? 12 : 9,
-        pb: plan.isFeatured ? 12 : 9,
+        py: 9,
         boxShadow: plan.isFeatured
           ? '0 24px 48px -16px rgba(15, 23, 42, 0.35)'
           : '0 8px 24px -12px rgba(15, 23, 42, 0.15)'
@@ -117,7 +116,17 @@ const PlanCard = ({ plan, lang }) => {
         {pick(plan, 'description', lang)}
       </Typography>
 
-      <Box sx={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 2, mb: 6, minHeight: 56 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'baseline',
+          alignContent: 'flex-start',
+          flexWrap: 'wrap',
+          gap: 2,
+          mb: 6,
+          minHeight: 92
+        }}
+      >
         {free ? (
           <Typography sx={{ fontSize: '2.4rem', fontWeight: 700, lineHeight: 1.1, color: 'inherit' }}>
             {t('landing.pricing.free')}
@@ -131,6 +140,11 @@ const PlanCard = ({ plan, lang }) => {
             <Typography sx={{ fontSize: '0.85rem', color: style.muted }}>
               {t(plan.interval === 'monthly' ? 'landing.pricing.perMonth' : 'landing.pricing.perYear')}
             </Typography>
+            {plan.yearlyPrice ? (
+              <Typography sx={{ flexBasis: '100%', fontSize: '0.95rem', fontWeight: 600, color: style.muted }}>
+                {t('landing.pricing.orYearly', { price: formatNumber(plan.yearlyPrice), currency })}
+              </Typography>
+            ) : null}
           </>
         )}
       </Box>
@@ -230,7 +244,7 @@ const PricingSection = ({ data }) => {
           sx={{
             display: 'grid',
             gap: 6,
-            alignItems: 'center',
+            alignItems: 'stretch',
             gridTemplateColumns: {
               xs: '1fr',
               md: `repeat(${Math.min(plans.length, 2)}, minmax(0, 1fr))`,

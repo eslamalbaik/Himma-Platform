@@ -29,6 +29,7 @@ class ArticleFormRequest extends ApiRequest
             'summary' => ['nullable', 'string', 'max:2000'],
             'body' => ['required', 'string', 'max:200000'],
             'language' => ['required', Rule::in(Article::LANGUAGES)],
+            'kind' => ['sometimes', Rule::in(Article::KINDS)],
             'classification' => ['required', Rule::in(Article::CLASSIFICATIONS)],
             // Institutional and government content must name the client it belongs to (CLS-03).
             'tenantId' => [
@@ -55,6 +56,7 @@ class ArticleFormRequest extends ApiRequest
             'summary' => 'invalid_article_summary',
             'body' => 'invalid_article_body',
             'language' => 'invalid_language',
+            'kind' => 'invalid_article_kind',
             'classification' => 'invalid_classification',
             'tenantId.required' => 'tenant_required_for_classification',
             'tenantId' => 'invalid_tenant',
@@ -74,7 +76,8 @@ class ArticleFormRequest extends ApiRequest
     {
         $tenantNeeded = in_array($this->input('classification'), Article::TENANT_CLASSIFICATIONS, true);
 
-        return [
+        // Left out, the kind stays as it is (a new article is an `article`).
+        return ($this->filled('kind') ? ['kind' => $this->input('kind')] : []) + [
             'title' => trim($this->input('title')),
             'summary' => $this->input('summary'),
             'body' => $this->input('body'),

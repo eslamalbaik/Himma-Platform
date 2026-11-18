@@ -25,6 +25,8 @@ import { currentCommunity } from 'src/configs/community'
 // Same lists as App\Models\Article.
 export const CLASSIFICATIONS = ['public', 'members', 'academic', 'institutional', 'government', 'confidential']
 export const TENANT_CLASSIFICATIONS = ['institutional', 'government']
+// An article, or a literary story listed on the magazine's Stories tab.
+export const KINDS = ['article', 'story']
 export const AUDIENCES = ['teachers', 'researchers', 'school_leaders', 'students', 'parents', 'decision_makers']
 
 const emptyArticle = {
@@ -32,6 +34,7 @@ const emptyArticle = {
   summary: '',
   body: '',
   language: 'ar',
+  kind: 'article',
   sectionId: '',
   issueId: '',
   classification: 'public',
@@ -50,6 +53,7 @@ const toForm = article => ({
   summary: article.summary || '',
   body: article.body || '',
   language: article.language,
+  kind: article.kind || 'article',
   sectionId: article.sectionId || '',
   issueId: article.issueId || '',
   classification: article.classification,
@@ -65,7 +69,18 @@ const toForm = article => ({
 })
 
 // Create or edit an article. `article` (with its body) is null when adding.
-const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, errorCode, onSubmit, onClose }) => {
+const ArticleFormDialog = ({
+  open,
+  article,
+  sections,
+  issues,
+  tags,
+  defaultKind = 'article',
+  submitting,
+  errorCode,
+  onSubmit,
+  onClose
+}) => {
   const { t, i18n } = useTranslation()
   const lang = pickLang(i18n)
 
@@ -74,7 +89,9 @@ const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, 
     handleSubmit,
     watch,
     formState: { errors }
-  } = useForm({ values: article ? toForm(article) : { ...emptyArticle, language: currentCommunity() } })
+  } = useForm({
+    values: article ? toForm(article) : { ...emptyArticle, kind: defaultKind, language: currentCommunity() }
+  })
 
   const classification = watch('classification')
   const needsTenant = TENANT_CLASSIFICATIONS.includes(classification)
@@ -118,10 +135,25 @@ const ArticleFormDialog = ({ open, article, sections, issues, tags, submitting, 
             </Alert>
           ) : null}
           <Grid container spacing={4}>
-            <Grid item xs={12} md={8}>
+            <Grid item xs={12} md={6}>
               {text('title', { required: true })}
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Controller
+                name='kind'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField {...field} select fullWidth label={t('admin.content.field.kind')}>
+                    {KINDS.map(value => (
+                      <MenuItem key={value} value={value}>
+                        {t(`admin.content.kind.${value}`)}
+                      </MenuItem>
+                    ))}
+                  </CustomTextField>
+                )}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
               <Controller
                 name='language'
                 control={control}

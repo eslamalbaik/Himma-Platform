@@ -33,7 +33,7 @@ import { formatDate, localName, pickLang } from 'src/views/admin/billing/format'
 
 // ** Views
 import { ArticleStatusChip, ComplianceChip } from './chips'
-import ArticleFormDialog, { CLASSIFICATIONS } from './ArticleFormDialog'
+import ArticleFormDialog, { CLASSIFICATIONS, KINDS } from './ArticleFormDialog'
 import ArticleDetailsDialog from './ArticleDetailsDialog'
 import ComplianceDialog from './ComplianceDialog'
 import ReasonDialog from './ReasonDialog'
@@ -69,7 +69,8 @@ const DONE = {
   restore: 'restored'
 }
 
-const ArticlesList = ({ titleKey, subtitleKey, fixedStatus = null }) => {
+// `fixedKind` ('story') makes the list the magazine's Stories page: only stories, and new ones are stories.
+const ArticlesList = ({ titleKey, subtitleKey, fixedStatus = null, fixedKind = null }) => {
   const { t, i18n } = useTranslation()
   const lang = pickLang(i18n)
   const ability = useContext(AbilityContext)
@@ -79,13 +80,18 @@ const ArticlesList = ({ titleKey, subtitleKey, fixedStatus = null }) => {
   const [filters, setFilters] = useState({
     search: '',
     status: '',
+    kind: '',
     classification: '',
     axis: '',
     sectionId: '',
     language: ''
   })
   const setFilter = (key, value) => setFilters(current => ({ ...current, [key]: value }))
-  const list = useApiList('/api/admin/content/articles', { ...filters, status: fixedStatus || filters.status })
+  const list = useApiList('/api/admin/content/articles', {
+    ...filters,
+    status: fixedStatus || filters.status,
+    kind: fixedKind || filters.kind
+  })
 
   const sections = useApiOptions('/api/admin/magazine/sections', { enabled: canReadMagazine })
   const issues = useApiOptions('/api/admin/magazine/issues', { enabled: canReadMagazine })
@@ -180,6 +186,15 @@ const ArticlesList = ({ titleKey, subtitleKey, fixedStatus = null }) => {
             {article.sectionId ? ` · ${localName(article, 'sectionName', lang)}` : ''}
             {article.issueNumber ? ` · ${t('admin.content.field.issue')} ${article.issueNumber}` : ''}
           </Typography>
+          {article.kind === 'story' ? (
+            <Chip
+              size='small'
+              color='primary'
+              variant='tonal'
+              label={t('admin.content.kind.story')}
+              sx={{ mt: 1, me: 1 }}
+            />
+          ) : null}
           {article.isSponsored ? (
             <Chip size='small' color='warning' variant='tonal' label={t('admin.content.sponsored')} sx={{ mt: 1 }} />
           ) : null}
@@ -301,6 +316,13 @@ const ArticlesList = ({ titleKey, subtitleKey, fixedStatus = null }) => {
                     o => t(`admin.content.status.${o.value}`)
                   )
                 : null}
+              {!fixedKind
+                ? filterSelect(
+                    'kind',
+                    KINDS.map(value => ({ value })),
+                    o => t(`admin.content.kind.${o.value}`)
+                  )
+                : null}
               {filterSelect(
                 'classification',
                 CLASSIFICATIONS.map(value => ({ value })),
@@ -351,6 +373,7 @@ const ArticlesList = ({ titleKey, subtitleKey, fixedStatus = null }) => {
         sections={sections}
         issues={issues}
         tags={tags}
+        defaultKind={fixedKind || 'article'}
         submitting={submitting}
         errorCode={form.open ? error : null}
         onSubmit={save}

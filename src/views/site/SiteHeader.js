@@ -145,6 +145,14 @@ const SiteHeader = ({ actions = null }) => {
         >
           {t('magazine.nav')}
         </Button>
+        <Button
+          component={Link}
+          href='/library'
+          color='secondary'
+          sx={{ display: { xs: 'none', sm: 'inline-flex' }, color: 'text.secondary', whiteSpace: 'nowrap' }}
+        >
+          {t('library.nav')}
+        </Button>
 
         <Box sx={{ marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 3 } }}>
           {actions}
